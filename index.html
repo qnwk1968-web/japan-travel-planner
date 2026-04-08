@@ -1474,16 +1474,28 @@ function makeTripId() {
   return 'trip_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 }
 function initTrips() {
+  // EMBEDDED_TRIPS가 있으면 해당 trip id가 localStorage에 없는 경우 병합
+  if (EMBEDDED_TRIPS && EMBEDDED_TRIPS.trips && EMBEDDED_TRIPS.trips.length) {
+    let trips = getAllTrips();
+    let changed = false;
+    EMBEDDED_TRIPS.trips.forEach(et => {
+      if (!trips.find(t => t.id === et.id)) {
+        trips.push(et);
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveAllTrips(trips);
+      if (EMBEDDED_TRIPS.activeId) setActiveTripId(EMBEDDED_TRIPS.activeId);
+    }
+    if (!getAllTrips().find(t => t.id === getActiveTripId())) {
+      setActiveTripId(EMBEDDED_TRIPS.activeId || EMBEDDED_TRIPS.trips[0].id);
+    }
+    updateTripBar();
+    return;
+  }
   let trips = getAllTrips();
   if (trips.length === 0) {
-    // 코드에 저장된 데이터가 있으면 우선 사용
-    if (EMBEDDED_TRIPS && EMBEDDED_TRIPS.trips && EMBEDDED_TRIPS.trips.length) {
-      saveAllTrips(EMBEDDED_TRIPS.trips);
-      if (EMBEDDED_TRIPS.activeId) setActiveTripId(EMBEDDED_TRIPS.activeId);
-      else setActiveTripId(EMBEDDED_TRIPS.trips[0].id);
-      updateTripBar();
-      return;
-    }
     let oldItems = [];
     try { oldItems = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e) {}
     const first = {

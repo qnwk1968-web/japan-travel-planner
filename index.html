@@ -2456,14 +2456,19 @@ async function translateJaToKo(text) {
 function openGoogleMaps(placeId, name, addr) {
   let url;
   if (placeId) {
-    // place_id URL: 가장 정확하게 해당 장소로 이동
     url = 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(placeId);
   } else {
     const q = [name, addr].filter(Boolean).join(' ');
     if (!q) return;
     url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
   }
-  window.open(url, '_blank');
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 // 일정 아이템 지도 열기 (특수문자 안전 처리)
 function openItemMap(itemId) {
@@ -3096,7 +3101,9 @@ function addFromPlace(placeId) {
 function showSingleMap(lat, lng, name) {
   const query = name ? encodeURIComponent(name) : (lat + ',' + lng);
   const url = 'https://www.google.com/maps/search/?api=1&query=' + query;
-  window.open(url, '_blank');
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 // 전체 일정 → 구글지도 경로(Directions)로 열기
@@ -3114,14 +3121,17 @@ function showItineraryMap() {
     return;
   }
 
+  function openUrl(url) {
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+
   if (items.length === 1) {
-    // 장소 1개면 검색으로
-    const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(items[0].name);
-    window.open(url, '_blank');
+    openUrl('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(items[0].name));
     return;
   }
 
-  // 2개 이상: 경로 안내 URL (Google Maps Directions API, 최대 10지점)
   const limited = items.slice(0, 10);
   const origin      = limited[0].lat + ',' + limited[0].lng;
   const destination = limited[limited.length - 1].lat + ',' + limited[limited.length - 1].lng;
@@ -3132,8 +3142,7 @@ function showItineraryMap() {
     + '&destination=' + encodeURIComponent(destination);
   if (waypoints) url += '&waypoints=' + encodeURIComponent(waypoints);
   url += '&travelmode=driving';
-
-  window.open(url, '_blank');
+  openUrl(url);
 }
 
 function closeMap() {

@@ -2427,7 +2427,7 @@ function recommendFood(date) {
             ${serveTags ? `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${serveTags}</div>` : ''}
             ${todayH ? `<div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">⏰ 오늘 영업시간: <span style="color:var(--text);font-weight:600;">${escapeHtml(todayH)}</span></div>` : ''}
             <div style="display:flex;gap:6px;">
-              <a class="btn btn-outline btn-sm" href="https://www.google.com/maps/place/?q=place_id:${pid}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🗺️ 구글지도</a>
+              <a class="btn btn-outline btn-sm" href="https://maps.google.com/maps?q=${lat},${lng}&query=${encodeURIComponent(p.name)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🗺️ 구글지도</a>
               <button class="btn btn-primary btn-sm" onclick="addRecFood('${pid}','${escapeHtml(date)}')">+ 일정에 추가</button>
             </div>
           </div>`;
@@ -2710,7 +2710,7 @@ function renderPlaceCard(p, mode, distanceM) {
         ${price}${rating}
       </div>
       <div class="place-actions">
-        <a class="btn btn-outline btn-sm" href="https://www.google.com/maps/place/?q=place_id:${pid}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;" onclick="event.stopPropagation()">🗺️ 구글지도</a>
+        <a class="btn btn-outline btn-sm" href="https://maps.google.com/maps?q=${escapeHtml(p.name)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;" onclick="event.stopPropagation()">🗺️ 구글지도</a>
         <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addFromPlace('${pid}')">+ 일정추가</button>
       </div>
     </div>

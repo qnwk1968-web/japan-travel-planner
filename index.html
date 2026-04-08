@@ -639,6 +639,18 @@
   }
   .trip-mgr-close:active { background: #E2E8F0; transform: scale(0.9); }
   .trip-mgr-body { padding: 16px; flex: 1; }
+  .trip-mgr-io-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+  }
+  .trip-mgr-io-btn {
+    padding: 11px 8px; border-radius: var(--radius-sm); border: 1.5px solid rgba(0,0,0,0.08);
+    background: #F8FAFC; color: var(--text); font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 6px; transition: all 0.18s;
+  }
+  .trip-mgr-io-btn:active { transform: scale(0.97); }
+  .trip-mgr-io-btn.export { border-color: rgba(79,172,254,0.4); color: var(--blue); background: rgba(79,172,254,0.06); }
+  .trip-mgr-io-btn.import { border-color: rgba(214,79,123,0.4); color: var(--pink); background: rgba(214,79,123,0.06); }
   .trip-mgr-new-btn {
     width: 100%; padding: 16px; border-radius: var(--radius); border: 2px dashed rgba(214,79,123,0.35);
     background: rgba(214,79,123,0.04); color: var(--pink); font-family: 'Noto Sans KR', sans-serif;
@@ -1273,6 +1285,11 @@
     <button class="trip-mgr-close" onclick="closeTripManager()">✕</button>
   </div>
   <div class="trip-mgr-body">
+    <div class="trip-mgr-io-row">
+      <button class="trip-mgr-io-btn export" onclick="exportTrips()">📤 내보내기</button>
+      <button class="trip-mgr-io-btn import" onclick="document.getElementById('tripImportInput').click()">📥 가져오기</button>
+    </div>
+    <input type="file" id="tripImportInput" accept=".json" style="display:none" onchange="importTrips(this)">
     <button class="trip-mgr-new-btn" onclick="createTripPrompt()">＋ 새 여행 만들기</button>
     <div id="tripManagerList"></div>
   </div>
@@ -1510,6 +1527,49 @@ function renderTripManager() {
       </div>
     `;
   }).join('');
+}
+function exportTrips() {
+  const trips = getAllTrips();
+  if (!trips.length) { showToast('⚠️ 저장된 여행이 없습니다'); return; }
+  const data = JSON.stringify({ version: 2, trips, activeId: getActiveTripId() }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '일본여행_일정_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 일정을 파일로 내보냈습니다');
+}
+function importTrips(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const incoming = parsed.trips || (Array.isArray(parsed) ? parsed : null);
+      if (!incoming) { showToast('⚠️ 올바른 일정 파일이 아닙니다'); return; }
+      const existing = getAllTrips();
+      let added = 0;
+      incoming.forEach(trip => {
+        if (!existing.find(t => t.id === trip.id)) {
+          existing.push(trip);
+          added++;
+        }
+      });
+      saveAllTrips(existing);
+      if (parsed.activeId && !getActiveTripId()) setActiveTripId(parsed.activeId);
+      updateTripBar();
+      renderItinerary();
+      renderTripManager();
+      showToast(`📥 ${added}개 여행 가져오기 완료`);
+    } catch(err) {
+      showToast('⚠️ 파일을 읽을 수 없습니다');
+    }
+  };
+  reader.readAsText(file);
 }
 function switchToTrip(id) {
   setActiveTripId(id);

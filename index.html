@@ -90,6 +90,37 @@
   }
   .refresh-btn:active { transform: rotate(180deg) scale(0.9); background: #EDE9FE; border-color: #C4B5FD; color: var(--pink2); }
 
+  .install-btn {
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    border: none; color: #fff; font-size: 11.5px; font-weight: 800;
+    padding: 8px 12px; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 3px 10px rgba(214,79,123,0.32);
+    font-family: 'Noto Sans KR', sans-serif; letter-spacing: -0.2px;
+    transition: transform 0.18s, box-shadow 0.18s;
+    white-space: nowrap;
+    animation: installPulse 2.4s ease-in-out infinite;
+  }
+  .install-btn:active { transform: scale(0.94); box-shadow: 0 1px 4px rgba(214,79,123,0.2); }
+  @keyframes installPulse {
+    0%,100% { box-shadow: 0 3px 10px rgba(214,79,123,0.32); }
+    50%     { box-shadow: 0 3px 14px rgba(214,79,123,0.55); }
+  }
+  /* iOS install guide steps */
+  .ios-step {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0; border-bottom: 1px dashed rgba(0,0,0,0.07);
+  }
+  .ios-step:last-child { border-bottom: none; }
+  .ios-step-num {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    color: #fff; font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ios-step-body { flex: 1; line-height: 1.55; font-size: 13px; }
+  .ios-step-icon { display: inline-block; padding: 2px 8px; border-radius: 6px;
+    background: #EFF6FF; color: var(--blue); font-weight: 700; font-size: 12px; margin: 0 2px; }
+
   .tab-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 14px 14px calc(var(--nav-h) + 16px); }
   .tab-content::-webkit-scrollbar { width: 3px; }
   .tab-content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
@@ -893,6 +924,7 @@
       <p>스마트한 일본 여행 올인원 앱</p>
     </div>
     <div class="header-right">
+      <button id="installBtn" class="install-btn" onclick="onInstallClick()" style="display:none;" title="앱 설치">📲 앱 설치</button>
       <button class="refresh-btn" onclick="location.reload()" title="새로고침">↻</button>
     </div>
   </div>
@@ -1667,6 +1699,45 @@
       <button class="btn btn-outline" onclick="closeConfirm(false)">취소</button>
       <button class="btn" id="confirmOkBtn" onclick="closeConfirm(true)"
         style="background:linear-gradient(135deg,#F43F5E,#DC2626);color:#fff;box-shadow:0 4px 12px rgba(244,63,94,0.3);">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- iOS install guide sheet -->
+<div class="overlay" id="iosInstallSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">📲 홈 화면에 앱 설치</div>
+    </div>
+    <div class="sheet-body">
+      <div class="info-note" id="iosInstallNote" style="margin-bottom:14px;">
+        💡 iPhone/iPad에서는 Safari 브라우저로 접속해야 설치할 수 있습니다.
+      </div>
+      <div id="iosStepList">
+        <div class="ios-step">
+          <div class="ios-step-num">1</div>
+          <div class="ios-step-body">
+            화면 아래(또는 위)의 <span class="ios-step-icon">⬆️ 공유</span> 버튼을 누르세요.
+          </div>
+        </div>
+        <div class="ios-step">
+          <div class="ios-step-num">2</div>
+          <div class="ios-step-body">
+            메뉴에서 <span class="ios-step-icon">➕ 홈 화면에 추가</span>를 선택하세요.
+          </div>
+        </div>
+        <div class="ios-step">
+          <div class="ios-step-num">3</div>
+          <div class="ios-step-body">
+            오른쪽 상단의 <strong>추가</strong> 버튼을 누르면 끝!<br>
+            <span style="color:var(--text-dim);font-size:12px;">홈 화면에 앱 아이콘이 생기고, 일반 앱처럼 전체화면으로 실행됩니다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-primary" style="width:100%;" onclick="closeIosInstallSheet()">알겠어요</button>
     </div>
   </div>
 </div>
@@ -4718,6 +4789,73 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
+
+// ========== PWA INSTALL ==========
+let deferredInstallPrompt = null;
+const installBtn = document.getElementById('installBtn');
+
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+         window.navigator.standalone === true;
+}
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+function isIOSSafari() {
+  const ua = navigator.userAgent;
+  return isIOS() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (installBtn && !isStandalone()) installBtn.style.display = '';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  if (installBtn) installBtn.style.display = 'none';
+  if (typeof showToast === 'function') showToast('🎉 앱이 설치되었습니다!');
+});
+
+// Show install button for iOS (where beforeinstallprompt isn't supported)
+if (!isStandalone() && isIOS() && installBtn) {
+  installBtn.style.display = '';
+}
+// Hide button if running as installed PWA
+if (isStandalone() && installBtn) installBtn.style.display = 'none';
+
+function onInstallClick() {
+  // iOS: show guide sheet
+  if (isIOS()) {
+    const note = document.getElementById('iosInstallNote');
+    if (note) {
+      note.style.display = isIOSSafari() ? 'none' : '';
+    }
+    document.getElementById('iosInstallSheet').classList.add('open');
+    return;
+  }
+  // Android/Chrome: trigger prompt
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(choice => {
+      if (choice.outcome === 'accepted') {
+        if (installBtn) installBtn.style.display = 'none';
+      }
+      deferredInstallPrompt = null;
+    });
+  } else {
+    // Fallback: show iOS-style guide (works for desktop browsers too)
+    document.getElementById('iosInstallSheet').classList.add('open');
+  }
+}
+
+function closeIosInstallSheet() {
+  document.getElementById('iosInstallSheet').classList.remove('open');
+}
+document.getElementById('iosInstallSheet').addEventListener('click', function(e) {
+  if (e.target === this) closeIosInstallSheet();
+});
 </script>
 </body>
 </html>

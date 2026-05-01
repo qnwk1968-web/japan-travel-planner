@@ -112,12 +112,13 @@
     gap: 0; cursor: pointer; border: none; background: none;
     color: #A0AABB;
     font-family: 'Noto Sans KR', sans-serif;
-    font-size: 10.5px; font-weight: 800;
-    letter-spacing: -0.3px;
+    font-size: 10px; font-weight: 800;
+    letter-spacing: -0.4px;
     transition: color 0.22s ease;
-    padding: 6px 2px 10px;
+    padding: 6px 0 10px;
     position: relative; outline: none;
     -webkit-tap-highlight-color: transparent;
+    min-width: 0;
   }
   /* 상단 인디케이터 바 */
   .nav-btn::before {
@@ -133,7 +134,7 @@
   .nav-btn .nav-label {
     display: inline-block;
     transition: transform 0.22s cubic-bezier(.32,1,.36,1), color 0.22s;
-    padding: 5px 8px 4px;
+    padding: 5px 6px 4px;
     border-radius: 20px;
     line-height: 1;
   }
@@ -746,6 +747,135 @@
     background: rgba(255,200,87,0.1); border: 1px solid rgba(255,200,87,0.3);
     font-size: 12px; color: var(--gold); display: flex; align-items: center; gap: 8px;
   }
+
+  /* ===== EXPENSE TRACKER ===== */
+  .expense-card {
+    background: linear-gradient(135deg, #fff 60%, #FFFBEB 100%);
+    border: 1px solid rgba(217,119,6,0.18);
+    border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .expense-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+  }
+  .expense-card-title { font-size: 13px; font-weight: 800; color: var(--gold); letter-spacing: -0.2px; }
+  .expense-total { font-size: 18px; font-weight: 900; color: var(--gold); margin-top: 2px; letter-spacing: -0.4px; }
+  .expense-total-krw { font-size: 12px; color: var(--text-dim); font-weight: 600; margin-top: 1px; }
+  .expense-toggle { font-size: 18px; color: var(--text-dim); transition: transform 0.2s; }
+  .expense-card.open .expense-toggle { transform: rotate(180deg); }
+  .expense-detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(0,0,0,0.08); }
+  .expense-card.open .expense-detail { display: block; }
+  .expense-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; color: var(--text); }
+  .expense-row .ex-label { display: flex; align-items: center; gap: 6px; color: var(--text-dim); }
+  .expense-row .ex-amt { font-weight: 700; }
+  .item-cost { font-size: 11px; color: var(--gold); font-weight: 700; margin-top: 3px; }
+
+  /* ===== REORDER BUTTONS ===== */
+  .reorder-btn {
+    background: #F1F5F9; border: none; color: var(--text-dim); font-size: 11px;
+    cursor: pointer; padding: 4px 7px; border-radius: var(--radius-xs);
+    font-weight: 800; transition: all 0.15s; line-height: 1;
+  }
+  .reorder-btn:active { background: #E2E8F0; transform: scale(0.92); }
+  .reorder-btn:disabled { opacity: 0.3; cursor: default; }
+
+  /* ===== TOOLS TAB ===== */
+  .tool-pane { animation: fadeUp 0.22s cubic-bezier(.32,1,.36,1); }
+  .phrase-item {
+    background: #fff; border: 1px solid rgba(0,0,0,0.06);
+    border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
+    box-shadow: var(--shadow-sm); cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .phrase-item:active { transform: scale(0.99); box-shadow: var(--shadow-sm); }
+  .phrase-ko { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+  .phrase-ja { font-size: 14px; font-weight: 600; color: var(--pink); margin-top: 4px; letter-spacing: -0.2px; }
+  .phrase-pron { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; font-style: italic; }
+  .phrase-emergency { border-left: 4px solid #DC2626; background: linear-gradient(135deg, #fff 70%, #FFF1F2 100%); }
+
+  /* ===== CHECKLIST ===== */
+  .chk-cat { margin-bottom: 14px; }
+  .chk-cat-header {
+    font-size: 12px; font-weight: 800; color: var(--text-dim);
+    letter-spacing: 0.3px; text-transform: uppercase;
+    padding: 6px 0; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  }
+  .chk-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 4px; font-size: 13px; color: var(--text);
+    border-bottom: 1px solid #F1F5F9;
+  }
+  .chk-item:last-child { border-bottom: none; }
+  .chk-item input[type="checkbox"] {
+    width: 20px; height: 20px; cursor: pointer; accent-color: var(--pink); flex-shrink: 0;
+  }
+  .chk-item label {
+    flex: 1; cursor: pointer; line-height: 1.5; transition: opacity 0.18s, text-decoration 0.18s;
+  }
+  .chk-item input[type="checkbox"]:checked + label {
+    text-decoration: line-through; opacity: 0.45;
+  }
+  .chk-item .chk-del {
+    background: none; border: none; color: var(--text-dim); font-size: 14px;
+    cursor: pointer; padding: 4px 8px; opacity: 0.5; transition: all 0.15s;
+  }
+  .chk-item .chk-del:active { opacity: 1; color: #F43F5E; }
+  .chk-progress-bar {
+    height: 5px; background: #E2E8F0; border-radius: 50px; overflow: hidden; margin-bottom: 12px;
+  }
+  .chk-progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--pink), var(--pink2));
+    transition: width 0.4s ease;
+  }
+
+  /* ===== ROUTE MAP OVERLAY ===== */
+  #routeMapOverlay {
+    position: fixed; inset: 0; z-index: 320;
+    display: none; flex-direction: column; background: var(--bg);
+  }
+  #routeMapOverlay.open { display: flex; }
+  .route-map-header {
+    padding: 12px 14px; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border); display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .route-map-title { font-size: 15px; font-weight: 800; flex: 1; letter-spacing: -0.2px; }
+  .route-map-close {
+    background: #F1F5F9; border: none; color: var(--text); font-size: 18px;
+    width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .route-day-chips {
+    display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px; flex-shrink: 0;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .route-day-chips::-webkit-scrollbar { display: none; }
+  .route-day-chip {
+    padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700;
+    border: 1.5px solid #E8EDF4; background: #fff; color: var(--text-dim);
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    transition: all 0.18s;
+  }
+  .route-day-chip.active {
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    color: #fff; border-color: transparent;
+    box-shadow: 0 3px 10px rgba(214,79,123,0.25);
+  }
+  #routeMapEl { flex: 1; min-height: 0; }
+  .route-stats {
+    padding: 10px 14px; background: #fff; border-top: 1px solid var(--card-border);
+    font-size: 12px; color: var(--text-dim); display: flex; gap: 14px; flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .route-stat-item { display: flex; align-items: center; gap: 5px; }
+  .route-stat-val { color: var(--text); font-weight: 700; }
+  .route-open-gmaps {
+    padding: 10px 14px; background: #fff; border-top: 1px solid var(--card-border);
+    flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
@@ -778,6 +908,9 @@
         </div>
         <div class="trip-bar-arrow">›</div>
       </div>
+      <!-- Expense summary card -->
+      <div id="expenseCard"></div>
+
       <!-- Quick-add toolbar -->
       <div class="itin-toolbar">
         <div class="itin-toolbar-grid">
@@ -949,6 +1082,84 @@
         </p>
       </div>
     </div>
+
+    <!-- Tab 7: 도구 (환율/회화/체크리스트) -->
+    <div class="tab-pane" id="tab-tools">
+      <!-- 도구 sub-nav -->
+      <div class="chips" id="toolsChips" style="margin-bottom:14px;">
+        <div class="chip active" data-tool="fx" onclick="selectToolChip(this,'fx')">💱 환율</div>
+        <div class="chip" data-tool="phrase" onclick="selectToolChip(this,'phrase')">🗣 회화</div>
+        <div class="chip" data-tool="checklist" onclick="selectToolChip(this,'checklist')">✅ 체크리스트</div>
+      </div>
+
+      <!-- 환율 도우미 -->
+      <div id="tool-fx" class="tool-pane">
+        <div class="card">
+          <div class="card-title">💱 엔화 ↔ 원화 환율 계산기</div>
+          <div id="fxRateBox" style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">환율 불러오는 중...</div>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px;">
+            <div>
+              <label class="form-label">JPY (¥)</label>
+              <input class="form-input" id="fxJpy" type="number" placeholder="0" inputmode="decimal" oninput="fxConvert('jpy')">
+            </div>
+            <div style="font-size:18px;color:var(--text-dim);padding-top:18px;">⇄</div>
+            <div>
+              <label class="form-label">KRW (₩)</label>
+              <input class="form-input" id="fxKrw" type="number" placeholder="0" inputmode="decimal" oninput="fxConvert('krw')">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;font-weight:700;">⚡ 빠른 변환 (¥)</div>
+          <div class="chips" id="fxQuickChips" style="margin-bottom:10px;">
+            <div class="chip" onclick="fxQuick(100)">¥100</div>
+            <div class="chip" onclick="fxQuick(500)">¥500</div>
+            <div class="chip" onclick="fxQuick(1000)">¥1,000</div>
+            <div class="chip" onclick="fxQuick(3000)">¥3,000</div>
+            <div class="chip" onclick="fxQuick(5000)">¥5,000</div>
+            <div class="chip" onclick="fxQuick(10000)">¥10,000</div>
+            <div class="chip" onclick="fxQuick(50000)">¥50,000</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="loadFxRate(true)" style="width:100%;">🔄 환율 새로고침</button>
+        </div>
+        <div class="card">
+          <div class="card-title">💡 환전 팁</div>
+          <p style="font-size:12px;color:var(--text-dim);line-height:1.7;">
+            • 한국 시중은행 환전 우대 50~90% 활용<br>
+            • 트래블월렛·트래블로그 등 선불 카드는 ATM 출금 수수료 무료<br>
+            • 일본 현지 ATM은 세븐일레븐·이온이 한국 카드 대응 우수<br>
+            • 신용카드는 JCB/Visa/Master 모두 통용, 일부 소형점 현금만 가능
+          </p>
+        </div>
+      </div>
+
+      <!-- 회화/긴급 표현집 -->
+      <div id="tool-phrase" class="tool-pane" style="display:none;">
+        <div class="chips" id="phraseCatChips" style="margin-bottom:10px;"></div>
+        <div id="phraseList"></div>
+      </div>
+
+      <!-- 체크리스트 -->
+      <div id="tool-checklist" class="tool-pane" style="display:none;">
+        <div class="card" style="padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div class="card-title" style="margin:0;">✅ 여행 체크리스트</div>
+            <button class="btn btn-outline btn-sm" onclick="resetChecklist()">기본값 복원</button>
+          </div>
+          <div id="checklistTripName" style="font-size:11.5px;color:var(--text-dim);margin-bottom:4px;"></div>
+          <div id="checklistProgress" style="font-size:11px;color:var(--pink);font-weight:700;margin-bottom:10px;"></div>
+          <div id="checklistContainer"></div>
+          <div style="display:flex;gap:6px;margin-top:12px;">
+            <input class="form-input" id="newChkText" placeholder="새 항목 추가..." style="flex:1;">
+            <select class="form-select" id="newChkCat" style="flex:0 0 110px;">
+              <option value="before">출국 전</option>
+              <option value="pack">짐싸기</option>
+              <option value="trip">여행 중</option>
+              <option value="return">귀국 전</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="addChecklistItem()">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <nav class="bottom-nav">
@@ -969,6 +1180,9 @@
     </button>
     <button class="nav-btn" onclick="switchTab('car',this)">
       <span class="nav-label">렌트카</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tools',this)">
+      <span class="nav-label">도구</span>
     </button>
   </nav>
 </div>
@@ -1008,6 +1222,19 @@
             <input class="form-input" id="fa-time" type="time">
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">항공권 비용</label>
+            <input class="form-input" id="fa-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="fa-cur">
+              <option value="KRW">₩ 원</option>
+              <option value="JPY">¥ 엔</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">메모</label>
           <input class="form-input" id="fa-memo" placeholder="메모...">
@@ -1040,6 +1267,19 @@
             <input class="form-input" id="fd-time" type="time">
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">항공권 비용</label>
+            <input class="form-input" id="fd-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="fd-cur">
+              <option value="KRW">₩ 원</option>
+              <option value="JPY">¥ 엔</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">메모</label>
           <input class="form-input" id="fd-memo" placeholder="메모...">
@@ -1065,6 +1305,19 @@
         <div class="form-group">
           <label class="form-label">주소</label>
           <input class="form-input" id="h-addr" placeholder="주소 입력 (선택)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">총 숙박비</label>
+            <input class="form-input" id="h-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="h-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">위치</label>
@@ -1096,6 +1349,19 @@
             <option value="기타">기타</option>
           </select>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">교통비</label>
+            <input class="form-input" id="c-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="c-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">메모</label>
           <input class="form-input" id="c-memo" placeholder="메모...">
@@ -1123,8 +1389,21 @@
           <input class="form-input" id="si-addr" placeholder="주소 (선택)">
         </div>
         <div class="form-group">
-          <label class="form-label">이용요금</label>
+          <label class="form-label">이용요금 (메모)</label>
           <input class="form-input" id="si-fee" placeholder="무료, ¥500...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">실제 지출</label>
+            <input class="form-input" id="si-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="si-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">위치</label>
@@ -1173,6 +1452,19 @@
             <input class="form-input" id="fo-rating" placeholder="4.2" type="number" step="0.1" min="0" max="5">
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">실제 지출</label>
+            <input class="form-input" id="fo-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="fo-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">위치</label>
           <div class="loc-pick-row">
@@ -1213,6 +1505,19 @@
           <label class="form-label">주소</label>
           <input class="form-input" id="sh-addr" placeholder="주소 (선택)">
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">실제 지출</label>
+            <input class="form-input" id="sh-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="sh-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">메모</label>
           <input class="form-input" id="sh-memo" placeholder="메모...">
@@ -1238,6 +1543,19 @@
         <div class="form-group">
           <label class="form-label">주소</label>
           <input class="form-input" id="o-addr" placeholder="주소 (선택)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">지출</label>
+            <input class="form-input" id="o-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="o-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">메모</label>
@@ -1313,6 +1631,20 @@
     </div>
     <button class="trip-mgr-new-btn" onclick="createTripPrompt()">＋ 새 여행 만들기</button>
     <div id="tripManagerList"></div>
+  </div>
+</div>
+
+<!-- Route map overlay (전체 일정 지도) -->
+<div id="routeMapOverlay">
+  <div class="route-map-header">
+    <button class="route-map-close" onclick="closeRouteMap()">✕</button>
+    <div class="route-map-title">🗺️ 전체 일정 지도</div>
+  </div>
+  <div class="route-day-chips" id="routeDayChips"></div>
+  <div id="routeMapEl"></div>
+  <div class="route-stats" id="routeStats"></div>
+  <div class="route-open-gmaps">
+    <button class="btn btn-outline btn-sm" style="width:100%;" onclick="openRouteInGmaps()">📍 구글지도에서 길찾기 열기</button>
   </div>
 </div>
 
@@ -1418,6 +1750,8 @@ function initApp() {
   initTrips();
   renderItinerary();
   renderCityGrid();
+  // Background fetch FX rate so expense card uses live rate
+  loadFxRate(false);
 }
 
 function darkMapStyle() {
@@ -1457,6 +1791,14 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   if (name === 'weather') loadWeather(currentWeatherCity);
   if (name === 'weather') loadVolcano();
+  if (name === 'tools') {
+    // Default to FX sub-tab on first open
+    const activeChip = document.querySelector('#toolsChips .chip.active');
+    const tool = activeChip ? activeChip.dataset.tool : 'fx';
+    if (tool === 'fx') loadFxRate(false);
+    else if (tool === 'phrase') { renderPhraseCatChips(); renderPhraseList(); }
+    else if (tool === 'checklist') renderChecklist();
+  }
 }
 
 // ========== TRIP MANAGEMENT ==========
@@ -1710,6 +2052,7 @@ function saveItinerary(arr) {
 }
 
 function renderItinerary() {
+  renderExpenseCard();
   const items = getItinerary();
   const el = document.getElementById('itineraryList');
   if (!items.length) {
@@ -1747,17 +2090,21 @@ function renderItinerary() {
   const sortedDates = Object.keys(grouped).sort();
   el.innerHTML = sortedDates.map(d => {
     const dayItems = grouped[d].sort((a,b) => {
+      // Manual sort order takes precedence when both have it
+      if (a.sortOrder != null && b.sortOrder != null) return a.sortOrder - b.sortOrder;
+      if (a.sortOrder != null) return -1;
+      if (b.sortOrder != null) return 1;
       const ta = a.time || a.checkin || '';
       const tb = b.time || b.checkin || '';
       return ta.localeCompare(tb);
     });
     const dateLabel = formatDate(d);
-    return `<div class="date-group">
+    return `<div class="date-group" data-date="${escapeHtml(d)}">
       <div class="date-header">
         <div class="date-header-left">📅 ${escapeHtml(dateLabel)}</div>
         <button class="btn-rec-food" onclick="recommendFood('${escapeHtml(d)}')">🍜 이 날 식당 추천</button>
       </div>
-      ${dayItems.map(it => renderItineraryItem(it, d)).join('')}
+      ${dayItems.map((it, i) => renderItineraryItem(it, d, i, dayItems.length)).join('')}
     </div>`;
   }).join('');
 }
@@ -1771,7 +2118,7 @@ function formatDate(d) {
   } catch(e) { return d; }
 }
 
-function renderItineraryItem(it, contextDate) {
+function renderItineraryItem(it, contextDate, idxInDay, dayCount) {
   const type = it.type || 'other';
   const icon = getTypeIcon(type);
   const id = escapeHtml(it.id);
@@ -1817,6 +2164,10 @@ function renderItineraryItem(it, contextDate) {
   const name = it.name || it.airport || it.city || it.hotelName || '(이름 없음)';
   const time = it.time || '';
   const showMap = !!(name && name !== '(이름 없음)');
+  const costStr = formatCostStr(it.cost, it.currency);
+  const isFirst = idxInDay === 0;
+  const isLast  = idxInDay === (dayCount || 1) - 1;
+  const showReorder = type !== 'hotel' && (dayCount || 0) > 1;
 
   return `<div class="itinerary-item type-${escapeHtml(type)}">
     <div class="item-icon">${icon}</div>
@@ -1824,11 +2175,16 @@ function renderItineraryItem(it, contextDate) {
       <div class="item-name">${escapeHtml(name)}</div>
       ${time ? `<div class="item-time">⏰ ${escapeHtml(time)}</div>` : ''}
       ${subLines.map(l => `<div class="item-addr">${escapeHtml(l)}</div>`).join('')}
+      ${costStr ? `<div class="item-cost">💴 ${costStr}</div>` : ''}
       <div class="item-actions">
         ${showMap ? `<button class="btn btn-outline btn-sm" onclick="openItemMap('${id}')">🗺️ 구글지도</button>` : ''}
       </div>
     </div>
     <div class="item-btn-row">
+      ${showReorder ? `
+        <button class="reorder-btn" onclick='moveItem("${id}","${escapeHtml(contextDate)}",-1)' title="위로" ${isFirst?'disabled':''}>▲</button>
+        <button class="reorder-btn" onclick='moveItem("${id}","${escapeHtml(contextDate)}",1)' title="아래로" ${isLast?'disabled':''}>▼</button>
+      ` : ''}
       <button class="edit-btn" onclick='editItem("${id}")' title="편집">✏️</button>
       <button class="del-btn" onclick='deleteItem("${id}")' title="삭제">🗑</button>
     </div>
@@ -1914,6 +2270,8 @@ function clearModalFields(type) {
     document.getElementById('fa-date').value = today;
     document.getElementById('fa-time').value = '';
     document.getElementById('fa-memo').value = '';
+    document.getElementById('fa-cost').value = '';
+    document.getElementById('fa-cur').value = 'KRW';
   } else if (type === 'flight_departure') {
     document.getElementById('fd-airport').value = '';
     document.getElementById('fd-flight').value = '';
@@ -1921,17 +2279,23 @@ function clearModalFields(type) {
     document.getElementById('fd-date').value = today;
     document.getElementById('fd-time').value = '';
     document.getElementById('fd-memo').value = '';
+    document.getElementById('fd-cost').value = '';
+    document.getElementById('fd-cur').value = 'KRW';
   } else if (type === 'hotel') {
     document.getElementById('h-name').value = '';
     document.getElementById('h-checkin').value = today;
     document.getElementById('h-checkout').value = '';
     document.getElementById('h-addr').value = '';
     document.getElementById('h-loc-display').textContent = '위치 미지정';
+    document.getElementById('h-cost').value = '';
+    document.getElementById('h-cur').value = 'JPY';
   } else if (type === 'city') {
     document.getElementById('c-name').value = '';
     document.getElementById('c-date').value = today;
     document.getElementById('c-transport').value = '비행기';
     document.getElementById('c-memo').value = '';
+    document.getElementById('c-cost').value = '';
+    document.getElementById('c-cur').value = 'JPY';
   } else if (type === 'sight') {
     document.getElementById('si-name').value = '';
     document.getElementById('si-date').value = today;
@@ -1940,6 +2304,8 @@ function clearModalFields(type) {
     document.getElementById('si-fee').value = '';
     document.getElementById('si-loc-display').textContent = '위치 미지정';
     document.getElementById('si-memo').value = '';
+    document.getElementById('si-cost').value = '';
+    document.getElementById('si-cur').value = 'JPY';
   } else if (type === 'food') {
     document.getElementById('fo-name').value = '';
     document.getElementById('fo-date').value = today;
@@ -1949,6 +2315,8 @@ function clearModalFields(type) {
     document.getElementById('fo-rating').value = '';
     document.getElementById('fo-loc-display').textContent = '위치 미지정';
     document.getElementById('fo-memo').value = '';
+    document.getElementById('fo-cost').value = '';
+    document.getElementById('fo-cur').value = 'JPY';
   } else if (type === 'shop') {
     document.getElementById('sh-name').value = '';
     document.getElementById('sh-date').value = today;
@@ -1956,12 +2324,16 @@ function clearModalFields(type) {
     document.getElementById('sh-addr').value = '';
     document.getElementById('sh-memo').value = '';
     document.getElementById('sh-loc-display').textContent = '위치 미지정';
+    document.getElementById('sh-cost').value = '';
+    document.getElementById('sh-cur').value = 'JPY';
   } else if (type === 'other') {
     document.getElementById('o-name').value = '';
     document.getElementById('o-date').value = today;
     document.getElementById('o-time').value = '';
     document.getElementById('o-addr').value = '';
     document.getElementById('o-memo').value = '';
+    document.getElementById('o-cost').value = '';
+    document.getElementById('o-cur').value = 'JPY';
   }
 }
 
@@ -1974,11 +2346,15 @@ function fillModalFields(type, it) {
     document.getElementById(p+'-date').value = it.date || '';
     document.getElementById(p+'-time').value = it.time || '';
     document.getElementById(p+'-memo').value = it.memo || '';
+    document.getElementById(p+'-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById(p+'-cur').value = it.currency || 'KRW';
   } else if (type === 'hotel') {
     document.getElementById('h-name').value = it.name || '';
     document.getElementById('h-checkin').value = it.checkin || it.date || '';
     document.getElementById('h-checkout').value = it.checkout || '';
     document.getElementById('h-addr').value = it.addr || '';
+    document.getElementById('h-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('h-cur').value = it.currency || 'JPY';
     if (it.lat && it.lng) {
       locPickLat = it.lat; locPickLng = it.lng;
       updateLocDisplay('hotel', it.lat, it.lng);
@@ -1988,6 +2364,8 @@ function fillModalFields(type, it) {
     document.getElementById('c-date').value = it.date || '';
     document.getElementById('c-transport').value = it.transport || '비행기';
     document.getElementById('c-memo').value = it.memo || '';
+    document.getElementById('c-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('c-cur').value = it.currency || 'JPY';
   } else if (type === 'sight') {
     document.getElementById('si-name').value = it.name || '';
     document.getElementById('si-date').value = it.date || '';
@@ -1995,6 +2373,8 @@ function fillModalFields(type, it) {
     document.getElementById('si-addr').value = it.addr || '';
     document.getElementById('si-fee').value = it.fee || '';
     document.getElementById('si-memo').value = it.memo || '';
+    document.getElementById('si-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('si-cur').value = it.currency || 'JPY';
     if (it.lat && it.lng) {
       locPickLat = it.lat; locPickLng = it.lng;
       updateLocDisplay('sight', it.lat, it.lng);
@@ -2007,6 +2387,8 @@ function fillModalFields(type, it) {
     document.getElementById('fo-price').value = it.price || '¥¥';
     document.getElementById('fo-rating').value = it.rating || '';
     document.getElementById('fo-memo').value = it.memo || '';
+    document.getElementById('fo-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('fo-cur').value = it.currency || 'JPY';
     if (it.lat && it.lng) {
       locPickLat = it.lat; locPickLng = it.lng;
       updateLocDisplay('food', it.lat, it.lng);
@@ -2017,6 +2399,8 @@ function fillModalFields(type, it) {
     document.getElementById('sh-time').value = it.time || '';
     document.getElementById('sh-addr').value = it.addr || '';
     document.getElementById('sh-memo').value = it.memo || '';
+    document.getElementById('sh-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('sh-cur').value = it.currency || 'JPY';
     if (it.lat && it.lng) {
       locPickLat = it.lat; locPickLng = it.lng;
       updateLocDisplay('shop', it.lat, it.lng);
@@ -2027,6 +2411,8 @@ function fillModalFields(type, it) {
     document.getElementById('o-time').value = it.time || '';
     document.getElementById('o-addr').value = it.addr || '';
     document.getElementById('o-memo').value = it.memo || '';
+    document.getElementById('o-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('o-cur').value = it.currency || 'JPY';
   }
 }
 
@@ -2053,6 +2439,11 @@ function closeAddModal() {
 
 function buildItemFromModal(type) {
   const base = { type, id: editingId || Date.now().toString() };
+  function readCost(prefix) {
+    const v = document.getElementById(prefix+'-cost').value;
+    base.cost = v === '' ? null : Number(v);
+    base.currency = document.getElementById(prefix+'-cur').value || 'JPY';
+  }
   if (type === 'flight_arrival' || type === 'flight_departure') {
     const p = type === 'flight_arrival' ? 'fa' : 'fd';
     base.airport = document.getElementById(p+'-airport').value.trim();
@@ -2062,6 +2453,7 @@ function buildItemFromModal(type) {
     base.time = document.getElementById(p+'-time').value;
     base.memo = document.getElementById(p+'-memo').value.trim();
     base.name = base.airport || (type === 'flight_arrival' ? '도착항공편' : '출발항공편');
+    readCost(p);
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'hotel') {
     base.name = document.getElementById('h-name').value.trim();
@@ -2071,6 +2463,7 @@ function buildItemFromModal(type) {
     base.lat = locPickLat;
     base.lng = locPickLng;
     base.date = base.checkin;
+    readCost('h');
     if (!base.name) { showToast('⚠️ 호텔명을 입력하세요'); return null; }
     if (!base.checkin) { showToast('⚠️ 체크인 날짜를 입력하세요'); return null; }
     if (!base.checkout) { showToast('⚠️ 체크아웃 날짜를 입력하세요'); return null; }
@@ -2080,6 +2473,7 @@ function buildItemFromModal(type) {
     base.date = document.getElementById('c-date').value;
     base.transport = document.getElementById('c-transport').value;
     base.memo = document.getElementById('c-memo').value.trim();
+    readCost('c');
     if (!base.name) { showToast('⚠️ 도시명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'sight') {
@@ -2091,6 +2485,7 @@ function buildItemFromModal(type) {
     base.memo = document.getElementById('si-memo').value.trim();
     base.lat = locPickLat;
     base.lng = locPickLng;
+    readCost('si');
     if (!base.name) { showToast('⚠️ 장소명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'food') {
@@ -2103,6 +2498,7 @@ function buildItemFromModal(type) {
     base.memo = document.getElementById('fo-memo').value.trim();
     base.lat = locPickLat;
     base.lng = locPickLng;
+    readCost('fo');
     if (!base.name) { showToast('⚠️ 장소명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'shop') {
@@ -2113,6 +2509,7 @@ function buildItemFromModal(type) {
     base.memo = document.getElementById('sh-memo').value.trim();
     base.lat = locPickLat;
     base.lng = locPickLng;
+    readCost('sh');
     if (!base.name) { showToast('⚠️ 장소명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else {
@@ -2121,6 +2518,7 @@ function buildItemFromModal(type) {
     base.time = document.getElementById('o-time').value;
     base.addr = document.getElementById('o-addr').value.trim();
     base.memo = document.getElementById('o-memo').value.trim();
+    readCost('o');
     if (!base.name) { showToast('⚠️ 장소명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   }
@@ -3106,43 +3504,9 @@ function showSingleMap(lat, lng, name) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
-// 전체 일정 → 구글지도 경로(Directions)로 열기
+// 전체 일정 → 인앱 지도 (일자별 색상 + 폴리라인 + 거리)
 function showItineraryMap() {
-  const items = getItinerary()
-    .filter(it => it.lat && it.lng)
-    .sort((a, b) => {
-      const da = (a.date || '') + (a.time || '');
-      const db = (b.date || '') + (b.time || '');
-      return da.localeCompare(db);
-    });
-
-  if (!items.length) {
-    showToast('⚠️ 위치 정보가 있는 일정이 없습니다');
-    return;
-  }
-
-  function openUrl(url) {
-    const a = document.createElement('a');
-    a.href = url; a.target = '_blank'; a.rel = 'noopener';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  }
-
-  if (items.length === 1) {
-    openUrl('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(items[0].name));
-    return;
-  }
-
-  const limited = items.slice(0, 10);
-  const origin      = limited[0].lat + ',' + limited[0].lng;
-  const destination = limited[limited.length - 1].lat + ',' + limited[limited.length - 1].lng;
-  const waypoints   = limited.slice(1, -1).map(it => it.lat + ',' + it.lng).join('|');
-
-  let url = 'https://www.google.com/maps/dir/?api=1'
-    + '&origin=' + encodeURIComponent(origin)
-    + '&destination=' + encodeURIComponent(destination);
-  if (waypoints) url += '&waypoints=' + encodeURIComponent(waypoints);
-  url += '&travelmode=driving';
-  openUrl(url);
+  showItineraryMapInApp();
 }
 
 function closeMap() {
@@ -3626,6 +3990,680 @@ function calcETC() {
     html = `<div class="etc-result etc-gray">📋 선택 사항<br><small style="font-weight:400;opacity:0.85">단거리·단기간은 ETC 없이도 충분할 수 있음</small></div>`;
   }
   el.innerHTML = html;
+}
+
+// ========== EXPENSE TRACKER ==========
+function getCurrentRate() {
+  // KRW per 1 JPY
+  const cached = parseFloat(localStorage.getItem('fx_jpy_to_krw'));
+  return Number.isFinite(cached) && cached > 0 ? cached : 9.3;
+}
+
+function toJPY(cost, currency) {
+  if (cost == null || isNaN(cost)) return 0;
+  if (currency === 'KRW') {
+    const rate = getCurrentRate();
+    return rate > 0 ? cost / rate : 0;
+  }
+  return cost; // JPY default
+}
+
+function toKRW(cost, currency) {
+  if (cost == null || isNaN(cost)) return 0;
+  if (currency === 'JPY' || !currency) return cost * getCurrentRate();
+  return cost;
+}
+
+function formatCostStr(cost, currency) {
+  if (cost == null || cost === '' || isNaN(cost)) return '';
+  const num = Number(cost);
+  if (currency === 'KRW') return '₩' + Math.round(num).toLocaleString();
+  return '¥' + Math.round(num).toLocaleString();
+}
+
+const EXPENSE_CAT_LABEL = {
+  flight_arrival: '✈️ 항공',
+  flight_departure: '✈️ 항공',
+  hotel: '🏨 숙박',
+  city: '🚆 교통',
+  sight: '🏯 관광',
+  food: '🍜 식사',
+  shop: '🛍️ 쇼핑',
+  other: '📌 기타',
+};
+
+function renderExpenseCard() {
+  const items = getItinerary();
+  const card = document.getElementById('expenseCard');
+  if (!card) return;
+  const itemsWithCost = items.filter(it => it.cost != null && !isNaN(it.cost) && Number(it.cost) > 0);
+  if (!itemsWithCost.length) {
+    card.innerHTML = '';
+    return;
+  }
+  // Totals
+  let totalJPY = 0;
+  const byCat = {};
+  const byDate = {};
+  itemsWithCost.forEach(it => {
+    const jpy = toJPY(Number(it.cost), it.currency);
+    totalJPY += jpy;
+    const cat = (it.type === 'flight_arrival' || it.type === 'flight_departure') ? 'flight_arrival' : (it.type || 'other');
+    byCat[cat] = (byCat[cat] || 0) + jpy;
+    const d = it.date || it.checkin || '날짜 미정';
+    byDate[d] = (byDate[d] || 0) + jpy;
+  });
+  const totalKRW = totalJPY * getCurrentRate();
+
+  const catRows = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat, jpy]) => `
+    <div class="expense-row">
+      <span class="ex-label">${EXPENSE_CAT_LABEL[cat] || cat}</span>
+      <span class="ex-amt">¥${Math.round(jpy).toLocaleString()}</span>
+    </div>`).join('');
+  const dateRows = Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0])).map(([d, jpy]) => `
+    <div class="expense-row">
+      <span class="ex-label">📅 ${escapeHtml(d)}</span>
+      <span class="ex-amt">¥${Math.round(jpy).toLocaleString()}</span>
+    </div>`).join('');
+
+  card.innerHTML = `
+    <div class="expense-card" id="expCardBox">
+      <div class="expense-card-head" onclick="document.getElementById('expCardBox').classList.toggle('open')">
+        <div>
+          <div class="expense-card-title">💴 여행 경비 합계</div>
+          <div class="expense-total">¥${Math.round(totalJPY).toLocaleString()}</div>
+          <div class="expense-total-krw">≈ ₩${Math.round(totalKRW).toLocaleString()} · ${itemsWithCost.length}건</div>
+        </div>
+        <div class="expense-toggle">▾</div>
+      </div>
+      <div class="expense-detail">
+        <div style="font-size:11px;font-weight:800;color:var(--text-dim);letter-spacing:0.4px;text-transform:uppercase;margin:4px 0 6px;">카테고리별</div>
+        ${catRows}
+        <div style="font-size:11px;font-weight:800;color:var(--text-dim);letter-spacing:0.4px;text-transform:uppercase;margin:12px 0 6px;">일자별</div>
+        ${dateRows}
+        <div style="font-size:10px;color:var(--text-dim);margin-top:10px;">
+          ※ 환율: 100엔 = ₩${Math.round(getCurrentRate()*100).toLocaleString()} (도구 → 환율에서 갱신)
+        </div>
+      </div>
+    </div>`;
+}
+
+// ========== REORDER ITEMS ==========
+function moveItem(id, contextDate, dir) {
+  const items = getItinerary();
+  // Build the dayItems list for this contextDate using same grouping logic
+  const dayItems = [];
+  items.forEach(it => {
+    const type = it.type || 'other';
+    if (type === 'hotel' && it.checkin && it.checkout) {
+      // skip - hotels span days
+    } else if ((it.date || '날짜 미정') === contextDate) {
+      dayItems.push(it);
+    }
+  });
+  // Sort same as render
+  dayItems.sort((a,b) => {
+    if (a.sortOrder != null && b.sortOrder != null) return a.sortOrder - b.sortOrder;
+    if (a.sortOrder != null) return -1;
+    if (b.sortOrder != null) return 1;
+    return (a.time||'').localeCompare(b.time||'');
+  });
+  const idx = dayItems.findIndex(i => i.id === id);
+  if (idx < 0) return;
+  const swapIdx = idx + dir;
+  if (swapIdx < 0 || swapIdx >= dayItems.length) return;
+  // Swap
+  [dayItems[idx], dayItems[swapIdx]] = [dayItems[swapIdx], dayItems[idx]];
+  // Reassign sortOrder to all dayItems
+  dayItems.forEach((it, i) => {
+    const original = items.find(x => x.id === it.id);
+    if (original) original.sortOrder = i;
+  });
+  saveItinerary(items);
+  renderItinerary();
+}
+
+// ========== CURRENCY (FX) ==========
+const FX_LS_KEY = 'fx_jpy_to_krw';
+const FX_LS_TS_KEY = 'fx_jpy_to_krw_ts';
+
+async function loadFxRate(force) {
+  const box = document.getElementById('fxRateBox');
+  if (!box) return;
+  const cached = parseFloat(localStorage.getItem(FX_LS_KEY));
+  const cachedTs = parseInt(localStorage.getItem(FX_LS_TS_KEY)) || 0;
+  const fresh = (Date.now() - cachedTs) < 6 * 60 * 60 * 1000; // 6 hours
+  if (!force && cached && fresh) {
+    showFxRate(cached, cachedTs);
+    return;
+  }
+  box.textContent = '환율 불러오는 중...';
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/JPY', { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+    const rate = data && data.rates && data.rates.KRW;
+    if (rate && rate > 0) {
+      localStorage.setItem(FX_LS_KEY, String(rate));
+      localStorage.setItem(FX_LS_TS_KEY, String(Date.now()));
+      showFxRate(rate, Date.now());
+    } else {
+      throw new Error('rate not found');
+    }
+  } catch (e) {
+    if (cached) { showFxRate(cached, cachedTs); return; }
+    // Fallback static
+    const fallback = 9.3;
+    localStorage.setItem(FX_LS_KEY, String(fallback));
+    showFxRate(fallback, 0);
+    box.innerHTML += ' <span style="color:var(--gold)">(오프라인 — 기본값 사용)</span>';
+  }
+}
+
+function showFxRate(rate, ts) {
+  const box = document.getElementById('fxRateBox');
+  if (!box) return;
+  const dt = ts ? new Date(ts) : null;
+  const tsStr = dt ? `${dt.getMonth()+1}/${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '저장값';
+  box.innerHTML = `📊 100¥ = <strong style="color:var(--pink)">₩${Math.round(rate*100).toLocaleString()}</strong> · ${tsStr} 기준`;
+  // Re-render expense card with updated rate
+  renderExpenseCard();
+}
+
+function fxConvert(from) {
+  const rate = getCurrentRate();
+  const jpyEl = document.getElementById('fxJpy');
+  const krwEl = document.getElementById('fxKrw');
+  if (from === 'jpy') {
+    const v = parseFloat(jpyEl.value);
+    krwEl.value = Number.isFinite(v) ? Math.round(v * rate) : '';
+  } else {
+    const v = parseFloat(krwEl.value);
+    jpyEl.value = Number.isFinite(v) && rate > 0 ? Math.round((v / rate) * 100) / 100 : '';
+  }
+}
+
+function fxQuick(jpy) {
+  document.getElementById('fxJpy').value = jpy;
+  fxConvert('jpy');
+}
+
+// ========== PHRASEBOOK ==========
+const PHRASES = {
+  basic: [
+    ['안녕하세요',                        'こんにちは',                  '곤니치와'],
+    ['감사합니다',                        'ありがとうございます',          '아리가또-고자이마스'],
+    ['죄송합니다',                        'すみません',                  '스미마셍'],
+    ['괜찮습니다',                        '大丈夫です',                  '다이죠-부데스'],
+    ['네 / 아니요',                       'はい / いいえ',                '하이 / 이이에'],
+    ['잘 부탁드립니다',                   'よろしくお願いします',          '요로시쿠 오네가이시마스'],
+    ['실례합니다',                        '失礼します',                  '시츠레이시마스'],
+    ['이해 못했어요',                     'わかりません',                 '와카리마셍'],
+    ['천천히 말해주세요',                 'ゆっくり話してください',         '윳쿠리 하나시테 쿠다사이'],
+    ['한국어 할 줄 아세요?',              '韓国語 話せますか',             '칸코쿠고 하나세마스카'],
+    ['영어로 말해도 될까요?',             '英語で話してもいいですか',        '에이고데 하나시테모 이이데스카'],
+  ],
+  food: [
+    ['메뉴 주세요',                       'メニューください',              '메뉴- 쿠다사이'],
+    ['주문할게요',                        '注文お願いします',              '츄-몬 오네가이시마스'],
+    ['이거 주세요',                       'これください',                 '코레 쿠다사이'],
+    ['추천해 주세요',                     'おすすめは何ですか',            '오스스메와 난데스카'],
+    ['매운 거 빼주세요',                  '辛いの抜いてください',           '카라이노 누이테 쿠다사이'],
+    ['알레르기가 있어요',                 'アレルギーがあります',           '아레루기-가 아리마스'],
+    ['물 한 잔 주세요',                   'お水ください',                 '오미즈 쿠다사이'],
+    ['계산 부탁드려요',                   'お会計お願いします',            '오카이케- 오네가이시마스'],
+    ['정말 맛있어요',                     'とても美味しいです',            '도테모 오이시이데스'],
+    ['포장해 주세요',                     '持ち帰りでお願いします',         '모치카에리데 오네가이시마스'],
+    ['젓가락 주세요',                     'お箸ください',                 '오하시 쿠다사이'],
+    ['금연석으로 부탁해요',               '禁煙席でお願いします',           '킨엔세키데 오네가이시마스'],
+  ],
+  shop: [
+    ['얼마예요?',                         'いくらですか',                 '이쿠라데스카'],
+    ['이거 보여주세요',                   'これ見せてください',            '코레 미세테 쿠다사이'],
+    ['사이즈 다른 거 있어요?',            '別のサイズはありますか',         '베츠노 사이즈와 아리마스카'],
+    ['입어봐도 될까요?',                  '試着してもいいですか',           '시챠쿠시테모 이이데스카'],
+    ['카드 사용 가능한가요?',             'カード使えますか',              '카-도 츠카에마스카'],
+    ['면세 가능한가요?',                  '免税できますか',                '멘제이 데키마스카'],
+    ['영수증 주세요',                     'レシートください',              '레시-토 쿠다사이'],
+    ['좀 더 깎아주실 수 있어요?',         'もう少し安くなりますか',         '모-스코시 야스쿠나리마스카'],
+    ['그냥 구경하는 거예요',              '見ているだけです',              '미테이루 다케데스'],
+  ],
+  transport: [
+    ['역까지 어떻게 가요?',               '駅までどうやって行きますか',      '에키마데 도-얏테 이키마스카'],
+    ['이 차는 OO에 가나요?',             'これは○○に行きますか',         '코레와 ○○니 이키마스카'],
+    ['몇 시 출발인가요?',                 '何時に出発ですか',              '난지니 슛파츠데스카'],
+    ['편도 / 왕복 한 장이요',             '片道 / 往復 一枚',              '카타미치 / 오-후쿠 이치마이'],
+    ['택시 좀 불러주세요',                'タクシー呼んでください',         '타쿠시- 욘데 쿠다사이'],
+    ['여기서 세워주세요',                 'ここで止めてください',           '코코데 토메테 쿠다사이'],
+    ['길을 잃었어요',                     '道に迷いました',                '미치니 마요이마시타'],
+    ['주유소가 어디예요?',                'ガソリンスタンドはどこですか',    '가소린스탄도와 도코데스카'],
+    ['주차장 있어요?',                    '駐車場ありますか',              '츄-샤죠- 아리마스카'],
+  ],
+  hotel: [
+    ['체크인 부탁드려요',                 'チェックイン お願いします',       '체크인 오네가이시마스'],
+    ['예약했습니다 / 이름은 OO',          '予約しました / 名前は○○',      '요야쿠시마시타 / 나마에와 ○○'],
+    ['짐 좀 맡길 수 있을까요?',           '荷物を預けられますか',           '니모츠오 아즈케라레마스카'],
+    ['Wi-Fi 비밀번호가 뭐예요?',          'Wi-Fiのパスワードは何ですか',    '와이파이노 파스와-도와 난데스카'],
+    ['수건 더 주세요',                    'タオルをもう少しください',        '타오루오 모-스코시 쿠다사이'],
+    ['방 청소 부탁드려요',                '部屋の掃除お願いします',         '헤야노 소-지 오네가이시마스'],
+    ['아침식사는 몇 시예요?',             '朝食は何時からですか',           '쵸-쇼쿠와 난지카라데스카'],
+    ['체크아웃은 몇 시까지예요?',         'チェックアウトは何時までですか',  '체크아우토와 난지마데데스카'],
+  ],
+  emergency: [
+    ['도와주세요!',                       '助けてください',                '타스케테 쿠다사이'],
+    ['응급실로 가야 해요',                '救急室に行きたいです',           '큐-큐-시츠니 이키타이데스'],
+    ['병원이 어디예요?',                  '病院はどこですか',              '뵤-인와 도코데스카'],
+    ['아파요 / 다쳤어요',                 '痛いです / 怪我をしました',     '이타이데스 / 케가오 시마시타'],
+    ['약국에 가고 싶어요',                '薬局に行きたいです',            '얏쿄쿠니 이키타이데스'],
+    ['경찰을 불러주세요',                 '警察を呼んでください',           '케-사츠오 욘데 쿠다사이'],
+    ['지갑을 잃어버렸어요',               '財布をなくしました',            '사이후오 나쿠시마시타'],
+    ['여권을 잃어버렸어요',               'パスポートをなくしました',        '파스포-토오 나쿠시마시타'],
+    ['알레르기가 있어요',                 'アレルギーがあります',           '아레루기-가 아리마스'],
+    ['열이 나요',                         '熱があります',                  '네츠가 아리마스'],
+    ['지진이에요!',                       '地震です',                      '지신데스'],
+    ['대피소는 어디예요?',                '避難所はどこですか',            '히난죠와 도코데스카'],
+  ],
+};
+
+const PHRASE_CAT_INFO = [
+  { key: 'basic',     label: '🙏 인사·기본' },
+  { key: 'food',      label: '🍜 식당' },
+  { key: 'shop',      label: '🛍️ 쇼핑' },
+  { key: 'transport', label: '🚆 교통' },
+  { key: 'hotel',     label: '🏨 호텔' },
+  { key: 'emergency', label: '🚨 긴급' },
+];
+
+let currentPhraseCat = 'basic';
+
+function renderPhraseCatChips() {
+  const wrap = document.getElementById('phraseCatChips');
+  if (!wrap) return;
+  wrap.innerHTML = PHRASE_CAT_INFO.map(c => `
+    <div class="chip${c.key===currentPhraseCat?' active':''}" onclick="selectPhraseCat('${c.key}')">${c.label}</div>
+  `).join('');
+}
+
+function selectPhraseCat(key) {
+  currentPhraseCat = key;
+  renderPhraseCatChips();
+  renderPhraseList();
+}
+
+function renderPhraseList() {
+  const list = PHRASES[currentPhraseCat] || [];
+  const isEmergency = currentPhraseCat === 'emergency';
+  const el = document.getElementById('phraseList');
+  if (!el) return;
+  el.innerHTML = list.map(([ko, ja, pron]) => `
+    <div class="phrase-item${isEmergency?' phrase-emergency':''}" onclick="copyText('${ja.replace(/'/g, "\\'")}')">
+      <div class="phrase-ko">${escapeHtml(ko)}</div>
+      <div class="phrase-ja">${escapeHtml(ja)}</div>
+      <div class="phrase-pron">${escapeHtml(pron)}</div>
+    </div>
+  `).join('');
+}
+
+// ========== CHECKLIST ==========
+const DEFAULT_CHECKLIST = [
+  { cat: 'before', text: '여권 유효기간 6개월 이상 확인', done: false },
+  { cat: 'before', text: '항공권 / 호텔 예약 확인 메일 인쇄·저장', done: false },
+  { cat: 'before', text: '여행자보험 가입', done: false },
+  { cat: 'before', text: '국제운전면허증 발급 (운전 시)', done: false },
+  { cat: 'before', text: '환전 또는 트래블 카드 충전', done: false },
+  { cat: 'before', text: '데이터 로밍 / eSIM / 포켓와이파이 준비', done: false },
+  { cat: 'before', text: '주요 앱 다운로드 (구글지도/번역/네이버지도)', done: false },
+
+  { cat: 'pack', text: '여권 + 사본 1부 (분실 대비)', done: false },
+  { cat: 'pack', text: '신용·체크카드 + 현금', done: false },
+  { cat: 'pack', text: '110V 멀티 어댑터 / 멀티탭', done: false },
+  { cat: 'pack', text: '보조배터리 (20,000mAh 이하 위탁불가)', done: false },
+  { cat: 'pack', text: '계절에 맞는 옷 (날씨 탭 확인)', done: false },
+  { cat: 'pack', text: '편한 신발 (하루 1만보 이상)', done: false },
+  { cat: 'pack', text: '우산 / 우비', done: false },
+  { cat: 'pack', text: '상비약 (소화제·지사제·진통제·반창고)', done: false },
+  { cat: 'pack', text: '세면도구 / 화장품', done: false },
+  { cat: 'pack', text: '에코백 (쇼핑용 — 일본은 봉투 유료)', done: false },
+
+  { cat: 'trip', text: '도착 후 교통카드 (Suica/PASMO/ICOCA) 충전', done: false },
+  { cat: 'trip', text: '숙소 와이파이 비번·체크아웃 시간 확인', done: false },
+  { cat: 'trip', text: '하루 일정 출발 전 지도/날씨 재확인', done: false },
+  { cat: 'trip', text: '면세 영수증·여권 함께 보관', done: false },
+  { cat: 'trip', text: '지진·태풍 대비: NHK World·재난문자 알림', done: false },
+
+  { cat: 'return', text: '면세품 영수증 정리·세관 신고 준비', done: false },
+  { cat: 'return', text: '호텔 체크아웃 시 분실물 점검', done: false },
+  { cat: 'return', text: '공항 도착 2시간 전 출발', done: false },
+  { cat: 'return', text: '남은 엔화 정리 (환전 or 다음 여행용)', done: false },
+];
+
+const CHK_CAT_LABEL = {
+  before: '✈️ 출국 전',
+  pack:   '🎒 짐싸기',
+  trip:   '🗺 여행 중',
+  return: '🏠 귀국 전',
+};
+
+function getChecklist() {
+  const trip = getActiveTrip();
+  if (!trip) return [];
+  if (!trip.checklist) trip.checklist = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
+  return trip.checklist;
+}
+function saveChecklist(list) {
+  const trips = getAllTrips();
+  const id = getActiveTripId();
+  const idx = trips.findIndex(t => t.id === id);
+  if (idx < 0) return;
+  trips[idx].checklist = list;
+  saveAllTrips(trips);
+}
+
+function renderChecklist() {
+  const trip = getActiveTrip();
+  const list = getChecklist();
+  const container = document.getElementById('checklistContainer');
+  const tripNameEl = document.getElementById('checklistTripName');
+  const progressEl = document.getElementById('checklistProgress');
+  if (!container) return;
+  if (tripNameEl) tripNameEl.textContent = trip ? `🧳 ${trip.name}` : '';
+  const total = list.length;
+  const done  = list.filter(i => i.done).length;
+  const pct   = total ? Math.round((done / total) * 100) : 0;
+  if (progressEl) {
+    progressEl.innerHTML = `진행: ${done}/${total} (${pct}%)
+      <div class="chk-progress-bar" style="margin-top:6px;"><div class="chk-progress-fill" style="width:${pct}%"></div></div>`;
+  }
+  // Group by category
+  const cats = ['before','pack','trip','return'];
+  container.innerHTML = cats.map(cat => {
+    const catItems = list.filter(i => i.cat === cat);
+    if (!catItems.length) return '';
+    return `<div class="chk-cat">
+      <div class="chk-cat-header">${CHK_CAT_LABEL[cat] || cat}</div>
+      ${catItems.map((it, i) => {
+        const realIdx = list.indexOf(it);
+        const cid = `chk-${realIdx}`;
+        return `<div class="chk-item">
+          <input type="checkbox" id="${cid}" ${it.done?'checked':''} onchange="toggleChecklist(${realIdx})">
+          <label for="${cid}">${escapeHtml(it.text)}</label>
+          <button class="chk-del" onclick="deleteChecklistItem(${realIdx})" title="삭제">✕</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function toggleChecklist(idx) {
+  const list = getChecklist();
+  if (!list[idx]) return;
+  list[idx].done = !list[idx].done;
+  saveChecklist(list);
+  renderChecklist();
+}
+
+function addChecklistItem() {
+  const text = document.getElementById('newChkText').value.trim();
+  const cat = document.getElementById('newChkCat').value;
+  if (!text) { showToast('⚠️ 내용을 입력하세요'); return; }
+  const list = getChecklist();
+  list.push({ cat, text, done: false });
+  saveChecklist(list);
+  document.getElementById('newChkText').value = '';
+  renderChecklist();
+}
+
+function deleteChecklistItem(idx) {
+  const list = getChecklist();
+  if (!list[idx]) return;
+  list.splice(idx, 1);
+  saveChecklist(list);
+  renderChecklist();
+}
+
+function resetChecklist() {
+  showConfirm({
+    icon: '🔁', title: '체크리스트를 기본값으로 복원할까요?',
+    msg: '추가/수정한 항목과 체크 상태가 모두 초기화됩니다.',
+    okLabel: '복원',
+    okStyle: 'background:linear-gradient(135deg,#3B82F6,#2563EB);color:#fff;box-shadow:0 4px 12px rgba(59,130,246,0.3);'
+  }, ok => {
+    if (!ok) return;
+    saveChecklist(JSON.parse(JSON.stringify(DEFAULT_CHECKLIST)));
+    renderChecklist();
+    showToast('🔁 체크리스트 초기화됨');
+  });
+}
+
+// ========== TOOLS TAB SUB-NAV ==========
+function selectToolChip(el, tool) {
+  document.querySelectorAll('#toolsChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tool-pane').forEach(p => p.style.display = 'none');
+  const pane = document.getElementById('tool-' + tool);
+  if (pane) pane.style.display = '';
+  if (tool === 'phrase') {
+    renderPhraseCatChips();
+    renderPhraseList();
+  } else if (tool === 'checklist') {
+    renderChecklist();
+  } else if (tool === 'fx') {
+    loadFxRate(false);
+  }
+}
+
+// ========== ROUTE MAP (in-app) ==========
+let routeMap, routeMarkers = [], routePolyline, routeDirectionsRenderer;
+let routeFilterDate = 'all';
+
+function showItineraryMapInApp() {
+  const items = getItinerary().filter(it => it.lat && it.lng);
+  if (!items.length) { showToast('⚠️ 위치 정보가 있는 일정이 없습니다'); return; }
+  document.getElementById('routeMapOverlay').classList.add('open');
+  setTimeout(() => initRouteMap(), 50);
+}
+
+function closeRouteMap() {
+  document.getElementById('routeMapOverlay').classList.remove('open');
+}
+
+function initRouteMap() {
+  const el = document.getElementById('routeMapEl');
+  if (!routeMap) {
+    routeMap = new google.maps.Map(el, {
+      center: { lat: 35.6762, lng: 139.6503 },
+      zoom: 8,
+      gestureHandling: 'greedy',
+      streetViewControl: false,
+      mapTypeControl: false,
+    });
+  } else {
+    google.maps.event.trigger(routeMap, 'resize');
+  }
+  renderRouteDayChips();
+  renderRouteOnMap();
+}
+
+function getRouteItemsByDay() {
+  const items = getItinerary().filter(it => it.lat && it.lng);
+  const days = {};
+  items.forEach(it => {
+    let d = it.date || it.checkin || '날짜 미정';
+    if (!days[d]) days[d] = [];
+    days[d].push(it);
+  });
+  // Sort within each day (manual sortOrder, then time)
+  Object.keys(days).forEach(d => {
+    days[d].sort((a,b) => {
+      if (a.sortOrder != null && b.sortOrder != null) return a.sortOrder - b.sortOrder;
+      if (a.sortOrder != null) return -1;
+      if (b.sortOrder != null) return 1;
+      return (a.time||'').localeCompare(b.time||'');
+    });
+  });
+  return days;
+}
+
+function renderRouteDayChips() {
+  const wrap = document.getElementById('routeDayChips');
+  if (!wrap) return;
+  const days = getRouteItemsByDay();
+  const dayKeys = Object.keys(days).sort();
+  const allChip = `<div class="route-day-chip${routeFilterDate==='all'?' active':''}" onclick="setRouteFilter('all')">전체</div>`;
+  const dayChips = dayKeys.map((d, i) => {
+    const cnt = days[d].length;
+    const lbl = d === '날짜 미정' ? '날짜 미정' : `Day ${i+1} (${d.slice(5)})`;
+    return `<div class="route-day-chip${routeFilterDate===d?' active':''}" onclick="setRouteFilter('${escapeHtml(d)}')">${lbl} · ${cnt}</div>`;
+  }).join('');
+  wrap.innerHTML = allChip + dayChips;
+}
+
+function setRouteFilter(d) {
+  routeFilterDate = d;
+  renderRouteDayChips();
+  renderRouteOnMap();
+}
+
+function renderRouteOnMap() {
+  if (!routeMap) return;
+  // Clear existing
+  routeMarkers.forEach(m => m.setMap(null));
+  routeMarkers = [];
+  if (routePolyline) { routePolyline.setMap(null); routePolyline = null; }
+
+  const days = getRouteItemsByDay();
+  const dayKeys = Object.keys(days).sort();
+
+  // Day color palette
+  const COLORS = ['#D64F7B','#3B82F6','#10B981','#F59E0B','#7C3AED','#EC4899','#0EA5E9','#84CC16','#F97316','#06B6D4','#A855F7','#EF4444'];
+
+  let allPoints = [];
+  let totalDistMeters = 0;
+  let totalCount = 0;
+
+  dayKeys.forEach((d, dayIdx) => {
+    if (routeFilterDate !== 'all' && routeFilterDate !== d) return;
+    const dayItems = days[d];
+    const color = COLORS[dayIdx % COLORS.length];
+    const pathPts = dayItems.map(it => ({ lat: it.lat, lng: it.lng }));
+    allPoints = allPoints.concat(pathPts);
+
+    // Markers (numbered)
+    dayItems.forEach((it, i) => {
+      const num = i + 1;
+      const label = `${num}`;
+      const marker = new google.maps.Marker({
+        position: { lat: it.lat, lng: it.lng },
+        map: routeMap,
+        label: { text: label, color: '#fff', fontWeight: '700', fontSize: '12px' },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 14, fillColor: color, fillOpacity: 1,
+          strokeColor: '#fff', strokeWeight: 2,
+        },
+        title: it.name || '',
+      });
+      const info = new google.maps.InfoWindow({
+        content: `<div style="font-size:13px;font-weight:700;max-width:220px;">${escapeHtml(it.name || '')}</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;">${escapeHtml(it.date || '')} ${escapeHtml(it.time || '')}</div>
+          ${it.addr ? `<div style="font-size:11px;color:#777;margin-top:3px;">${escapeHtml(it.addr.substring(0,60))}</div>` : ''}`
+      });
+      marker.addListener('click', () => info.open(routeMap, marker));
+      routeMarkers.push(marker);
+    });
+
+    // Distance for this day
+    if (pathPts.length >= 2 && google.maps.geometry) {
+      for (let i = 0; i < pathPts.length - 1; i++) {
+        const a = new google.maps.LatLng(pathPts[i].lat, pathPts[i].lng);
+        const b = new google.maps.LatLng(pathPts[i+1].lat, pathPts[i+1].lng);
+        totalDistMeters += google.maps.geometry.spherical.computeDistanceBetween(a, b);
+      }
+    }
+    totalCount += dayItems.length;
+  });
+
+  // Single polyline connecting in order, color-coded by segment day
+  if (routeFilterDate === 'all') {
+    // Draw multi-color: one polyline per day
+    dayKeys.forEach((d, dayIdx) => {
+      const dayItems = days[d];
+      if (dayItems.length < 2) return;
+      const color = COLORS[dayIdx % COLORS.length];
+      const path = dayItems.map(it => ({ lat: it.lat, lng: it.lng }));
+      const pl = new google.maps.Polyline({
+        path, geodesic: true, strokeColor: color, strokeOpacity: 0.85, strokeWeight: 3,
+        map: routeMap,
+      });
+      routeMarkers.push({ setMap: m => pl.setMap(m) });
+    });
+  } else {
+    // Single day → single polyline
+    const dayItems = days[routeFilterDate] || [];
+    if (dayItems.length >= 2) {
+      const color = COLORS[dayKeys.indexOf(routeFilterDate) % COLORS.length];
+      const path = dayItems.map(it => ({ lat: it.lat, lng: it.lng }));
+      routePolyline = new google.maps.Polyline({
+        path, geodesic: true, strokeColor: color, strokeOpacity: 0.9, strokeWeight: 4,
+        map: routeMap,
+      });
+    }
+  }
+
+  // Fit bounds
+  if (allPoints.length) {
+    const bounds = new google.maps.LatLngBounds();
+    allPoints.forEach(p => bounds.extend(p));
+    routeMap.fitBounds(bounds, { top: 50, bottom: 50, left: 30, right: 30 });
+    if (allPoints.length === 1) routeMap.setZoom(14);
+  }
+
+  // Stats
+  const stats = document.getElementById('routeStats');
+  if (stats) {
+    const km = (totalDistMeters / 1000).toFixed(1);
+    stats.innerHTML = `
+      <div class="route-stat-item">📍 <span class="route-stat-val">${totalCount}</span>곳</div>
+      <div class="route-stat-item">📏 직선거리 <span class="route-stat-val">${km}km</span></div>
+      <div class="route-stat-item">📅 ${routeFilterDate==='all' ? `${dayKeys.length}일` : escapeHtml(routeFilterDate)}</div>
+    `;
+  }
+}
+
+function openRouteInGmaps() {
+  const days = getRouteItemsByDay();
+  const dayKeys = Object.keys(days).sort();
+  let pts = [];
+  if (routeFilterDate === 'all') {
+    dayKeys.forEach(d => { pts = pts.concat(days[d]); });
+  } else {
+    pts = days[routeFilterDate] || [];
+  }
+  if (!pts.length) { showToast('⚠️ 표시할 일정이 없습니다'); return; }
+  if (pts.length === 1) {
+    const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(pts[0].name || (pts[0].lat+','+pts[0].lng));
+    window.open(url, '_blank', 'noopener');
+    return;
+  }
+  const limited = pts.slice(0, 10);
+  const origin = limited[0].lat + ',' + limited[0].lng;
+  const destination = limited[limited.length-1].lat + ',' + limited[limited.length-1].lng;
+  const waypoints = limited.slice(1, -1).map(it => it.lat + ',' + it.lng).join('|');
+  let url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origin) + '&destination=' + encodeURIComponent(destination);
+  if (waypoints) url += '&waypoints=' + encodeURIComponent(waypoints);
+  url += '&travelmode=driving';
+  window.open(url, '_blank', 'noopener');
+}
+
+// ========== EMBED HELPERS (referenced from trip mgr) ==========
+function showDataForEmbed() {
+  const trips = getAllTrips();
+  const payload = JSON.stringify({ trips, activeId: getActiveTripId() });
+  document.getElementById('embedDataBox').style.display = 'block';
+  document.getElementById('embedDataText').value = payload;
+}
+function copyEmbedData() {
+  const txt = document.getElementById('embedDataText').value;
+  copyText(txt);
 }
 
 // ========== TOAST ==========

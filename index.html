@@ -526,6 +526,33 @@
   [data-theme="dark"] .card-title { color: #FFFFFF; }
   [data-theme="dark"] .modal-content,
   [data-theme="dark"] .overlay .sheet { background: #1C1C1E; }
+  [data-theme="dark"] .itin-toolbar-bottom .btn-outline,
+  [data-theme="dark"] .btn-rec-food { background: #2C2C2E; color: #EBEBF5; border-color: #48484A; }
+  [data-theme="dark"] .date-header-left { color: #FFFFFF; }
+  [data-theme="dark"] .trip-bar { background: linear-gradient(135deg, var(--pink), var(--pink2)); }
+  [data-theme="dark"] .weather-card { background: #1C1C1E; color: #FFFFFF; }
+  [data-theme="dark"] .car-card { background: #1C1C1E; color: #FFFFFF; }
+  [data-theme="dark"] .checklist-item { background: #2C2C2E; border-color: #48484A; color: #FFFFFF; }
+  [data-theme="dark"] .checklist-cat { color: #EBEBF5; }
+  [data-theme="dark"] .city-btn { background: #2C2C2E; border-color: #48484A; color: #FFFFFF; }
+  [data-theme="dark"] .city-add-btn { background: #1C1C1E; color: #6AABFF; border-color: #2D4A80; }
+  [data-theme="dark"] .form-label { color: #EBEBF5; }
+  [data-theme="dark"] .sheet-title { color: #FFFFFF; }
+  [data-theme="dark"] .chip { background: #2C2C2E !important; border-color: #48484A !important; color: #EBEBF5 !important; }
+  [data-theme="dark"] .airport-btn {
+    background: #2C2C2E; border-color: #48484A; color: #FFFFFF;
+  }
+  [data-theme="dark"] .airport-name { color: #8E8E93; }
+  [data-theme="dark"] .etc-select,
+  [data-theme="dark"] select.form-select {
+    background: #2C2C2E; border-color: #48484A; color: #FFFFFF;
+  }
+  [data-theme="dark"] .form-select option { background: #2C2C2E; color: #FFFFFF; }
+  [data-theme="dark"] .place-addr { color: #8E8E93; }
+  [data-theme="dark"] .place-name { color: #FFFFFF; }
+  [data-theme="dark"] .nearby-empty { color: #8E8E93; }
+  [data-theme="dark"] .weather-icon { color: #FFFFFF; }
+  [data-theme="dark"] .itin-empty { color: #8E8E93; }
 
   /* 아이폰블루 테마 버튼 */
   [data-theme="ios-blue"] .btn-type.t-arrive  { color: #0040DD; }
@@ -2125,7 +2152,7 @@ function closeThemePicker() {
   document.getElementById('themeSheet').classList.remove('open');
 }
 (function() {
-  const saved = localStorage.getItem('app-theme') || '';
+  const saved = localStorage.getItem('app-theme') ?? (localStorage.setItem('app-theme','mint'), 'mint');
   document.documentElement.setAttribute('data-theme', saved);
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.theme-item').forEach(el => {

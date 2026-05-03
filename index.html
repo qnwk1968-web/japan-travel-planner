@@ -33,6 +33,86 @@
     --radius: 20px;
     --radius-sm: 14px;
     --radius-xs: 10px;
+    --blob1-color: #F9A8C9;
+    --blob2-color: #BFDBFE;
+    --blob3-color: #FDE68A;
+    --header-bg: rgba(255,255,255,0.92);
+    --nav-bg: rgba(255,255,255,0.97);
+    --input-bg: #fff;
+    --input-border: #E2E8F0;
+    --surface: #F8FAFC;
+  }
+  /* ===== THEMES ===== */
+  [data-theme="ios-blue"] {
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --card-border: rgba(0,0,0,0.06);
+    --pink: #007AFF;
+    --pink2: #5856D6;
+    --text: #000000;
+    --text-dim: #8E8E93;
+    --blob1-color: #BFDBFE;
+    --blob2-color: #C7D2FE;
+    --blob3-color: #E0F2FE;
+    --header-bg: rgba(242,242,247,0.92);
+    --nav-bg: rgba(242,242,247,0.97);
+    --input-bg: #FFFFFF;
+    --input-border: #C7C7CC;
+    --surface: #EFEFF4;
+  }
+  [data-theme="dark"] {
+    --bg: #000000;
+    --card: #1C1C1E;
+    --card-border: rgba(255,255,255,0.12);
+    --shadow: 0 4px 20px rgba(0,0,0,0.5);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
+    --pink: #FF375F;
+    --pink2: #BF5AF2;
+    --text: #FFFFFF;
+    --text-dim: #8E8E93;
+    --blob1-color: rgba(255,55,95,0.35);
+    --blob2-color: rgba(191,90,242,0.3);
+    --blob3-color: rgba(255,214,10,0.2);
+    --header-bg: rgba(28,28,30,0.95);
+    --nav-bg: rgba(28,28,30,0.97);
+    --input-bg: #2C2C2E;
+    --input-border: #3A3A3C;
+    --surface: #2C2C2E;
+  }
+  [data-theme="mint"] {
+    --bg: #F0FAF5;
+    --card: #FFFFFF;
+    --card-border: rgba(0,0,0,0.06);
+    --pink: #059669;
+    --pink2: #0891B2;
+    --text: #134E4A;
+    --text-dim: #64748B;
+    --blob1-color: #A7F3D0;
+    --blob2-color: #BAE6FD;
+    --blob3-color: #D1FAE5;
+    --header-bg: rgba(255,255,255,0.92);
+    --nav-bg: rgba(255,255,255,0.97);
+    --input-bg: #fff;
+    --input-border: #D1FAE5;
+    --surface: #F0FAF5;
+  }
+  [data-theme="sunset"] {
+    --bg: #FFF8F0;
+    --card: #FFFFFF;
+    --card-border: rgba(0,0,0,0.06);
+    --pink: #F97316;
+    --pink2: #EF4444;
+    --text: #431407;
+    --text-dim: #78716C;
+    --blob1-color: #FED7AA;
+    --blob2-color: #FECACA;
+    --blob3-color: #FEF08A;
+    --header-bg: rgba(255,255,255,0.92);
+    --nav-bg: rgba(255,255,255,0.97);
+    --input-bg: #fff;
+    --input-border: #FED7AA;
+    --surface: #FFF7ED;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
@@ -51,9 +131,9 @@
     position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.22;
     animation: blobMove 18s ease-in-out infinite alternate;
   }
-  .blob1 { width: 380px; height: 380px; background: #F9A8C9; top: -120px; left: -80px; animation-duration: 20s; }
-  .blob2 { width: 320px; height: 320px; background: #BFDBFE; bottom: -60px; right: -60px; animation-duration: 15s; animation-delay: -5s; }
-  .blob3 { width: 220px; height: 220px; background: #FDE68A; top: 38%; left: 28%; animation-duration: 25s; animation-delay: -10s; }
+  .blob1 { width: 380px; height: 380px; background: var(--blob1-color); top: -120px; left: -80px; animation-duration: 20s; }
+  .blob2 { width: 320px; height: 320px; background: var(--blob2-color); bottom: -60px; right: -60px; animation-duration: 15s; animation-delay: -5s; }
+  .blob3 { width: 220px; height: 220px; background: var(--blob3-color); top: 38%; left: 28%; animation-duration: 25s; animation-delay: -10s; }
   @keyframes blobMove {
     0% { transform: translate(0,0) scale(1); }
     33% { transform: translate(30px,-40px) scale(1.1); }
@@ -66,7 +146,7 @@
   .header {
     padding: 0 16px;
     height: var(--header-h);
-    background: rgba(255,255,255,0.92);
+    background: var(--header-bg);
     backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(0,0,0,0.06);
     flex-shrink: 0;
@@ -132,7 +212,7 @@
   /* ===== BOTTOM NAV ===== */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
-    background: rgba(255,255,255,0.97); backdrop-filter: blur(24px);
+    background: var(--nav-bg); backdrop-filter: blur(24px);
     border-top: 1px solid rgba(0,0,0,0.06);
     display: flex; z-index: 100;
     box-shadow: 0 -4px 28px rgba(0,0,0,0.09);
@@ -186,7 +266,7 @@
 
   /* Cards */
   .card {
-    background: #FFFFFF;
+    background: var(--card);
     border: 1px solid rgba(0,0,0,0.055);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
@@ -234,7 +314,7 @@
   .search-wrap { position: relative; margin-bottom: 10px; }
   .search-input {
     width: 100%; padding: 12px 46px 12px 16px;
-    background: #fff; border: 1.5px solid #E2E8F0; border-radius: 50px;
+    background: var(--input-bg); border: 1.5px solid var(--input-border); border-radius: 50px;
     color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s;
     box-shadow: var(--shadow-sm);
   }
@@ -907,9 +987,90 @@
     padding: 10px 14px; background: #fff; border-top: 1px solid var(--card-border);
     flex-shrink: 0;
   }
+
+  /* ===== THEME PICKER ===== */
+  .theme-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 999; opacity: 0; transition: opacity 0.28s;
+    pointer-events: none;
+  }
+  .theme-overlay.open { opacity: 1; pointer-events: all; }
+  .theme-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-radius: 28px 28px 0 0;
+    padding: 12px 20px 40px;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(.32,1,.36,1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+  }
+  .theme-sheet.open { transform: translateY(0); }
+  .theme-sheet-handle {
+    width: 40px; height: 4px; border-radius: 2px;
+    background: var(--input-border); margin: 0 auto 18px;
+  }
+  .theme-sheet-title {
+    font-size: 17px; font-weight: 800; color: var(--text);
+    text-align: center; margin-bottom: 20px; letter-spacing: -0.4px;
+  }
+  .theme-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  }
+  .theme-item {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; padding: 10px 4px; border-radius: 16px;
+    border: 2px solid transparent;
+    transition: all 0.2s cubic-bezier(.32,1,.36,1);
+    background: var(--surface);
+  }
+  .theme-item.active {
+    border-color: var(--pink);
+    background: rgba(var(--pink-rgb, 214,79,123), 0.08);
+  }
+  .theme-item:active { transform: scale(0.94); }
+  .theme-swatch {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  }
+  .theme-name {
+    font-size: 10px; font-weight: 700; color: var(--text-dim);
+    text-align: center; letter-spacing: -0.2px; line-height: 1.2;
+  }
+  .theme-item.active .theme-name { color: var(--pink); }
 </style>
 </head>
 <body>
+
+<!-- Theme Picker -->
+<div class="theme-overlay" id="themeOverlay" onclick="closeThemePicker()"></div>
+<div class="theme-sheet" id="themeSheet">
+  <div class="theme-sheet-handle"></div>
+  <div class="theme-sheet-title">테마 선택</div>
+  <div class="theme-grid">
+    <div class="theme-item" data-theme="" onclick="applyTheme('')">
+      <div class="theme-swatch" style="background:linear-gradient(135deg,#F9A8C9,#D64F7B);">🌸</div>
+      <div class="theme-name">벚꽃</div>
+    </div>
+    <div class="theme-item" data-theme="ios-blue" onclick="applyTheme('ios-blue')">
+      <div class="theme-swatch" style="background:linear-gradient(135deg,#BFDBFE,#007AFF);">🍎</div>
+      <div class="theme-name">아이폰<br>블루</div>
+    </div>
+    <div class="theme-item" data-theme="dark" onclick="applyTheme('dark')">
+      <div class="theme-swatch" style="background:linear-gradient(135deg,#3A3A3C,#1C1C1E);">🌙</div>
+      <div class="theme-name">다크</div>
+    </div>
+    <div class="theme-item" data-theme="mint" onclick="applyTheme('mint')">
+      <div class="theme-swatch" style="background:linear-gradient(135deg,#A7F3D0,#059669);">🌿</div>
+      <div class="theme-name">민트</div>
+    </div>
+    <div class="theme-item" data-theme="sunset" onclick="applyTheme('sunset')">
+      <div class="theme-swatch" style="background:linear-gradient(135deg,#FED7AA,#F97316);">🌅</div>
+      <div class="theme-name">선셋</div>
+    </div>
+  </div>
+</div>
 
 <div class="blob-container">
   <div class="blob blob1"></div>
@@ -925,6 +1086,7 @@
     </div>
     <div class="header-right">
       <button id="installBtn" class="install-btn" onclick="onInstallClick()" style="display:none;" title="앱 설치">📲 앱 설치</button>
+      <button class="refresh-btn" onclick="openThemePicker()" title="테마 변경" style="font-size:17px;">🎨</button>
       <button class="refresh-btn" onclick="location.reload()" title="새로고침">↻</button>
     </div>
   </div>
@@ -1808,6 +1970,33 @@ function getTypeLabel(type) {
 }
 
 // ========== INIT ==========
+// ========== THEME ==========
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('app-theme', theme);
+  document.querySelectorAll('.theme-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === theme);
+  });
+  closeThemePicker();
+}
+function openThemePicker() {
+  document.getElementById('themeOverlay').classList.add('open');
+  document.getElementById('themeSheet').classList.add('open');
+}
+function closeThemePicker() {
+  document.getElementById('themeOverlay').classList.remove('open');
+  document.getElementById('themeSheet').classList.remove('open');
+}
+(function() {
+  const saved = localStorage.getItem('app-theme') || '';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.theme-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.theme === saved);
+    });
+  });
+})();
+
 function initApp() {
   const dummy = document.createElement('div');
   dummy.style.display = 'none';

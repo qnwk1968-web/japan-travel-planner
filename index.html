@@ -381,32 +381,68 @@
   }
   .btn-type {
     padding: 12px 4px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 800;
-    border: none; cursor: pointer; transition: all 0.22s cubic-bezier(.32,1,.36,1);
+    border: none; cursor: pointer;
+    transition: transform 0.18s cubic-bezier(.32,1,.36,1), box-shadow 0.18s cubic-bezier(.32,1,.36,1);
     text-align: center; line-height: 1; letter-spacing: -0.2px;
     display: flex; flex-direction: column; align-items: center; gap: 6px;
     position: relative; overflow: hidden;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 rgba(0,0,0,0.13), 0 8px 16px rgba(0,0,0,0.10);
   }
   .btn-type::after {
-    content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.6);
-    opacity: 0; transition: opacity 0.15s;
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 60%);
+    pointer-events: none;
   }
-  .btn-type:active::after { opacity: 1; }
-  .btn-type:active { transform: scale(0.92); }
+  .btn-type:active {
+    transform: translateY(2px) scale(0.97);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.08);
+  }
   .btn-type .bt-icon {
-    font-size: 20px; line-height: 1;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+    font-size: 22px; line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+    transition: transform 0.18s cubic-bezier(.32,1,.36,1);
   }
+  .btn-type:active .bt-icon { transform: scale(0.88); }
   .btn-type .bt-label { font-size: 10.5px; font-weight: 800; }
 
   /* 타입별 색상 */
-  .btn-type.t-arrive  { background: linear-gradient(145deg,#DBEAFE,#EFF6FF); color: #1D4ED8; }
-  .btn-type.t-depart  { background: linear-gradient(145deg,#E0E7FF,#EEF2FF); color: #4338CA; }
-  .btn-type.t-hotel   { background: linear-gradient(145deg,#FEF3C7,#FFFBEB); color: #B45309; }
-  .btn-type.t-city    { background: linear-gradient(145deg,#D1FAE5,#ECFDF5); color: #065F46; }
-  .btn-type.t-sight   { background: linear-gradient(145deg,#FCE7F3,#FDF2F8); color: #9D174D; }
-  .btn-type.t-food    { background: linear-gradient(145deg,#FFEDD5,#FFF7ED); color: #C2410C; }
-  .btn-type.t-shop    { background: linear-gradient(145deg,#EDE9FE,#F5F3FF); color: #6D28D9; }
-  .btn-type.t-other   { background: linear-gradient(145deg,#F1F5F9,#F8FAFC); color: #475569; }
+  .btn-type.t-arrive  { background: linear-gradient(145deg,#BFDBFE,#DBEAFE); color: #1D4ED8; border-bottom: 3px solid #93C5FD; }
+  .btn-type.t-depart  { background: linear-gradient(145deg,#C7D2FE,#E0E7FF); color: #4338CA; border-bottom: 3px solid #A5B4FC; }
+  .btn-type.t-hotel   { background: linear-gradient(145deg,#FDE68A,#FEF3C7); color: #B45309; border-bottom: 3px solid #FCD34D; }
+  .btn-type.t-city    { background: linear-gradient(145deg,#A7F3D0,#D1FAE5); color: #065F46; border-bottom: 3px solid #6EE7B7; }
+  .btn-type.t-sight   { background: linear-gradient(145deg,#FBCFE8,#FCE7F3); color: #9D174D; border-bottom: 3px solid #F9A8D4; }
+  .btn-type.t-food    { background: linear-gradient(145deg,#FED7AA,#FFEDD5); color: #C2410C; border-bottom: 3px solid #FDBA74; }
+  .btn-type.t-shop    { background: linear-gradient(145deg,#DDD6FE,#EDE9FE); color: #6D28D9; border-bottom: 3px solid #C4B5FD; }
+  .btn-type.t-other   { background: linear-gradient(145deg,#CBD5E1,#F1F5F9); color: #475569; border-bottom: 3px solid #94A3B8; }
+
+  /* 다크 테마 버튼 */
+  [data-theme="dark"] .btn-type.t-arrive  { background: linear-gradient(145deg,#1E3A5F,#1D4ED8); color: #BFDBFE; border-bottom: 3px solid #1E40AF; }
+  [data-theme="dark"] .btn-type.t-depart  { background: linear-gradient(145deg,#2D2B6E,#4338CA); color: #C7D2FE; border-bottom: 3px solid #3730A3; }
+  [data-theme="dark"] .btn-type.t-hotel   { background: linear-gradient(145deg,#5C3D0A,#B45309); color: #FDE68A; border-bottom: 3px solid #92400E; }
+  [data-theme="dark"] .btn-type.t-city    { background: linear-gradient(145deg,#064E3B,#059669); color: #A7F3D0; border-bottom: 3px solid #065F46; }
+  [data-theme="dark"] .btn-type.t-sight   { background: linear-gradient(145deg,#5B1538,#BE185D); color: #FBCFE8; border-bottom: 3px solid #9D174D; }
+  [data-theme="dark"] .btn-type.t-food    { background: linear-gradient(145deg,#6B2100,#C2410C); color: #FED7AA; border-bottom: 3px solid #9A3412; }
+  [data-theme="dark"] .btn-type.t-shop    { background: linear-gradient(145deg,#3B1F8C,#6D28D9); color: #DDD6FE; border-bottom: 3px solid #5B21B6; }
+  [data-theme="dark"] .btn-type.t-other   { background: linear-gradient(145deg,#2D3748,#475569); color: #CBD5E1; border-bottom: 3px solid #374151; }
+
+  /* 아이폰블루 테마 버튼 */
+  [data-theme="ios-blue"] .btn-type.t-arrive  { color: #0040DD; }
+  [data-theme="ios-blue"] .btn-type.t-depart  { color: #3634A3; }
+  [data-theme="ios-blue"] .btn-type.t-hotel   { color: #8B3E00; }
+  [data-theme="ios-blue"] .btn-type.t-city    { color: #1B4D3E; }
+  [data-theme="ios-blue"] .btn-type.t-sight   { color: #7B0A3C; }
+  [data-theme="ios-blue"] .btn-type.t-food    { color: #9A2A00; }
+  [data-theme="ios-blue"] .btn-type.t-shop    { color: #4C1D95; }
+  [data-theme="ios-blue"] .btn-type.t-other   { color: #2D3748; }
+
+  /* 민트 테마 버튼 */
+  [data-theme="mint"] .btn-type { filter: hue-rotate(120deg) saturate(0.9); }
+  [data-theme="mint"] .btn-type .bt-label { color: var(--text); }
+
+  /* 선셋 테마 버튼 */
+  [data-theme="sunset"] .btn-type { filter: hue-rotate(20deg) saturate(1.1); }
+  [data-theme="sunset"] .btn-type .bt-label { color: var(--text); }
 
   .itin-toolbar-bottom { display: flex; gap: 8px; }
 

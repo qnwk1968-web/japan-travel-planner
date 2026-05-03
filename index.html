@@ -1569,12 +1569,11 @@
       </div>
     </div>
 
-    <!-- Tab 7: 도구 (환율/회화/체크리스트) -->
+    <!-- Tab 7: 도구 (환율/체크리스트) -->
     <div class="tab-pane" id="tab-tools">
       <!-- 도구 sub-nav -->
       <div class="chips" id="toolsChips" style="margin-bottom:14px;">
         <div class="chip active" data-tool="fx" onclick="selectToolChip(this,'fx')">💱 환율</div>
-        <div class="chip" data-tool="phrase" onclick="selectToolChip(this,'phrase')">🗣 회화</div>
         <div class="chip" data-tool="checklist" onclick="selectToolChip(this,'checklist')">✅ 체크리스트</div>
       </div>
 
@@ -1617,12 +1616,6 @@
         </div>
       </div>
 
-      <!-- 회화/긴급 표현집 -->
-      <div id="tool-phrase" class="tool-pane" style="display:none;">
-        <div class="chips" id="phraseCatChips" style="margin-bottom:10px;"></div>
-        <div id="phraseList"></div>
-      </div>
-
       <!-- 체크리스트 -->
       <div id="tool-checklist" class="tool-pane" style="display:none;">
         <div class="card" style="padding:14px;">
@@ -1646,6 +1639,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Tab 8: 회화 (독립 탭) -->
+    <div class="tab-pane" id="tab-phrase">
+      <div class="chips" id="phraseCatChips" style="margin-bottom:10px;"></div>
+      <div id="phraseList"></div>
+    </div>
   </div>
 
   <nav class="bottom-nav">
@@ -1667,8 +1666,8 @@
     <button class="nav-btn" onclick="switchTab('car',this)">
       <span class="nav-label">렌트카</span>
     </button>
-    <button class="nav-btn" onclick="switchTab('tools',this)">
-      <span class="nav-label">도구</span>
+    <button class="nav-btn" onclick="switchTab('phrase',this)">
+      <span class="nav-label">회화</span>
     </button>
   </nav>
 </div>
@@ -2452,8 +2451,11 @@ function switchTab(name, btn) {
     const activeChip = document.querySelector('#toolsChips .chip.active');
     const tool = activeChip ? activeChip.dataset.tool : 'fx';
     if (tool === 'fx') loadFxRate(false);
-    else if (tool === 'phrase') { renderPhraseCatChips(); renderPhraseList(); }
     else if (tool === 'checklist') renderChecklist();
+  }
+  if (name === 'phrase') {
+    renderPhraseCatChips();
+    renderPhraseList();
   }
 }
 
@@ -4992,14 +4994,75 @@ function renderPhraseList() {
   `).join('');
 }
 
+function romajiToKorean(str) {
+  str = (str||'').toLowerCase()
+    .replace(/ā/g,'aa').replace(/ō/g,'oo').replace(/ū/g,'uu')
+    .replace(/ē/g,'ee').replace(/ī/g,'ii');
+  const map = [
+    ['kya','캬'],['kyu','큐'],['kyo','쿄'],
+    ['sha','샤'],['shi','시'],['shu','슈'],['she','쉐'],['sho','쇼'],
+    ['chi','치'],['cha','챠'],['chu','추'],['che','체'],['cho','초'],
+    ['tsu','쓰'],['tya','챠'],['tyu','츄'],['tyo','쵸'],
+    ['nya','냐'],['nyu','뉴'],['nyo','뇨'],
+    ['hya','햐'],['hyu','휴'],['hyo','효'],
+    ['mya','먀'],['myu','뮤'],['myo','묘'],
+    ['rya','랴'],['ryu','류'],['ryo','료'],
+    ['gya','갸'],['gyu','규'],['gyo','교'],
+    ['bya','뱌'],['byu','뷰'],['byo','뵤'],
+    ['pya','퍄'],['pyu','퓨'],['pyo','표'],
+    ['ka','카'],['ki','키'],['ku','쿠'],['ke','케'],['ko','코'],
+    ['sa','사'],['si','시'],['su','스'],['se','세'],['so','소'],
+    ['ta','타'],['ti','치'],['tu','쓰'],['te','테'],['to','토'],
+    ['na','나'],['ni','니'],['nu','누'],['ne','네'],['no','노'],
+    ['ha','하'],['hi','히'],['fu','후'],['hu','후'],['he','헤'],['ho','호'],
+    ['ma','마'],['mi','미'],['mu','무'],['me','메'],['mo','모'],
+    ['ya','야'],['yu','유'],['yo','요'],
+    ['ra','라'],['ri','리'],['ru','루'],['re','레'],['ro','로'],
+    ['wa','와'],['wi','위'],['we','웨'],['wo','오'],
+    ['ga','가'],['gi','기'],['gu','구'],['ge','게'],['go','고'],
+    ['za','자'],['zi','지'],['zu','즈'],['ze','제'],['zo','조'],
+    ['da','다'],['di','지'],['du','즈'],['de','데'],['do','도'],
+    ['ja','자'],['ji','지'],['ju','주'],['je','제'],['jo','조'],
+    ['ba','바'],['bi','비'],['bu','부'],['be','베'],['bo','보'],
+    ['pa','파'],['pi','피'],['pu','푸'],['pe','페'],['po','포'],
+    ['nn','ン'],['n ','은 '],['n','은'],
+    ['a','아'],['i','이'],['u','우'],['e','에'],['o','오'],
+    [' ',' ']
+  ];
+  let result = '', idx = 0;
+  while (idx < str.length) {
+    // double consonant handling (っ effect)
+    if (idx < str.length - 1 && str[idx] === str[idx+1] && 'kstpgzdbhmnr'.includes(str[idx])) {
+      idx++; continue;
+    }
+    let found = false;
+    for (const [from, to] of map) {
+      if (str.startsWith(from, idx)) {
+        result += to; idx += from.length; found = true; break;
+      }
+    }
+    if (!found) { result += str[idx]; idx++; }
+  }
+  return result;
+}
+
 async function translateKoToJa(text) {
   try {
     const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=ja&dt=t&dt=rm&q=' + encodeURIComponent(text);
     const res = await fetch(url);
     const data = await res.json();
     const ja = (data[0] || []).map(i => i[0] || '').join('').trim();
-    const pron = (data[0] || []).map(i => i[3] || '').join('').trim() || '';
-    return { ja, pron };
+    if (!ja) return { ja: '', pron: '' };
+    // Get Japanese romaji via second call, then convert to Korean phonetics
+    try {
+      const url2 = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=en&dt=t&dt=rm&q=' + encodeURIComponent(ja);
+      const res2 = await fetch(url2);
+      const data2 = await res2.json();
+      const romaji = (data2[0] || []).map(i => i[3] || '').join('').trim()
+        || (typeof data2[2] === 'string' ? data2[2] : '');
+      const pron = romaji ? romajiToKorean(romaji) : '';
+      return { ja, pron };
+    } catch(e2) { return { ja, pron: '' }; }
   } catch(e) { return { ja: '', pron: '' }; }
 }
 
@@ -5166,10 +5229,7 @@ function selectToolChip(el, tool) {
   document.querySelectorAll('.tool-pane').forEach(p => p.style.display = 'none');
   const pane = document.getElementById('tool-' + tool);
   if (pane) pane.style.display = '';
-  if (tool === 'phrase') {
-    renderPhraseCatChips();
-    renderPhraseList();
-  } else if (tool === 'checklist') {
+  if (tool === 'checklist') {
     renderChecklist();
   } else if (tool === 'fx') {
     loadFxRate(false);

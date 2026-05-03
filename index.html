@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&family=Gothic+A1:wght@400;600;700;800;900&family=Do+Hyeon&family=Sunflower:wght@300;500;700&family=Jua&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #F0EDE8;
@@ -41,6 +41,7 @@
     --input-bg: #fff;
     --input-border: #E2E8F0;
     --surface: #F8FAFC;
+    --font: 'Noto Sans KR', -apple-system, sans-serif;
   }
   /* ===== THEMES ===== */
   [data-theme="ios-blue"] {
@@ -59,6 +60,7 @@
     --input-bg: #FFFFFF;
     --input-border: #C7C7CC;
     --surface: #EFEFF4;
+    --font: 'Gothic A1', -apple-system, sans-serif;
   }
   [data-theme="dark"] {
     --bg: #000000;
@@ -79,6 +81,7 @@
     --input-bg: #2C2C2E;
     --input-border: #3A3A3C;
     --surface: #2C2C2E;
+    --font: 'Do Hyeon', sans-serif;
   }
   [data-theme="mint"] {
     --bg: #F0FAF5;
@@ -96,6 +99,7 @@
     --input-bg: #fff;
     --input-border: #D1FAE5;
     --surface: #F0FAF5;
+    --font: 'Sunflower', sans-serif;
   }
   [data-theme="sunset"] {
     --bg: #FFF8F0;
@@ -113,13 +117,14 @@
     --input-bg: #fff;
     --input-border: #FED7AA;
     --surface: #FFF7ED;
+    --font: 'Jua', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    font-family: var(--font);
     font-size: 14px;
     position: relative;
     -webkit-font-smoothing: antialiased;
@@ -175,7 +180,7 @@
     border: none; color: #fff; font-size: 11.5px; font-weight: 800;
     padding: 8px 12px; border-radius: 50px; cursor: pointer;
     box-shadow: 0 3px 10px rgba(214,79,123,0.32);
-    font-family: 'Noto Sans KR', sans-serif; letter-spacing: -0.2px;
+    font-family: var(--font); letter-spacing: -0.2px;
     transition: transform 0.18s, box-shadow 0.18s;
     white-space: nowrap;
     animation: installPulse 2.4s ease-in-out infinite;
@@ -209,53 +214,97 @@
   .tab-pane.active { display: block; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* ===== BOTTOM NAV ===== */
+  /* ===== BOTTOM NAV — 견출지 3D 탭 ===== */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
-    background: var(--nav-bg); backdrop-filter: blur(24px);
-    border-top: 1px solid rgba(0,0,0,0.06);
-    display: flex; z-index: 100;
-    box-shadow: 0 -4px 28px rgba(0,0,0,0.09);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: transparent;
+    display: flex; align-items: flex-end; z-index: 100;
+    padding: 0 4px env(safe-area-inset-bottom, 0px);
+    gap: 3px;
+    overflow: visible;
+    pointer-events: none;
   }
   .nav-btn {
     flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 0; cursor: pointer; border: none; background: none;
-    color: #A0AABB;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 10px; font-weight: 800;
-    letter-spacing: -0.4px;
-    transition: color 0.22s ease;
-    padding: 6px 0 10px;
-    position: relative; outline: none;
+    gap: 2px; cursor: pointer;
+    font-family: var(--font);
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.3px;
+    outline: none;
     -webkit-tap-highlight-color: transparent;
     min-width: 0;
+    pointer-events: all;
+    /* 견출지 탭 모양 */
+    border-radius: 10px 10px 0 0;
+    border: 1.5px solid rgba(0,0,0,0.10);
+    border-bottom: none;
+    height: 62px;
+    padding: 10px 2px 12px;
+    position: relative;
+    transition: transform 0.22s cubic-bezier(.32,1,.36,1),
+                height 0.22s cubic-bezier(.32,1,.36,1),
+                box-shadow 0.22s cubic-bezier(.32,1,.36,1);
+    /* 3D 깊이 효과 */
+    box-shadow: 0 -3px 0 rgba(0,0,0,0.10), 2px 0 4px rgba(0,0,0,0.06), -2px 0 4px rgba(0,0,0,0.06);
+    /* 상단 광택 */
+    overflow: hidden;
+    color: #60748A;
   }
-  /* 상단 인디케이터 바 */
+  /* 견출지별 색상 (파스텔 포스트잇 느낌) */
+  .nav-btn:nth-child(1) { background: linear-gradient(170deg, #FFE8EC, #FFC8D4); border-color: #FFB3C1; }
+  .nav-btn:nth-child(2) { background: linear-gradient(170deg, #E3F0FF, #C2DCFF); border-color: #A9CCFF; }
+  .nav-btn:nth-child(3) { background: linear-gradient(170deg, #E0FAF0, #B8F0D8); border-color: #94E8C0; }
+  .nav-btn:nth-child(4) { background: linear-gradient(170deg, #FFFAE0, #FFF0A0); border-color: #FFE060; }
+  .nav-btn:nth-child(5) { background: linear-gradient(170deg, #EEE6FF, #D8C8FF); border-color: #C4AAFF; }
+  .nav-btn:nth-child(6) { background: linear-gradient(170deg, #FFE8D8, #FFD0B0); border-color: #FFB88A; }
+  .nav-btn:nth-child(7) { background: linear-gradient(170deg, #E0F8FA, #B8EEF4); border-color: #8AE0EC; }
+  /* 상단 광택 레이어 */
   .nav-btn::before {
     content: '';
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%) scaleX(0);
-    width: 32px; height: 3px; border-radius: 0 0 3px 3px;
-    background: linear-gradient(90deg, var(--pink), var(--pink2));
-    transition: transform 0.3s cubic-bezier(.32,1,.36,1);
-    transform-origin: center;
+    position: absolute; top: 0; left: 0; right: 0; height: 45%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%);
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
   }
-  .nav-btn.active::before { transform: translateX(-50%) scaleX(1); }
-  /* 텍스트 레이블 */
+  /* 탭 텍스트 */
   .nav-btn .nav-label {
     display: inline-block;
-    transition: transform 0.22s cubic-bezier(.32,1,.36,1), color 0.22s;
-    padding: 5px 6px 4px;
-    border-radius: 20px;
     line-height: 1;
+    transition: transform 0.22s cubic-bezier(.32,1,.36,1);
+    font-size: 20px;
+    position: relative; z-index: 1;
   }
-  .nav-btn.active { color: var(--pink); }
-  .nav-btn.active .nav-label {
-    background: linear-gradient(135deg, rgba(214,79,123,0.1), rgba(124,58,237,0.08));
-    transform: translateY(-1px);
-    color: var(--pink);
+  /* 비활성 탭 — 살짝 내려가 있음 */
+  .nav-btn { transform: translateY(4px); }
+  /* 활성 탭 — 위로 튀어 나옴 */
+  .nav-btn.active {
+    transform: translateY(-8px);
+    height: 72px;
+    box-shadow: 0 -6px 0 rgba(0,0,0,0.13), 3px 0 8px rgba(0,0,0,0.10), -3px 0 8px rgba(0,0,0,0.10), 0 -2px 16px rgba(0,0,0,0.08);
+    color: #1A1A2E;
+    font-weight: 900;
+    z-index: 10;
   }
-  /* 탭 클릭 스프링 애니메이션 */
+  .nav-btn:nth-child(1).active { border-color: #FF8FAB; background: linear-gradient(170deg, #FFF0F3, #FFD6DF); }
+  .nav-btn:nth-child(2).active { border-color: #6AABFF; background: linear-gradient(170deg, #F0F7FF, #D6E8FF); }
+  .nav-btn:nth-child(3).active { border-color: #4DD4A0; background: linear-gradient(170deg, #F0FFF8, #D0F5E8); }
+  .nav-btn:nth-child(4).active { border-color: #FFD000; background: linear-gradient(170deg, #FFFEF0, #FFF8C0); }
+  .nav-btn:nth-child(5).active { border-color: #A080FF; background: linear-gradient(170deg, #F8F4FF, #EAD8FF); }
+  .nav-btn:nth-child(6).active { border-color: #FF9040; background: linear-gradient(170deg, #FFF5F0, #FFE0C8); }
+  .nav-btn:nth-child(7).active { border-color: #30C8E0; background: linear-gradient(170deg, #F0FCFF, #C8F0F8); }
+  /* 눌림 효과 */
+  .nav-btn:active { transform: translateY(2px) scale(0.97); }
+  /* 다크 테마 탭 */
+  [data-theme="dark"] .nav-btn { border-color: rgba(255,255,255,0.15); color: #A0AABB; }
+  [data-theme="dark"] .nav-btn:nth-child(1) { background: linear-gradient(170deg, #3D1520, #5A2030); }
+  [data-theme="dark"] .nav-btn:nth-child(2) { background: linear-gradient(170deg, #0D2040, #1A3560); }
+  [data-theme="dark"] .nav-btn:nth-child(3) { background: linear-gradient(170deg, #0A2E1E, #144D30); }
+  [data-theme="dark"] .nav-btn:nth-child(4) { background: linear-gradient(170deg, #2E2800, #4A4000); }
+  [data-theme="dark"] .nav-btn:nth-child(5) { background: linear-gradient(170deg, #1E1040, #32186A); }
+  [data-theme="dark"] .nav-btn:nth-child(6) { background: linear-gradient(170deg, #3A1800, #5C2800); }
+  [data-theme="dark"] .nav-btn:nth-child(7) { background: linear-gradient(170deg, #063040, #0A4A60); }
+  [data-theme="dark"] .nav-btn.active { color: #FFFFFF; }
+  /* 탭 클릭 스프링 */
   .nav-btn:active .nav-label { animation: navSpring 0.3s cubic-bezier(.36,2,.6,1) forwards; }
   @keyframes navSpring {
     0%   { transform: scale(1) translateY(0); }
@@ -288,7 +337,7 @@
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 5px;
     padding: 11px 20px; border-radius: 50px; border: none; cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: var(--font);
     font-size: 13px; font-weight: 800; transition: all 0.22s cubic-bezier(.32,1,.36,1);
     white-space: nowrap; letter-spacing: -0.2px;
   }
@@ -334,7 +383,7 @@
     border: 1.5px solid #E8EDF4; background: #fff; color: var(--text-dim);
     transition: all 0.22s cubic-bezier(.32,1,.36,1); white-space: nowrap;
     box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    font-family: 'Noto Sans KR', sans-serif; letter-spacing: -0.2px;
+    font-family: var(--font); letter-spacing: -0.2px;
   }
   .chip:active { transform: scale(0.94); }
   .chip.active {
@@ -634,14 +683,14 @@
     width: 100%; padding: 12px 15px; background: #fff; border: 1.5px solid #E8EDF4;
     border-radius: var(--radius-sm); color: var(--text); font-size: 14px; outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: var(--font);
   }
   .form-input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(214,79,123,0.1); }
   .form-select {
     width: 100%; padding: 12px 15px; background: #fff; border: 1.5px solid #E8EDF4;
     border-radius: var(--radius-sm); color: var(--text); font-size: 14px; outline: none;
     -webkit-appearance: none; appearance: none;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: var(--font);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748B' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 14px center;
   }
@@ -797,7 +846,7 @@
   .trip-mgr-embed-btn {
     width: 100%; padding: 14px; border-radius: var(--radius-sm); margin-bottom: 10px;
     border: none; background: linear-gradient(135deg, var(--pink), var(--pink2));
-    color: #fff; font-family: 'Noto Sans KR', sans-serif;
+    color: #fff; font-family: var(--font);
     font-size: 14px; font-weight: 800; cursor: pointer; letter-spacing: -0.2px;
     box-shadow: 0 4px 14px rgba(214,79,123,0.35); transition: all 0.2s;
   }
@@ -807,7 +856,7 @@
   }
   .trip-mgr-io-btn {
     padding: 11px 8px; border-radius: var(--radius-sm); border: 1.5px solid rgba(0,0,0,0.08);
-    background: #F8FAFC; color: var(--text); font-family: 'Noto Sans KR', sans-serif;
+    background: #F8FAFC; color: var(--text); font-family: var(--font);
     font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center;
     justify-content: center; gap: 6px; transition: all 0.18s;
   }
@@ -816,7 +865,7 @@
   .trip-mgr-io-btn.import { border-color: rgba(214,79,123,0.4); color: var(--pink); background: rgba(214,79,123,0.06); }
   .trip-mgr-new-btn {
     width: 100%; padding: 16px; border-radius: var(--radius); border: 2px dashed rgba(214,79,123,0.35);
-    background: rgba(214,79,123,0.04); color: var(--pink); font-family: 'Noto Sans KR', sans-serif;
+    background: rgba(214,79,123,0.04); color: var(--pink); font-family: var(--font);
     font-size: 14px; font-weight: 800; cursor: pointer; margin-bottom: 16px;
     display: flex; align-items: center; justify-content: center; gap: 8px;
     transition: all 0.22s; letter-spacing: -0.2px;

@@ -2171,6 +2171,50 @@
   </div>
 </div>
 
+<!-- Flight Monitor Setup Modal -->
+<div class="overlay" id="flightMonitorModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">📡 항공편 실시간 알림 설정</div>
+    </div>
+    <div class="sheet-body">
+      <div class="info-note" style="margin-bottom:16px;line-height:1.7;font-size:13px;">
+        오늘 일정에 입력된 항공편의 <strong>지연</strong>·<strong>게이트 변경</strong> 여부를<br>
+        5분마다 자동으로 확인하고, 이상이 있을 경우<br>
+        도착항공 / 출발항공 버튼이 <strong>주황색으로 점멸</strong>하며 알려줍니다.
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">1</div>
+        <div>
+          아래 링크에서 <strong>무료 가입</strong>하세요 (월 1,000회 무료)<br>
+          <a href="https://airlabs.co" target="_blank" rel="noopener"
+             style="color:var(--pink);font-weight:700;text-decoration:underline;">
+            🔗 airlabs.co 바로가기
+          </a>
+        </div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">2</div>
+        <div>로그인 후 <strong>대시보드 → API Key</strong> 항목에서 키를 복사하세요.</div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">3</div>
+        <div>복사한 키를 아래에 붙여넣고 저장하세요. 이후 자동으로 작동합니다.</div>
+      </div>
+      <div style="margin-top:14px;">
+        <label class="form-label">API Key</label>
+        <input class="form-input" id="flightApiKeyInput" placeholder="여기에 API 키 붙여넣기..." style="font-size:12px;letter-spacing:0.5px;">
+      </div>
+      <div id="flightApiKeyStatus" style="font-size:11px;color:var(--text-dim);margin-top:6px;text-align:center;"></div>
+    </div>
+    <div class="sheet-footer" style="display:flex;gap:10px;padding:16px;">
+      <button class="btn-outline" style="flex:1;" onclick="closeFlightMonitorModal()">취소</button>
+      <button class="btn-primary" style="flex:2;" onclick="saveFlightApiKey()">✅ 저장 & 시작</button>
+    </div>
+  </div>
+</div>
+
 <!-- iOS install guide sheet -->
 <div class="overlay" id="iosInstallSheet">
   <div class="sheet">
@@ -5654,26 +5698,32 @@ function startFlightMonitor() {
 
 function setupFlightApiKey() {
   const cur = localStorage.getItem(FLIGHT_API_KEY_LS) || '';
-  const masked = cur ? cur.slice(0, 6) + '...' : '미설정';
-  const key = prompt(
-    '✈️ 항공편 실시간 알림 설정\n\n' +
-    '① airlabs.co 무료 가입 → API Key 복사\n' +
-    '② 아래에 붙여넣기\n\n' +
-    '현재: ' + masked +
-    '\n(비워두면 알림 비활성화)',
-    cur
-  );
-  if (key === null) return;
-  if (key.trim()) {
-    localStorage.setItem(FLIGHT_API_KEY_LS, key.trim());
+  const input = document.getElementById('flightApiKeyInput');
+  const status = document.getElementById('flightApiKeyStatus');
+  if (input) input.value = cur;
+  if (status) status.textContent = cur ? '현재 키: ' + cur.slice(0,6) + '...' + cur.slice(-4) + '  (비워두면 비활성화)' : '';
+  document.getElementById('flightMonitorModal').classList.add('open');
+}
+function closeFlightMonitorModal() {
+  document.getElementById('flightMonitorModal').classList.remove('open');
+}
+function saveFlightApiKey() {
+  const key = (document.getElementById('flightApiKeyInput').value || '').trim();
+  if (key) {
+    localStorage.setItem(FLIGHT_API_KEY_LS, key);
+    closeFlightMonitorModal();
     if (typeof showToast === 'function') showToast('✅ 항공편 모니터링 시작. 오늘 항공편을 5분마다 확인합니다.');
     startFlightMonitor();
   } else {
     localStorage.removeItem(FLIGHT_API_KEY_LS);
     document.querySelectorAll('.t-arrive,.t-depart').forEach(b => b.classList.remove('flight-alert'));
+    closeFlightMonitorModal();
     if (typeof showToast === 'function') showToast('항공편 모니터링이 비활성화되었습니다.');
   }
 }
+document.getElementById('flightMonitorModal').addEventListener('click', function(e) {
+  if (e.target === this) closeFlightMonitorModal();
+});
 
 // 앱 시작 시 모니터 가동 (API 키 있을 때만 실제 작동)
 startFlightMonitor();

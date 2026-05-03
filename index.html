@@ -1152,6 +1152,92 @@
     flex-shrink: 0;
   }
 
+  /* ===== SHARE MODAL ===== */
+  .share-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-radius: 28px 28px 0 0;
+    padding: 12px 20px 40px;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(.32,1,.36,1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+  }
+  .share-sheet.open { transform: translateY(0); }
+  .share-sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--input-border); margin: 0 auto 18px; }
+  .share-sheet-title { font-size: 17px; font-weight: 800; color: var(--text); text-align: center; margin-bottom: 6px; letter-spacing: -0.4px; }
+  .share-trip-preview {
+    background: var(--surface); border-radius: 16px;
+    padding: 14px 16px; margin-bottom: 18px;
+    border: 1px solid var(--card-border);
+  }
+  .share-trip-name { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .share-trip-meta { font-size: 12px; color: var(--text-dim); }
+  .share-btn-kakao {
+    width: 100%; padding: 15px; border-radius: 16px; border: none; cursor: pointer;
+    background: #FEE500; color: #3A1D1D; font-size: 15px; font-weight: 800;
+    font-family: var(--font);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 14px rgba(254,229,0,0.4);
+    transition: all 0.2s; margin-bottom: 10px;
+  }
+  .share-btn-kakao:active { transform: scale(0.97); }
+  .share-btn-copy {
+    width: 100%; padding: 13px; border-radius: 16px;
+    background: var(--surface); border: 1.5px solid var(--input-border);
+    color: var(--text); font-size: 14px; font-weight: 700;
+    font-family: var(--font); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .share-btn-copy:active { transform: scale(0.97); }
+
+  /* ===== SHARE IMPORT DIALOG ===== */
+  .share-import-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 1100; display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.28s;
+  }
+  .share-import-overlay.open { opacity: 1; pointer-events: all; }
+  .share-import-sheet {
+    width: 100%; background: var(--card);
+    border-radius: 28px 28px 0 0;
+    padding: 16px 20px 44px;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(.32,1,.36,1);
+  }
+  .share-import-overlay.open .share-import-sheet { transform: translateY(0); }
+  .share-import-icon { text-align: center; font-size: 48px; margin-bottom: 8px; }
+  .share-import-title { font-size: 20px; font-weight: 900; color: var(--text); text-align: center; margin-bottom: 6px; }
+  .share-import-sub { font-size: 13px; color: var(--text-dim); text-align: center; margin-bottom: 18px; line-height: 1.6; }
+  .share-import-card {
+    background: var(--surface); border-radius: 16px;
+    padding: 14px 16px; margin-bottom: 18px;
+    border: 1.5px solid var(--pink);
+  }
+  .share-import-trip-name { font-size: 16px; font-weight: 800; color: var(--pink); margin-bottom: 4px; }
+  .share-import-trip-meta { font-size: 12px; color: var(--text-dim); }
+  .share-import-btns { display: flex; flex-direction: column; gap: 10px; }
+  .share-import-btn-main {
+    width: 100%; padding: 15px; border-radius: 16px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    color: #fff; font-size: 15px; font-weight: 800; font-family: var(--font);
+    box-shadow: 0 4px 14px rgba(214,79,123,0.35);
+    transition: all 0.2s;
+  }
+  .share-import-btn-main:active { transform: scale(0.97); }
+  .share-import-btn-install {
+    width: 100%; padding: 13px; border-radius: 16px; border: none; cursor: pointer;
+    background: #FEE500; color: #3A1D1D; font-size: 14px; font-weight: 800;
+    font-family: var(--font); transition: all 0.2s;
+  }
+  .share-import-btn-install:active { transform: scale(0.97); }
+  .share-import-btn-skip {
+    width: 100%; padding: 11px; border-radius: 16px; cursor: pointer;
+    background: none; border: 1.5px solid var(--input-border);
+    color: var(--text-dim); font-size: 13px; font-weight: 700; font-family: var(--font);
+  }
+
   /* ===== THEME PICKER ===== */
   .theme-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.4);
@@ -1207,6 +1293,41 @@
 </head>
 <body>
 
+<!-- Share Modal -->
+<div class="theme-overlay" id="shareOverlay" onclick="closeShareModal()"></div>
+<div class="share-sheet" id="shareSheet">
+  <div class="share-sheet-handle"></div>
+  <div class="share-sheet-title">✈️ 일정 공유</div>
+  <div class="share-trip-preview" id="shareTripPreview">
+    <div class="share-trip-name" id="shareTripName">여행 이름</div>
+    <div class="share-trip-meta" id="shareTripMeta"></div>
+  </div>
+  <button class="share-btn-kakao" onclick="doShare('kakao')">
+    <span style="font-size:20px;">💬</span> 카카오톡으로 공유
+  </button>
+  <button class="share-btn-copy" onclick="doShare('copy')">
+    <span>🔗</span> 링크 복사
+  </button>
+</div>
+
+<!-- Share Import Dialog (수신자용) -->
+<div class="share-import-overlay" id="shareImportOverlay">
+  <div class="share-import-sheet">
+    <div class="share-import-icon">✈️</div>
+    <div class="share-import-title">여행 일정 공유받음</div>
+    <div class="share-import-sub">누군가 여행 일정을 공유했습니다.<br>내 앱에 추가하거나 앱을 설치해보세요!</div>
+    <div class="share-import-card" id="shareImportCard">
+      <div class="share-import-trip-name" id="shareImportName"></div>
+      <div class="share-import-trip-meta" id="shareImportMeta"></div>
+    </div>
+    <div class="share-import-btns">
+      <button class="share-import-btn-main" onclick="importSharedTrip()">📥 일정 내 앱에 추가</button>
+      <button class="share-import-btn-install" id="shareInstallBtn" onclick="installSharedApp()" style="display:none;">📲 앱으로 설치하기</button>
+      <button class="share-import-btn-skip" onclick="skipSharedTrip()">그냥 둘러보기</button>
+    </div>
+  </div>
+</div>
+
 <!-- Theme Picker -->
 <div class="theme-overlay" id="themeOverlay" onclick="closeThemePicker()"></div>
 <div class="theme-sheet" id="themeSheet">
@@ -1250,6 +1371,7 @@
     </div>
     <div class="header-right">
       <button id="installBtn" class="install-btn" onclick="onInstallClick()" style="display:none;" title="앱 설치">📲 앱 설치</button>
+      <button class="refresh-btn" onclick="openShareModal()" title="일정 공유" style="font-size:17px;">📤</button>
       <button class="refresh-btn" onclick="openThemePicker()" title="테마 변경" style="font-size:17px;">🎨</button>
       <button class="refresh-btn" onclick="location.reload()" title="새로고침">↻</button>
     </div>
@@ -2134,6 +2256,109 @@ function getTypeLabel(type) {
 }
 
 // ========== INIT ==========
+// ========== SHARE ==========
+const SHARE_BASE_URL = 'https://qnwk1968-web.github.io/japan-travel-planner/';
+let _sharedTripData = null;
+let _deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+});
+
+function generateShareUrl(trip) {
+  try {
+    const data = JSON.stringify({ trip });
+    const encoded = btoa(unescape(encodeURIComponent(data)));
+    return SHARE_BASE_URL + '#share=' + encoded;
+  } catch(e) { return SHARE_BASE_URL; }
+}
+
+function openShareModal() {
+  const trip = getActiveTrip();
+  if (!trip) { showToast('공유할 여행이 없습니다'); return; }
+  const items = trip.items || [];
+  const dates = items.map(i => i.date || i.checkin).filter(Boolean).sort();
+  const meta = `일정 ${items.length}개${dates.length ? ' · ' + dates[0] + (dates[dates.length-1] !== dates[0] ? ' ~ ' + dates[dates.length-1] : '') : ''}`;
+  document.getElementById('shareTripName').textContent = trip.name;
+  document.getElementById('shareTripMeta').textContent = meta;
+  document.getElementById('shareOverlay').classList.add('open');
+  document.getElementById('shareSheet').classList.add('open');
+}
+
+function closeShareModal() {
+  document.getElementById('shareOverlay').classList.remove('open');
+  document.getElementById('shareSheet').classList.remove('open');
+}
+
+async function doShare(type) {
+  const trip = getActiveTrip();
+  if (!trip) return;
+  const url = generateShareUrl(trip);
+  const title = `✈️ ${trip.name}`;
+  const text = `일본 여행 일정을 공유합니다! 링크를 열면 일정을 바로 확인하고 앱으로 설치할 수 있어요 🗾`;
+  closeShareModal();
+  if (type === 'kakao' && navigator.share) {
+    try {
+      await navigator.share({ title, text: text + '\n' + url });
+    } catch(e) {
+      if (e.name !== 'AbortError') { navigator.clipboard?.writeText(url); showToast('링크 복사됨!'); }
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('🔗 링크가 복사됐습니다!');
+    } catch(e) { showToast('링크: ' + url); }
+  }
+}
+
+function checkIncomingShare() {
+  const hash = location.hash;
+  if (!hash.startsWith('#share=')) return;
+  const encoded = hash.slice(7);
+  history.replaceState(null, '', location.pathname);
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (!data.trip) return;
+    _sharedTripData = data.trip;
+    const trip = data.trip;
+    const items = trip.items || [];
+    const dates = items.map(i => i.date || i.checkin).filter(Boolean).sort();
+    const meta = `일정 ${items.length}개${dates.length ? ' · ' + dates[0] + (dates[dates.length-1] !== dates[0] ? ' ~ ' + dates[dates.length-1] : '') : ''}`;
+    document.getElementById('shareImportName').textContent = trip.name;
+    document.getElementById('shareImportMeta').textContent = meta;
+    if (_deferredInstallPrompt) document.getElementById('shareInstallBtn').style.display = '';
+    document.getElementById('shareImportOverlay').classList.add('open');
+  } catch(e) { console.warn('share parse error', e); }
+}
+
+function importSharedTrip() {
+  if (!_sharedTripData) return;
+  const trip = JSON.parse(JSON.stringify(_sharedTripData));
+  trip.id = 'trip_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  trip.name = (trip.name || '공유 여행') + ' (공유받음)';
+  const all = getAllTrips();
+  all.push(trip);
+  saveTrips(all);
+  setActiveTripId(trip.id);
+  document.getElementById('shareImportOverlay').classList.remove('open');
+  renderItinerary();
+  showToast('✅ 일정이 추가됐습니다!');
+  _sharedTripData = null;
+}
+
+async function installSharedApp() {
+  if (_deferredInstallPrompt) {
+    _deferredInstallPrompt.prompt();
+    const result = await _deferredInstallPrompt.userChoice;
+    if (result.outcome === 'accepted') { _deferredInstallPrompt = null; }
+  }
+}
+
+function skipSharedTrip() {
+  document.getElementById('shareImportOverlay').classList.remove('open');
+}
+
 // ========== THEME ==========
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
@@ -2174,6 +2399,7 @@ function initApp() {
   initTrips();
   renderItinerary();
   renderCityGrid();
+  checkIncomingShare();
   // Background fetch FX rate so expense card uses live rate
   loadFxRate(false);
 }
@@ -3967,14 +4193,22 @@ function getWeatherEmoji(code) {
 
 const WEATHER_CITIES_KEY = 'japan_weather_cities';
 const DEFAULT_CITIES = [
-  {city:'Tokyo',    label:'도쿄',    emoji:'🗼'},
-  {city:'Osaka',    label:'오사카',  emoji:'🏯'},
-  {city:'Fukuoka',  label:'후쿠오카',emoji:'🎌'},
-  {city:'Sapporo',  label:'삿포로',  emoji:'⛄'},
-  {city:'Nagoya',   label:'나고야',  emoji:'🦐'},
-  {city:'Kyoto',    label:'교토',    emoji:'⛩️'},
-  {city:'Naha',     label:'나하',    emoji:'🌺'},
-  {city:'Kagoshima',label:'가고시마',emoji:'🌋'},
+  {city:'Tokyo',       label:'도쿄',    emoji:'🗼'},
+  {city:'Osaka',       label:'오사카',  emoji:'🏯'},
+  {city:'Fukuoka',     label:'후쿠오카',emoji:'🎌'},
+  {city:'Sapporo',     label:'삿포로',  emoji:'⛄'},
+  {city:'Nagoya',      label:'나고야',  emoji:'🦐'},
+  {city:'Kyoto',       label:'교토',    emoji:'⛩️'},
+  {city:'Naha',        label:'나하',    emoji:'🌺'},
+  {city:'Kagoshima',   label:'가고시마',emoji:'🌋'},
+  {city:'Yufuin',      label:'유후인',  emoji:'♨️'},
+  {city:'Hita',        label:'히타시',  emoji:'🏞️'},
+  {city:'Kitakyushu',  label:'키타큐슈',emoji:'🏭'},
+  {city:'Shimonoseki', label:'시모노세키',emoji:'🐡'},
+  {city:'Beppu',       label:'벳푸',    emoji:'🌊'},
+  {city:'Okayama',     label:'오카야마',emoji:'🍑'},
+  {city:'Kurashiki',   label:'구라시키',emoji:'⛵'},
+  {city:'Aomori',      label:'아오모리',emoji:'🍎'},
 ];
 
 function getWeatherCities() {

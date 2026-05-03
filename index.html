@@ -190,6 +190,19 @@
     0%,100% { box-shadow: 0 3px 10px rgba(214,79,123,0.32); }
     50%     { box-shadow: 0 3px 14px rgba(214,79,123,0.55); }
   }
+  @keyframes flightBlink {
+    0%,100% { opacity:1; box-shadow:0 4px 12px rgba(255,152,0,0.25); }
+    50%     { opacity:0.5; box-shadow:0 4px 28px rgba(255,152,0,0.9); filter:brightness(1.2); }
+  }
+  .btn-type.flight-alert {
+    animation: flightBlink 1.6s ease-in-out infinite !important;
+    outline: 2.5px solid #ff9800 !important;
+    outline-offset: 2px;
+  }
+  .flight-monitor-link {
+    display:block; text-align:center; font-size:11px; color:var(--pink);
+    text-decoration:underline; cursor:pointer; margin-top:6px; padding:4px;
+  }
   /* iOS install guide steps */
   .ios-step {
     display: flex; align-items: flex-start; gap: 12px;
@@ -1724,6 +1737,7 @@
           <label class="form-label">메모</label>
           <input class="form-input" id="fa-memo" placeholder="메모...">
         </div>
+        <span class="flight-monitor-link" onclick="setupFlightApiKey()">📡 실시간 지연·게이트 알림 설정</span>
       </div>
 
       <!-- FLIGHT DEPARTURE fields -->
@@ -1769,6 +1783,7 @@
           <label class="form-label">메모</label>
           <input class="form-input" id="fd-memo" placeholder="메모...">
         </div>
+        <span class="flight-monitor-link" onclick="setupFlightApiKey()">📡 실시간 지연·게이트 알림 설정</span>
       </div>
 
       <!-- HOTEL fields -->
@@ -5570,6 +5585,98 @@ function closeIosInstallSheet() {
 document.getElementById('iosInstallSheet').addEventListener('click', function(e) {
   if (e.target === this) closeIosInstallSheet();
 });
+
+// ===== FLIGHT MONITOR =====
+const FLIGHT_API_KEY_LS = 'flight_monitor_api_key';
+let flightMonitorInterval = null;
+let flightAlertCache = {}; // { code: { delayed, gate, alerted } }
+
+async function fetchFlightStatus(flightIata) {
+  const key = localStorage.getItem(FLIGHT_API_KEY_LS);
+  if (!key) return null;
+  try {
+    const r = await fetch(
+      `https://airlabs.co/api/v9/flight?api_key=${encodeURIComponent(key)}&flight_iata=${encodeURIComponent(flightIata.toUpperCase())}`
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.response || null;
+  } catch { return null; }
+}
+
+async function runFlightCheck() {
+  const trip = typeof getActiveTrip === 'function' ? getActiveTrip() : null;
+  if (!trip?.items?.length) return;
+  const today = new Date().toISOString().split('T')[0];
+
+  const flightItems = trip.items.filter(it =>
+    (it.type === 'flight_arrival' || it.type === 'flight_departure') &&
+    it.flight && it.date === today
+  );
+  if (!flightItems.length) return;
+
+  for (const item of flightItems) {
+    const code = item.flight.toUpperCase().replace(/\s/g, '');
+    const status = await fetchFlightStatus(code);
+    if (!status) continue;
+
+    const delayMin = Number(status.delayed || 0);
+    const hasDelay = delayMin >= 15;
+    const gate = status.dep_gate || status.arr_gate || '';
+    const prev = flightAlertCache[code] || {};
+    const gateChanged = prev.gate && gate && prev.gate !== gate;
+    const hasAlert = hasDelay || gateChanged;
+
+    const btnSel = item.type === 'flight_arrival' ? '.t-arrive' : '.t-depart';
+    const btn = document.querySelector(btnSel);
+
+    if (hasAlert) {
+      btn?.classList.add('flight-alert');
+      if (!prev.alerted) {
+        const msgs = [];
+        if (hasDelay) msgs.push(`${code} ${delayMin}분 지연`);
+        if (gateChanged) msgs.push(`게이트 변경: ${prev.gate} → ${gate}`);
+        if (typeof showToast === 'function') showToast('✈️ ' + msgs.join(' · '));
+      }
+      flightAlertCache[code] = { gate, alerted: true };
+    } else {
+      btn?.classList.remove('flight-alert');
+      flightAlertCache[code] = { gate, alerted: false };
+    }
+  }
+}
+
+function startFlightMonitor() {
+  if (flightMonitorInterval) clearInterval(flightMonitorInterval);
+  runFlightCheck();
+  flightMonitorInterval = setInterval(runFlightCheck, 5 * 60 * 1000);
+}
+
+function setupFlightApiKey() {
+  const cur = localStorage.getItem(FLIGHT_API_KEY_LS) || '';
+  const masked = cur ? cur.slice(0, 6) + '...' : '미설정';
+  const key = prompt(
+    '✈️ 항공편 실시간 알림 설정\n\n' +
+    '① airlabs.co 무료 가입 → API Key 복사\n' +
+    '② 아래에 붙여넣기\n\n' +
+    '현재: ' + masked +
+    '\n(비워두면 알림 비활성화)',
+    cur
+  );
+  if (key === null) return;
+  if (key.trim()) {
+    localStorage.setItem(FLIGHT_API_KEY_LS, key.trim());
+    if (typeof showToast === 'function') showToast('✅ 항공편 모니터링 시작. 오늘 항공편을 5분마다 확인합니다.');
+    startFlightMonitor();
+  } else {
+    localStorage.removeItem(FLIGHT_API_KEY_LS);
+    document.querySelectorAll('.t-arrive,.t-depart').forEach(b => b.classList.remove('flight-alert'));
+    if (typeof showToast === 'function') showToast('항공편 모니터링이 비활성화되었습니다.');
+  }
+}
+
+// 앱 시작 시 모니터 가동 (API 키 있을 때만 실제 작동)
+startFlightMonitor();
 </script>
 </body>
 </html>

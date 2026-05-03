@@ -1377,6 +1377,7 @@
     </div>
     <div class="header-right">
       <button id="installBtn" class="install-btn" onclick="onInstallClick()" style="display:none;" title="앱 설치">📲 앱 설치</button>
+      <button class="refresh-btn" onclick="switchTab('phrase',document.querySelectorAll('.nav-btn')[6])" title="회화" style="font-size:12px;font-weight:900;width:auto;padding:0 10px;">회화</button>
       <button class="refresh-btn" onclick="openShareModal()" title="일정 공유" style="font-size:12px;font-weight:900;width:auto;padding:0 10px;">공유</button>
       <button class="refresh-btn" onclick="openThemePicker()" title="테마 변경" style="font-size:12px;font-weight:900;width:auto;padding:0 10px;">테마</button>
       <button class="refresh-btn" onclick="location.reload()" title="새로고침">↻</button>
@@ -1420,9 +1421,6 @@
           </button>
           <button class="btn-type t-shop" onclick="openTypedModal('shop')">
             <span class="bt-icon">🛍️</span><span class="bt-label">쇼핑</span>
-          </button>
-          <button class="btn-type t-other" onclick="openTypedModal('other')">
-            <span class="bt-icon">📌</span><span class="bt-label">기타</span>
           </button>
         </div>
         <div class="itin-toolbar-bottom">

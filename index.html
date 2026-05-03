@@ -475,6 +475,58 @@
   [data-theme="dark"] .btn-type.t-shop    { background: linear-gradient(145deg,#3B1F8C,#6D28D9); color: #DDD6FE; border-bottom: 3px solid #5B21B6; }
   [data-theme="dark"] .btn-type.t-other   { background: linear-gradient(145deg,#2D3748,#475569); color: #CBD5E1; border-bottom: 3px solid #374151; }
 
+  /* ===== 다크 테마 전용 텍스트/배경 오버라이드 ===== */
+  [data-theme="dark"] .btn-outline {
+    background: #2C2C2E; border-color: #48484A; color: #FFFFFF;
+  }
+  [data-theme="dark"] .btn-outline:active { background: #3A3A3C; }
+  [data-theme="dark"] .refresh-btn {
+    background: #2C2C2E; border-color: #48484A; color: #EBEBF5;
+  }
+  [data-theme="dark"] .date-header {
+    background: linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%);
+    color: #FFFFFF;
+  }
+  [data-theme="dark"] .itinerary-item {
+    background: #1C1C1E; border-color: rgba(255,255,255,0.08);
+  }
+  [data-theme="dark"] .form-input,
+  [data-theme="dark"] .form-select,
+  [data-theme="dark"] .search-input {
+    background: #2C2C2E; border-color: #48484A; color: #FFFFFF;
+  }
+  [data-theme="dark"] .form-input::placeholder,
+  [data-theme="dark"] .search-input::placeholder { color: #636366; }
+  [data-theme="dark"] .sheet {
+    background: #1C1C1E;
+  }
+  [data-theme="dark"] .sheet-header {
+    border-bottom-color: rgba(255,255,255,0.1);
+  }
+  [data-theme="dark"] .weather-detail { background: #2C2C2E; }
+  [data-theme="dark"] .chip {
+    background: #2C2C2E; color: #EBEBF5; border-color: #48484A;
+  }
+  [data-theme="dark"] .chip.active {
+    background: var(--pink); color: #fff;
+  }
+  [data-theme="dark"] .phrase-item,
+  [data-theme="dark"] .nearby-card,
+  [data-theme="dark"] .place-card {
+    background: #1C1C1E; border-color: rgba(255,255,255,0.08); color: #FFFFFF;
+  }
+  [data-theme="dark"] .route-open-gmaps { background: #1C1C1E; }
+  [data-theme="dark"] .badge-gray { background: #3A3A3C; color: #EBEBF5; }
+  [data-theme="dark"] .badge-type { background: #1D3461; color: #90C0FF; }
+  [data-theme="dark"] .etc-blue { background: #1D3461; color: #90C0FF; border-color: #2D4A80; }
+  [data-theme="dark"] .etc-gold { background: #3A2800; color: #FFD060; border-color: #5A4000; }
+  [data-theme="dark"] .btn-rec-food {
+    background: linear-gradient(135deg, #1D3461, #2D3A80); color: #90C0FF;
+  }
+  [data-theme="dark"] .card-title { color: #FFFFFF; }
+  [data-theme="dark"] .modal-content,
+  [data-theme="dark"] .overlay .sheet { background: #1C1C1E; }
+
   /* 아이폰블루 테마 버튼 */
   [data-theme="ios-blue"] .btn-type.t-arrive  { color: #0040DD; }
   [data-theme="ios-blue"] .btn-type.t-depart  { color: #3634A3; }

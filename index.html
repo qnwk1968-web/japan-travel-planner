@@ -4935,6 +4935,7 @@ const PHRASE_CAT_INFO = [
   { key: 'transport', label: '🚆 교통' },
   { key: 'hotel',     label: '🏨 호텔' },
   { key: 'emergency', label: '🚨 긴급' },
+  { key: 'custom',    label: '✏️ 직접입력' },
 ];
 
 let currentPhraseCat = 'basic';
@@ -4954,10 +4955,34 @@ function selectPhraseCat(key) {
 }
 
 function renderPhraseList() {
-  const list = PHRASES[currentPhraseCat] || [];
-  const isEmergency = currentPhraseCat === 'emergency';
   const el = document.getElementById('phraseList');
   if (!el) return;
+  if (currentPhraseCat === 'custom') {
+    el.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;gap:8px;align-items:flex-end;">
+          <textarea id="customPhraseInput" placeholder="한국어로 입력하세요..." rows="3"
+            style="flex:1;padding:12px 14px;border-radius:14px;border:1.5px solid var(--input-border);
+            background:var(--input-bg);color:var(--text);font-size:14px;font-family:var(--font);
+            resize:none;outline:none;line-height:1.5;box-shadow:var(--shadow-sm);"
+            oninput="onCustomPhraseInput()"
+          ></textarea>
+          <button onclick="translateCustomPhrase()"
+            style="padding:12px 16px;border-radius:14px;border:none;cursor:pointer;
+            background:linear-gradient(135deg,var(--pink),var(--pink2));color:#fff;
+            font-size:13px;font-weight:800;font-family:var(--font);
+            box-shadow:0 4px 12px rgba(214,79,123,0.3);white-space:nowrap;flex-shrink:0;">
+            번역
+          </button>
+        </div>
+        <div id="customPhraseResult" style="margin-top:12px;"></div>
+      </div>
+    `;
+    setTimeout(() => document.getElementById('customPhraseInput')?.focus(), 100);
+    return;
+  }
+  const list = PHRASES[currentPhraseCat] || [];
+  const isEmergency = currentPhraseCat === 'emergency';
   el.innerHTML = list.map(([ko, ja, pron]) => `
     <div class="phrase-item${isEmergency?' phrase-emergency':''}" onclick="copyText('${ja.replace(/'/g, "\\'")}')">
       <div class="phrase-ko">${escapeHtml(ko)}</div>
@@ -4965,6 +4990,42 @@ function renderPhraseList() {
       <div class="phrase-pron">${escapeHtml(pron)}</div>
     </div>
   `).join('');
+}
+
+async function translateKoToJa(text) {
+  try {
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=ko&tl=ja&dt=t&dt=rm&q=' + encodeURIComponent(text);
+    const res = await fetch(url);
+    const data = await res.json();
+    const ja = (data[0] || []).map(i => i[0] || '').join('').trim();
+    const pron = (data[0] || []).map(i => i[3] || '').join('').trim() || '';
+    return { ja, pron };
+  } catch(e) { return { ja: '', pron: '' }; }
+}
+
+let _customPhraseTimer = null;
+function onCustomPhraseInput() {
+  clearTimeout(_customPhraseTimer);
+  _customPhraseTimer = setTimeout(translateCustomPhrase, 800);
+}
+
+async function translateCustomPhrase() {
+  const input = document.getElementById('customPhraseInput');
+  const result = document.getElementById('customPhraseResult');
+  if (!input || !result) return;
+  const text = input.value.trim();
+  if (!text) { result.innerHTML = ''; return; }
+  result.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-dim);font-size:13px;">번역 중...</div>`;
+  const { ja, pron } = await translateKoToJa(text);
+  if (!ja) { result.innerHTML = `<div style="text-align:center;padding:16px;color:#DC2626;font-size:13px;">번역 실패. 다시 시도해주세요.</div>`; return; }
+  result.innerHTML = `
+    <div class="phrase-item" onclick="copyText('${ja.replace(/'/g,"\\'")}')">
+      <div class="phrase-ko">${escapeHtml(text)}</div>
+      <div class="phrase-ja">${escapeHtml(ja)}</div>
+      ${pron ? `<div class="phrase-pron">${escapeHtml(pron)}</div>` : ''}
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px;">👆 탭하면 복사</div>
+    </div>
+  `;
 }
 
 // ========== CHECKLIST ==========

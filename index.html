@@ -1452,7 +1452,7 @@
   <div class="header">
     <div class="header-text">
       <h1>🗾 일본 여행 플래너</h1>
-      <p>스마트한 일본 여행 올인원 앱</p>
+      <p>스마트한 일본 여행 올인원 앱 · <span id="hdrVer" style="opacity:0.7;font-size:10px;font-weight:700;letter-spacing:0.3px;">v1.0</span></p>
     </div>
     <div class="header-right">
       <button id="installBtn" class="install-btn" onclick="onInstallClick()" style="display:none;" title="앱 설치">📲 앱 설치</button>
@@ -2347,6 +2347,27 @@
     <div class="sheet-body" id="gridSettingsBody">
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">표시할 메뉴를 선택하세요. 최대 12개까지 노출됩니다.</p>
       <div id="gridToggleList"></div>
+
+      <!-- 앱 정보 -->
+      <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--divider,#eee);">
+        <div style="font-size:13px;font-weight:800;color:var(--text-dim);margin-bottom:10px;">📦 앱 정보</div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+          <span style="color:var(--text-dim);">버전</span>
+          <span id="infoVer" style="font-weight:700;">v1.0.0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+          <span style="color:var(--text-dim);">빌드 날짜</span>
+          <span id="infoBuild" style="font-weight:700;">2026-05-21</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+          <span style="color:var(--text-dim);">캐시 버전</span>
+          <span id="infoCache" style="font-weight:700;">v11</span>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:6px;">
+          <a href="https://github.com/qnwk1968-web/japan-travel-planner" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:9px;background:#1a1a1a;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">🐙 GitHub</a>
+          <button onclick="forceUpdateApp()" style="flex:1;padding:9px;background:#0EA5E9;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🔄 강제 업데이트</button>
+        </div>
+      </div>
     </div>
     <div class="sheet-footer">
       <button class="btn btn-outline" onclick="closeGridSettings()">닫기</button>
@@ -2991,6 +3012,30 @@ function closeAccidentGuide() {
   document.getElementById('accidentOverlay').classList.remove('open');
 }
 
+// ========== 앱 버전 정보 ==========
+const APP_VERSION = '1.0.0';
+const APP_BUILD = '2026-05-21';
+const APP_CACHE = 'v12';
+
+async function forceUpdateApp() {
+  if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    showToast('🔄 캐시 삭제 완료, 새로고침합니다...');
+    setTimeout(() => location.reload(true), 500);
+  } catch (e) {
+    console.warn(e);
+    location.reload();
+  }
+}
+
 function openThemePicker() {
   document.getElementById('themeOverlay').classList.add('open');
   document.getElementById('themeSheet').classList.add('open');
@@ -3009,6 +3054,17 @@ function closeThemePicker() {
     renderToolbarGrid();
     // 위치 권한 자동 요청 + 날씨 카드 로드 (지연 실행)
     setTimeout(() => { try { initLocWeather(); } catch(e) { console.warn(e); } }, 800);
+    // 버전 정보 동기화
+    try {
+      const v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : '';
+      if (v) {
+        const hdr = document.getElementById('hdrVer');
+        if (hdr) hdr.textContent = 'v' + v.split('.').slice(0,2).join('.');
+        const iv = document.getElementById('infoVer'); if (iv) iv.textContent = 'v' + v;
+        const ib = document.getElementById('infoBuild'); if (ib) ib.textContent = APP_BUILD;
+        const ic = document.getElementById('infoCache'); if (ic) ic.textContent = APP_CACHE;
+      }
+    } catch(e) {}
   });
 })();
 

@@ -981,6 +981,45 @@
   .lw-slot-div { width: 1px; height: 52px; background: rgba(255,255,255,0.3); flex-shrink: 0; align-self: center; }
   [data-theme="dark"] .loc-weather-card { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
 
+  /* 주유소 모드 선택 카드 */
+  .gas-mode-choice {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; margin-bottom: 10px;
+    border: 2px solid var(--divider, #e5e7eb);
+    border-radius: 14px; cursor: pointer; user-select: none;
+    transition: transform 0.18s, border-color 0.18s, background 0.18s;
+  }
+  .gas-mode-choice:active { transform: scale(0.98); border-color: var(--primary, #D64F7B); background: #FFF0F5; }
+  .gas-mode-icon { font-size: 30px; flex-shrink: 0; }
+  .gas-mode-info { flex: 1; min-width: 0; }
+  .gas-mode-title { font-size: 15px; font-weight: 800; margin-bottom: 3px; }
+  .gas-mode-desc { font-size: 11px; color: var(--text-dim); font-weight: 500; }
+  .gas-mode-arrow { font-size: 22px; opacity: 0.4; font-weight: 300; flex-shrink: 0; }
+
+  /* 가까운 주유소 목록 항목 */
+  .gas-near-item {
+    display: flex; gap: 12px; padding: 12px;
+    border: 1px solid var(--divider, #e5e7eb);
+    border-radius: 10px; margin-bottom: 8px; background: var(--card-bg, #fff);
+  }
+  .gas-near-info { flex: 1; min-width: 0; }
+  .gas-near-name { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+  .gas-near-meta { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+  .gas-near-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .gas-near-btn {
+    padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+    border: none; cursor: pointer; text-decoration: none; color: white;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .gas-near-btn.b-map { background: #1976D2; }
+  .gas-near-btn.b-price { background: #F59E0B; }
+  .gas-near-btn.b-plan { background: var(--primary, #D64F7B); }
+  .gas-near-dist {
+    background: #ECFDF5; color: #047857;
+    padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;
+    flex-shrink: 0; align-self: flex-start; white-space: nowrap;
+  }
+
   /* ===== TRIP MANAGER OVERLAY ===== */
   #tripManagerOverlay {
     position: fixed; inset: 0; background: var(--bg); z-index: 260;
@@ -2204,6 +2243,52 @@
         </div>
       </div>
 
+      <!-- GAS STATION fields -->
+      <div id="fields-gasstation" class="type-fields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">주유소명 *</label>
+          <input class="form-input" id="gs-name" placeholder="예: ENEOS 후쿠오카점">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">날짜 *</label>
+            <input class="form-input" id="gs-date" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">시간</label>
+            <input class="form-input" id="gs-time" type="time">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">주소</label>
+          <input class="form-input" id="gs-addr" placeholder="주소 (선택)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">위치</label>
+          <div class="loc-pick-row">
+            <button class="btn btn-blue btn-sm" onclick="startLocPick('gasstation')">🗺 지도에서 위치 지정</button>
+            <span class="loc-display" id="gs-loc-display">위치 미지정</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">예상 주유비</label>
+            <input class="form-input" id="gs-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="gs-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">메모</label>
+          <input class="form-input" id="gs-memo" placeholder="브랜드(ENEOS, ENEOS, JX, 出光 등), 셀프/일반 등">
+        </div>
+      </div>
+
       <!-- EXPENSE fields (multi-row) -->
       <div id="fields-expense" class="type-fields" style="display:none;">
         <div class="form-row">
@@ -2507,6 +2592,60 @@
     </div>
     <div class="sheet-footer">
       <button class="btn btn-primary" onclick="closeAccidentGuide()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 주유소 모드 선택 -->
+<div class="overlay" id="gasModeOverlay" style="z-index:1100;" onclick="closeGasMode()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">⛽ 주유소</div>
+    </div>
+    <div class="sheet-body">
+      <div class="gas-mode-choice" onclick="openGasNearby()">
+        <div class="gas-mode-icon">📍</div>
+        <div class="gas-mode-info">
+          <div class="gas-mode-title">내 주변 주유소 찾기</div>
+          <div class="gas-mode-desc">현재 위치 기준 가장 가까운 주유소 표시</div>
+        </div>
+        <div class="gas-mode-arrow">›</div>
+      </div>
+      <div class="gas-mode-choice" onclick="closeGasMode(); openTypedModal('gasstation');">
+        <div class="gas-mode-icon">📝</div>
+        <div class="gas-mode-info">
+          <div class="gas-mode-title">일정에 미리 등록</div>
+          <div class="gas-mode-desc">관광지처럼 주유 계획을 미리 추가</div>
+        </div>
+        <div class="gas-mode-arrow">›</div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-outline" style="width:100%;" onclick="closeGasMode()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 가까운 주유소 결과 -->
+<div class="overlay" id="gasNearbyOverlay" style="z-index:1150;" onclick="closeGasNearby()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">📍 가까운 주유소</div>
+    </div>
+    <div class="sheet-body">
+      <div id="gasNearbyList" style="max-height:55vh;overflow-y:auto;">
+        <div style="text-align:center;padding:30px;color:var(--text-dim);">불러오는 중...</div>
+      </div>
+      <div style="margin-top:14px;padding:10px 12px;background:#FFF8E1;border-radius:8px;font-size:11px;color:#92400E;">
+        💡 일본 실시간 유가는 무료 API가 없습니다.<br>
+        주유소 클릭 시 Google Maps로 이동, "유가 비교" 버튼으로 e-nenpi.com 지역 시세 확인 가능
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-outline" style="flex:1" onclick="closeGasNearby()">닫기</button>
+      <button class="btn btn-primary" style="flex:1" onclick="openGasNearby()">🔄 새로고침</button>
     </div>
   </div>
 </div>
@@ -2851,7 +2990,7 @@ const ALL_MENU_ITEMS = [
   { key:'phrase',          icon:'💬',  label:'회화',      cssClass:'t-other',   action:"switchTab('phrase',document.querySelectorAll('.nav-btn')[6])" },
   { key:'city',            icon:'🏙️', label:'도시이동',  cssClass:'t-city',    action:"openTypedModal('city')" },
   { key:'ferry',           icon:'⛴️', label:'유람선',    cssClass:'t-ferry',   action:"openTypedModal('ferry')" },
-  { key:'gasstation',      icon:'⛽',  label:'주유소',    cssClass:'t-gas',     action:"openGasMap()" },
+  { key:'gasstation',      icon:'⛽',  label:'주유소',    cssClass:'t-gas',     action:"openGasModeChoice()" },
   { key:'pharmacy',        icon:'💊',  label:'약국',      cssClass:'t-pharmacy',action:"openPharmacyMap()" },
   { key:'expense',         icon:'💴',  label:'소요경비',  cssClass:'t-expense', action:"openTypedModal('expense')" },
 ];
@@ -2906,11 +3045,111 @@ function saveGridSettings() {
   closeGridSettings();
   showToast('✅ 메뉴 설정이 저장되었습니다');
 }
-function openGasMap() {
+// ========== 주유소 (위치 기반 + 일정 등록) ==========
+function openGasModeChoice() {
+  document.getElementById('gasModeOverlay').classList.add('open');
+}
+function closeGasMode() {
+  document.getElementById('gasModeOverlay').classList.remove('open');
+}
+function closeGasNearby() {
+  document.getElementById('gasNearbyOverlay').classList.remove('open');
+}
+
+function openGasNearby() {
+  closeGasMode();
+  document.getElementById('gasNearbyOverlay').classList.add('open');
+  const list = document.getElementById('gasNearbyList');
+  list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);"><div class="spinner" style="display:inline-block;"></div><br>현재 위치 확인 중...</div>';
+
+  if (!navigator.geolocation) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 이 브라우저는 위치 기능을 지원하지 않습니다.</div>';
+    return;
+  }
   navigator.geolocation.getCurrentPosition(
-    pos => { window.open(`https://www.google.com/maps/search/주유소/@${pos.coords.latitude},${pos.coords.longitude},15z`, '_blank'); },
-    () =>  { window.open('https://www.google.com/maps/search/ガソリンスタンド+Japan', '_blank'); }
+    pos => fetchNearbyGas(pos.coords.latitude, pos.coords.longitude),
+    err => {
+      list.innerHTML = `<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 위치 권한이 필요합니다.<br><small style="color:var(--text-dim);">설정에서 위치 접근을 허용해 주세요.</small></div>`;
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
   );
+}
+
+function fetchNearbyGas(lat, lng) {
+  const list = document.getElementById('gasNearbyList');
+  if (!window.google || !google.maps || !google.maps.places) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 지도 API 로드 실패. 새로고침 후 다시 시도하세요.</div>';
+    return;
+  }
+  // PlacesService 는 map 객체가 필요
+  const dummyDiv = document.createElement('div');
+  const service = new google.maps.places.PlacesService(map || dummyDiv);
+  service.nearbySearch({
+    location: { lat, lng },
+    radius: 5000, // 5km
+    type: ['gas_station']
+  }, (results, status) => {
+    if (status !== google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);">주변 5km 내 주유소를 찾지 못했습니다.</div>';
+      return;
+    }
+    // 거리 계산 + 정렬
+    const enriched = results.map(p => {
+      const pLat = p.geometry.location.lat();
+      const pLng = p.geometry.location.lng();
+      const dist = haversine(lat, lng, pLat, pLng);
+      return { p, lat: pLat, lng: pLng, dist };
+    }).sort((a, b) => a.dist - b.dist).slice(0, 10);
+
+    list.innerHTML = enriched.map(({ p, lat: pLat, lng: pLng, dist }) => {
+      const name = (p.name || '주유소').replace(/"/g, '&quot;');
+      const addr = (p.vicinity || '').replace(/"/g, '&quot;');
+      const rating = p.rating ? `⭐ ${p.rating} (${p.user_ratings_total || 0})` : '';
+      const open = p.opening_hours ? (p.opening_hours.open_now ? '🟢 영업중' : '🔴 영업종료') : '';
+      const distStr = dist < 1000 ? `${Math.round(dist)}m` : `${(dist/1000).toFixed(1)}km`;
+      const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${p.place_id}`;
+      const priceUrl = `https://gogo.gs/`; // e-nenpi 대안: gogo.gs (전국 유가)
+      // 안전한 데이터 전달용 base64
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ name: p.name, addr: p.vicinity, lat: pLat, lng: pLng }))));
+      return `
+        <div class="gas-near-item">
+          <div class="gas-near-info">
+            <div class="gas-near-name">${name}</div>
+            ${addr ? `<div class="gas-near-meta">📍 ${addr}</div>` : ''}
+            <div class="gas-near-meta">${rating} ${open ? '· ' + open : ''}</div>
+            <div class="gas-near-actions">
+              <a class="gas-near-btn b-map" href="${mapUrl}" target="_blank" rel="noopener">🗺 지도 열기</a>
+              <a class="gas-near-btn b-price" href="${priceUrl}" target="_blank" rel="noopener">💰 유가 비교</a>
+              <button class="gas-near-btn b-plan" onclick="addGasFromNearby('${payload}')">📌 일정 추가</button>
+            </div>
+          </div>
+          <div class="gas-near-dist">${distStr}</div>
+        </div>`;
+    }).join('');
+  });
+}
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function addGasFromNearby(payload) {
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(payload))));
+    closeGasNearby();
+    openTypedModal('gasstation', {
+      name: data.name,
+      addr: data.addr,
+      lat: data.lat,
+      lng: data.lng,
+      date: new Date().toISOString().slice(0,10)
+    });
+  } catch(e) { console.warn(e); showToast('⚠️ 일정 추가 실패'); }
 }
 function openPharmacyMap() {
   navigator.geolocation.getCurrentPosition(
@@ -3015,7 +3254,7 @@ function closeAccidentGuide() {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.0.0';
 const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v12';
+const APP_CACHE = 'v13';
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
@@ -3570,6 +3809,7 @@ const MODAL_TITLES = {
   shop: '🛍️ 쇼핑 추가',
   rental: '🚗 렌트카 추가',
   ferry: '⛴️ 유람선/페리 추가',
+  gasstation: '⛽ 주유소 추가',
   expense: '💴 소요경비 추가',
   other: '📌 기타 추가',
 };
@@ -3685,6 +3925,15 @@ function clearModalFields(type) {
     document.getElementById('fe-cur').value = 'JPY';
     document.getElementById('fe-loc-display').textContent = '위치 미지정';
     document.getElementById('fe-memo').value = '';
+  } else if (type === 'gasstation') {
+    document.getElementById('gs-name').value = '';
+    document.getElementById('gs-date').value = today;
+    document.getElementById('gs-time').value = '';
+    document.getElementById('gs-addr').value = '';
+    document.getElementById('gs-loc-display').textContent = '위치 미지정';
+    document.getElementById('gs-cost').value = '';
+    document.getElementById('gs-cur').value = 'JPY';
+    document.getElementById('gs-memo').value = '';
   } else if (type === 'expense') {
     document.getElementById('ex-date').value = today;
     document.getElementById('ex-time').value = '';
@@ -3817,6 +4066,18 @@ function fillModalFields(type, it) {
       locPickLat = it.lat; locPickLng = it.lng;
       updateLocDisplay('ferry', it.lat, it.lng);
     }
+  } else if (type === 'gasstation') {
+    document.getElementById('gs-name').value = it.name || '';
+    document.getElementById('gs-date').value = it.date || '';
+    document.getElementById('gs-time').value = it.time || '';
+    document.getElementById('gs-addr').value = it.addr || '';
+    document.getElementById('gs-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('gs-cur').value = it.currency || 'JPY';
+    document.getElementById('gs-memo').value = it.memo || '';
+    if (it.lat && it.lng) {
+      locPickLat = it.lat; locPickLng = it.lng;
+      updateLocDisplay('gasstation', it.lat, it.lng);
+    }
   } else if (type === 'expense') {
     document.getElementById('ex-date').value = it.date || '';
     document.getElementById('ex-time').value = it.time || '';
@@ -3831,7 +4092,7 @@ function fillModalFields(type, it) {
 }
 
 function updateLocDisplay(type, lat, lng, label) {
-  const idMap = { hotel: 'h-loc-display', sight: 'si-loc-display', food: 'fo-loc-display', shop: 'sh-loc-display', rental: 'rt-loc-display', ferry: 'fe-loc-display' };
+  const idMap = { hotel: 'h-loc-display', sight: 'si-loc-display', food: 'fo-loc-display', shop: 'sh-loc-display', rental: 'rt-loc-display', ferry: 'fe-loc-display', gasstation: 'gs-loc-display' };
   const elId = idMap[type];
   if (!elId) return;
   const el = document.getElementById(elId);
@@ -3956,6 +4217,17 @@ function buildItemFromModal(type) {
     readCost('fe');
     if (!base.name) { showToast('⚠️ 유람선/페리명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 탑승 날짜를 입력하세요'); return null; }
+  } else if (type === 'gasstation') {
+    base.name = document.getElementById('gs-name').value.trim();
+    base.date = document.getElementById('gs-date').value;
+    base.time = document.getElementById('gs-time').value;
+    base.addr = document.getElementById('gs-addr').value.trim();
+    base.memo = document.getElementById('gs-memo').value.trim();
+    base.lat = locPickLat;
+    base.lng = locPickLng;
+    readCost('gs');
+    if (!base.name) { showToast('⚠️ 주유소명을 입력하세요'); return null; }
+    if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'expense') {
     // Edit mode: 단일 행에서 값 읽기
     const row = document.querySelector('#ex-rows-container .ex-row');

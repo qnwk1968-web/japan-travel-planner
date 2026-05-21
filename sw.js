@@ -1,4 +1,4 @@
-const CACHE = 'japan-planner-v12';
+const CACHE = 'japan-planner-v13';
 const ASSETS = [
   '/japan-travel-planner/',
   '/japan-travel-planner/index.html',

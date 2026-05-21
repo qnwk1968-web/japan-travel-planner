@@ -3904,6 +3904,9 @@ function saveItineraryItem() {
   showToast(`✅ ${escapeHtml(item.name)} ${action}`);
   editingId = null;
 
+  // 한글 도시명이 포함된 경우 날씨 탭에 자동 추가
+  try { maybeAddWeatherCityFromItem(item); } catch(e) { console.warn('weather auto-add', e); }
+
   switchTab('itinerary', document.querySelector('.nav-btn'));
   renderItinerary();
 }
@@ -4899,6 +4902,76 @@ const weatherEmoji = {
 
 function getWeatherEmoji(code) {
   return weatherEmoji[String(code)] || '🌡';
+}
+
+// 한글 도시명 → 영문 + 이모지 매핑 (일정에 도시명 추가 시 자동 매칭용)
+const KOREAN_CITY_MAP = {
+  '도쿄':       {en:'Tokyo',       emoji:'🗼'},
+  '오사카':     {en:'Osaka',       emoji:'🏯'},
+  '교토':       {en:'Kyoto',       emoji:'⛩️'},
+  '후쿠오카':   {en:'Fukuoka',     emoji:'🎌'},
+  '삿포로':     {en:'Sapporo',     emoji:'⛄'},
+  '나고야':     {en:'Nagoya',      emoji:'🦐'},
+  '오키나와':   {en:'Naha',        emoji:'🌺'},
+  '나하':       {en:'Naha',        emoji:'🌺'},
+  '가고시마':   {en:'Kagoshima',   emoji:'🌋'},
+  '카고시마':   {en:'Kagoshima',   emoji:'🌋'},
+  '유후인':     {en:'Yufuin',      emoji:'♨️'},
+  '히타':       {en:'Hita',        emoji:'🏞️'},
+  '키타큐슈':   {en:'Kitakyushu',  emoji:'🏭'},
+  '기타큐슈':   {en:'Kitakyushu',  emoji:'🏭'},
+  '시모노세키': {en:'Shimonoseki', emoji:'🐡'},
+  '벳푸':       {en:'Beppu',       emoji:'🌊'},
+  '오카야마':   {en:'Okayama',     emoji:'🍑'},
+  '구라시키':   {en:'Kurashiki',   emoji:'⛵'},
+  '아오모리':   {en:'Aomori',      emoji:'🍎'},
+  '요코하마':   {en:'Yokohama',    emoji:'🏙️'},
+  '센다이':     {en:'Sendai',      emoji:'🌳'},
+  '히로시마':   {en:'Hiroshima',   emoji:'🕊️'},
+  '나가사키':   {en:'Nagasaki',    emoji:'⛪'},
+  '구마모토':   {en:'Kumamoto',    emoji:'🐻'},
+  '가나자와':   {en:'Kanazawa',    emoji:'🌸'},
+  '닛코':       {en:'Nikko',       emoji:'🌅'},
+  '나라':       {en:'Nara',        emoji:'🦌'},
+  '고베':       {en:'Kobe',        emoji:'⚓'},
+  '하코다테':   {en:'Hakodate',    emoji:'🦑'},
+  '시즈오카':   {en:'Shizuoka',    emoji:'🍵'},
+  '미야자키':   {en:'Miyazaki',    emoji:'🌴'},
+  '오이타':     {en:'Oita',        emoji:'♨️'},
+  '사가':       {en:'Saga',        emoji:'🎈'},
+  '치바':       {en:'Chiba',       emoji:'🏖️'},
+  '사이타마':   {en:'Saitama',     emoji:'🌆'},
+  '하카타':     {en:'Fukuoka',     emoji:'🎌'},
+  '도톤보리':   {en:'Osaka',       emoji:'🏯'},
+  '신주쿠':     {en:'Tokyo',       emoji:'🗼'},
+  '시부야':     {en:'Tokyo',       emoji:'🗼'},
+  '긴자':       {en:'Tokyo',       emoji:'🗼'},
+};
+
+function maybeAddWeatherCityFromItem(item) {
+  if (!item) return;
+  const fields = [item.name, item.airport, item.addr, item.route, item.city, item.memo].filter(Boolean);
+  if (fields.length === 0) return;
+  const haystack = fields.join(' ');
+  const cities = getWeatherCities().slice(); // 원본 DEFAULT_CITIES 변형 방지
+  const added = [];
+  // 긴 매칭 우선 (예: '키타큐슈'가 '기타큐슈'보다 먼저 매칭되도록)
+  const sortedKeys = Object.keys(KOREAN_CITY_MAP).sort((a,b) => b.length - a.length);
+  const matchedEn = new Set();
+  for (const ko of sortedKeys) {
+    if (!haystack.includes(ko)) continue;
+    const data = KOREAN_CITY_MAP[ko];
+    if (matchedEn.has(data.en)) continue;
+    if (cities.find(c => c.city === data.en)) { matchedEn.add(data.en); continue; }
+    cities.push({ city: data.en, label: ko, emoji: data.emoji });
+    matchedEn.add(data.en);
+    added.push(ko);
+  }
+  if (added.length > 0) {
+    saveWeatherCities(cities);
+    if (document.getElementById('cityGrid')) renderCityGrid();
+    showToast(`🌤 날씨 탭에 ${added.join(', ')} 자동 추가`);
+  }
 }
 
 const WEATHER_CITIES_KEY = 'japan_weather_cities';

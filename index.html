@@ -11,6 +11,18 @@
 <meta name="theme-color" content="#D64F7B">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6XYZ8C6CRT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-6XYZ8C6CRT', { send_page_view: true });
+  // 간편 이벤트 추적 헬퍼
+  window.trackEvent = function(name, params) {
+    try { gtag('event', name, params || {}); } catch(e) {}
+  };
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&family=Gothic+A1:wght@400;600;700;800;900&family=Do+Hyeon&family=Sunflower:wght@300;500;700&family=Jua&display=swap" rel="stylesheet">
 <style>
@@ -2986,6 +2998,7 @@ function generateShareUrl(trip) {
 }
 
 function openShareModal() {
+  if (window.trackEvent) trackEvent('open_share');
   const trip = getActiveTrip();
   if (!trip) { showToast('공유할 여행이 없습니다'); return; }
   const items = trip.items || [];
@@ -3074,6 +3087,7 @@ function skipSharedTrip() {
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('app-theme', theme);
+  if (window.trackEvent) trackEvent('change_theme', { theme_name: theme });
   document.querySelectorAll('.theme-item').forEach(el => {
     el.classList.toggle('active', el.dataset.theme === theme);
   });
@@ -3117,6 +3131,7 @@ function renderToolbarGrid() {
   }).join('');
 }
 function openGridSettings() {
+  if (window.trackEvent) trackEvent('open_settings');
   const keys = loadGridKeys();
   const list = document.getElementById('gridToggleList');
   list.innerHTML = ALL_MENU_ITEMS.map(m => `
@@ -3148,6 +3163,7 @@ function saveGridSettings() {
 }
 // ========== 주유소 (위치 기반 + 일정 등록) ==========
 function openGasModeChoice() {
+  if (window.trackEvent) trackEvent('open_nearby_choice', { kind: 'gas' });
   document.getElementById('gasModeOverlay').classList.add('open');
 }
 function closeGasMode() {
@@ -3254,6 +3270,7 @@ function addGasFromNearby(payload) {
 }
 // ========== 약국 (위치 기반 + 일정 등록) ==========
 function openPharmacyModeChoice() {
+  if (window.trackEvent) trackEvent('open_nearby_choice', { kind: 'pharmacy' });
   document.getElementById('pharmModeOverlay').classList.add('open');
 }
 function closePharmacyMode() {
@@ -3428,6 +3445,7 @@ function onRentalCompanyChange() {
   }
 }
 function openAccidentGuide() {
+  if (window.trackEvent) trackEvent('open_accident_guide');
   document.getElementById('accidentOverlay').classList.add('open');
 }
 function closeAccidentGuide() {
@@ -3437,7 +3455,7 @@ function closeAccidentGuide() {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.0.0';
 const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v14';
+const APP_CACHE = 'v15';
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
@@ -3543,6 +3561,7 @@ function switchTab(name, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+  if (window.trackEvent) trackEvent('tab_view', { tab_name: name });
   if (name === 'weather') loadWeather(currentWeatherCity);
   if (name === 'weather') loadVolcano();
   if (name === 'tools') {
@@ -4485,6 +4504,7 @@ function saveItineraryItem() {
     saveItinerary(items);
     closeAddModal();
     showToast(`✅ ${newItems.length}개 경비 항목 저장됨`);
+    if (window.trackEvent) trackEvent('add_item', { item_type: 'expense', count: newItems.length });
     editingId = null;
     switchTab('itinerary', document.querySelector('.nav-btn'));
     renderItinerary();
@@ -4506,6 +4526,7 @@ function saveItineraryItem() {
   closeAddModal();
   const action = editingId ? '수정됨' : '추가됨';
   showToast(`✅ ${escapeHtml(item.name)} ${action}`);
+  if (window.trackEvent) trackEvent('add_item', { item_type: type, edit: editingId ? 1 : 0 });
   editingId = null;
 
   // 한글 도시명이 포함된 경우 날씨 탭에 자동 추가

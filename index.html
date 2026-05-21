@@ -975,9 +975,10 @@
   .lw-refresh:active { background: rgba(255,255,255,0.4); }
   .lw-slots { display: flex; align-items: center; gap: 2px; }
   .lw-slot { flex: 1; text-align: center; }
-  .lw-slot-lbl { font-size: 11px; font-weight: 600; opacity: 0.85; margin-bottom: 3px; }
-  .lw-slot-val { font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
-  .lw-slot-div { width: 1px; height: 28px; background: rgba(255,255,255,0.3); flex-shrink: 0; }
+  .lw-slot-lbl { font-size: 11px; font-weight: 600; opacity: 0.85; margin-bottom: 4px; }
+  .lw-slot-icon { font-size: 22px; line-height: 1; margin-bottom: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)); }
+  .lw-slot-val { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .lw-slot-div { width: 1px; height: 52px; background: rgba(255,255,255,0.3); flex-shrink: 0; align-self: center; }
   [data-theme="dark"] .loc-weather-card { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
 
   /* ===== TRIP MANAGER OVERLAY ===== */
@@ -1481,11 +1482,23 @@
           <button class="lw-refresh" onclick="event.stopPropagation(); refreshLocWeather()" title="새로고침">↻</button>
         </div>
         <div class="lw-slots" id="lwSlots">
-          <div class="lw-slot"><div class="lw-slot-lbl">오전</div><div class="lw-slot-val" id="lwSlotM">--°</div></div>
+          <div class="lw-slot">
+            <div class="lw-slot-lbl">오전</div>
+            <div class="lw-slot-icon" id="lwIconM">·</div>
+            <div class="lw-slot-val" id="lwSlotM">--°</div>
+          </div>
           <div class="lw-slot-div"></div>
-          <div class="lw-slot"><div class="lw-slot-lbl">오후</div><div class="lw-slot-val" id="lwSlotA">--°</div></div>
+          <div class="lw-slot">
+            <div class="lw-slot-lbl">오후</div>
+            <div class="lw-slot-icon" id="lwIconA">·</div>
+            <div class="lw-slot-val" id="lwSlotA">--°</div>
+          </div>
           <div class="lw-slot-div"></div>
-          <div class="lw-slot"><div class="lw-slot-lbl">저녁</div><div class="lw-slot-val" id="lwSlotE">--°</div></div>
+          <div class="lw-slot">
+            <div class="lw-slot-lbl">저녁</div>
+            <div class="lw-slot-icon" id="lwIconE">·</div>
+            <div class="lw-slot-val" id="lwSlotE">--°</div>
+          </div>
         </div>
       </div>
       <!-- Expense summary card (비활성화) -->
@@ -5204,11 +5217,9 @@ async function loadLocWeather(lat, lon) {
 }
 
 function bucketForecast(list) {
-  // list: openweathermap forecast 항목들 (3시간 간격)
   const buckets = { morning: [], afternoon: [], evening: [] };
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
-  // 오늘 데이터로 채우고, 비어있는 구간은 내일로 fallback
   for (const item of list) {
     const dt = new Date(item.dt * 1000);
     const h = dt.getHours();
@@ -5218,15 +5229,32 @@ function bucketForecast(list) {
     else if (h >= 12 && h < 18) bucketKey = 'afternoon';
     else if (h >= 18 && h < 24) bucketKey = 'evening';
     if (!bucketKey) continue;
-    // 오늘 우선, 비어있으면 내일도 수용
     if (dStr === todayStr) buckets[bucketKey].push(item);
     else if (buckets[bucketKey].length === 0) buckets[bucketKey].push(item);
   }
-  const avg = arr => arr.length ? Math.round(arr.reduce((s,i)=>s+i.main.temp, 0) / arr.length) : null;
+  const summarize = arr => {
+    if (!arr.length) return { temp: null, icon: null };
+    const temp = Math.round(arr.reduce((s,i)=>s+i.main.temp, 0) / arr.length);
+    // 구간 내 가장 자주 등장한 날씨 코드 선택 (악천후 우선: 우선순위 비/눈 > 흐림 > 맑음)
+    const counts = {};
+    arr.forEach(i => {
+      const id = i.weather[0].id;
+      counts[id] = (counts[id] || 0) + 1;
+    });
+    // 비/눈(2xx,3xx,5xx,6xx) 가중치 ↑, 흐림(80x) 중간, 맑음(800) 낮음
+    const weight = id => {
+      const n = Number(id);
+      if (n >= 200 && n < 700) return counts[id] * 3;
+      if (n === 800) return counts[id] * 1;
+      return counts[id] * 2;
+    };
+    const repId = Object.keys(counts).sort((a,b) => weight(b) - weight(a))[0];
+    return { temp, icon: getWeatherEmoji(repId) };
+  };
   return {
-    morning: avg(buckets.morning),
-    afternoon: avg(buckets.afternoon),
-    evening: avg(buckets.evening)
+    morning: summarize(buckets.morning),
+    afternoon: summarize(buckets.afternoon),
+    evening: summarize(buckets.evening)
   };
 }
 
@@ -5235,9 +5263,12 @@ function renderLocWeather() {
   const { placeName, slots } = locWeatherData;
   document.getElementById('lwPlace').textContent = placeName;
   const fmt = v => v == null ? '--°' : `${v}°`;
-  document.getElementById('lwSlotM').textContent = fmt(slots.morning);
-  document.getElementById('lwSlotA').textContent = fmt(slots.afternoon);
-  document.getElementById('lwSlotE').textContent = fmt(slots.evening);
+  document.getElementById('lwSlotM').textContent = fmt(slots.morning.temp);
+  document.getElementById('lwSlotA').textContent = fmt(slots.afternoon.temp);
+  document.getElementById('lwSlotE').textContent = fmt(slots.evening.temp);
+  document.getElementById('lwIconM').textContent = slots.morning.icon || '·';
+  document.getElementById('lwIconA').textContent = slots.afternoon.icon || '·';
+  document.getElementById('lwIconE').textContent = slots.evening.icon || '·';
 }
 
 function refreshLocWeather() {

@@ -2146,28 +2146,8 @@
         </div>
       </div>
 
-      <!-- EXPENSE fields -->
+      <!-- EXPENSE fields (multi-row) -->
       <div id="fields-expense" class="type-fields" style="display:none;">
-        <div class="form-group">
-          <label class="form-label">카테고리 *</label>
-          <select class="form-select" id="ex-category">
-            <option value="🍜 식비">🍜 식비</option>
-            <option value="🚇 교통">🚇 교통</option>
-            <option value="🏨 숙박">🏨 숙박</option>
-            <option value="🏯 관광/입장료">🏯 관광/입장료</option>
-            <option value="🛍️ 쇼핑">🛍️ 쇼핑</option>
-            <option value="⛽ 주유/렌트카">⛽ 주유/렌트카</option>
-            <option value="📱 통신/Wi-Fi">📱 통신/Wi-Fi</option>
-            <option value="🎫 입장권/티켓">🎫 입장권/티켓</option>
-            <option value="💊 의료/약품">💊 의료/약품</option>
-            <option value="🎁 선물">🎁 선물</option>
-            <option value="📌 기타">📌 기타</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">항목명 *</label>
-          <input class="form-input" id="ex-name" placeholder="예: 라멘, 지하철, 입장료">
-        </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">날짜 *</label>
@@ -2180,36 +2160,42 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">금액 *</label>
-            <input class="form-input" id="ex-cost" type="number" inputmode="decimal" placeholder="0">
+            <label class="form-label">결제수단</label>
+            <select class="form-select" id="ex-pay">
+              <option value="현금">💵 현금</option>
+              <option value="신용카드">💳 신용카드</option>
+              <option value="체크카드">💳 체크카드</option>
+              <option value="IC카드">🔖 IC카드</option>
+              <option value="QR페이">📱 QR페이</option>
+              <option value="기타">기타</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label">통화</label>
-            <select class="form-select" id="ex-cur">
+            <select class="form-select" id="ex-cur" onchange="updateExpenseTotal()">
               <option value="JPY">¥ 엔</option>
               <option value="KRW">₩ 원</option>
               <option value="USD">$ 달러</option>
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">결제수단</label>
-          <select class="form-select" id="ex-pay">
-            <option value="현금">💵 현금</option>
-            <option value="신용카드">💳 신용카드</option>
-            <option value="체크카드">💳 체크카드</option>
-            <option value="IC카드">🔖 IC카드 (Suica/PASMO/ICOCA)</option>
-            <option value="QR페이">📱 QR페이 (PayPay 등)</option>
-            <option value="기타">기타</option>
-          </select>
+
+        <!-- 합계 표시 -->
+        <div id="ex-total-card" style="background:linear-gradient(135deg,#D64F7B,#A8377A);color:white;padding:14px 16px;border-radius:14px;margin:14px 0 10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 12px rgba(214,79,123,0.3);">
+          <div>
+            <div style="font-size:11px;font-weight:700;opacity:0.85;">💰 합계 <span id="ex-row-count" style="opacity:0.7;">(0개)</span></div>
+          </div>
+          <div id="ex-total-value" style="font-size:24px;font-weight:900;letter-spacing:-0.5px;">¥0</div>
         </div>
-        <div class="form-group">
-          <label class="form-label">인원수</label>
-          <input class="form-input" id="ex-people" type="number" inputmode="numeric" placeholder="1" value="1" min="1">
-        </div>
-        <div class="form-group">
-          <label class="form-label">메모</label>
-          <input class="form-input" id="ex-memo" placeholder="영수증 번호, 상세 내용 등">
+
+        <!-- 항목 행 컨테이너 -->
+        <label class="form-label" style="display:block;margin-top:8px;">항목 *</label>
+        <div id="ex-rows-container"></div>
+        <button type="button" id="ex-add-row" onclick="addExpenseRow()" style="width:100%;padding:10px;border:2px dashed var(--primary,#D64F7B);background:transparent;color:var(--primary,#D64F7B);border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;margin-top:4px;">+ 항목 추가</button>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">전체 메모 (선택)</label>
+          <input class="form-input" id="ex-memo" placeholder="영수증 번호, 동행자 등">
         </div>
       </div>
 
@@ -2853,6 +2839,83 @@ function openPharmacyMap() {
     () =>  { window.open('https://www.google.com/maps/search/薬局+Japan', '_blank'); }
   );
 }
+// ========== EXPENSE MULTI-ROW ==========
+const EXPENSE_CATEGORIES = ['🍜 식비','🚇 교통','🏨 숙박','🏯 관광/입장료','🛍️ 쇼핑','⛽ 주유/렌트카','📱 통신/Wi-Fi','🎫 입장권/티켓','💊 의료/약품','🎁 선물','📌 기타'];
+
+function addExpenseRow(prefill) {
+  const container = document.getElementById('ex-rows-container');
+  const row = document.createElement('div');
+  row.className = 'ex-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1.2fr 1.5fr 1.1fr 28px;gap:4px;align-items:center;margin-bottom:6px;';
+  const cat = prefill && prefill.category ? prefill.category : EXPENSE_CATEGORIES[0];
+  const name = prefill && prefill.name ? String(prefill.name).replace(/"/g, '&quot;') : '';
+  const cost = prefill && prefill.cost != null ? prefill.cost : '';
+  row.innerHTML = `
+    <select class="form-select ex-row-cat" style="padding:8px 4px;font-size:11px;">
+      ${EXPENSE_CATEGORIES.map(c => `<option value="${c}"${c===cat?' selected':''}>${c}</option>`).join('')}
+    </select>
+    <input class="form-input ex-row-name" placeholder="항목명" style="padding:8px;font-size:12px;" value="${name}">
+    <input class="form-input ex-row-amount" type="number" inputmode="decimal" oninput="updateExpenseTotal()" placeholder="0" style="padding:8px;font-size:12px;text-align:right;" value="${cost}">
+    <button type="button" onclick="removeExpenseRow(this)" style="background:transparent;border:none;color:#9ca3af;font-size:18px;cursor:pointer;width:28px;height:36px;padding:0;">✕</button>
+  `;
+  container.appendChild(row);
+  updateExpenseTotal();
+}
+
+function removeExpenseRow(btn) {
+  const container = document.getElementById('ex-rows-container');
+  if (container.children.length <= 1) {
+    const row = btn.closest('.ex-row');
+    row.querySelector('.ex-row-name').value = '';
+    row.querySelector('.ex-row-amount').value = '';
+  } else {
+    btn.closest('.ex-row').remove();
+  }
+  updateExpenseTotal();
+}
+
+function updateExpenseTotal() {
+  let total = 0, count = 0;
+  document.querySelectorAll('.ex-row-amount').forEach(inp => {
+    const v = parseFloat(inp.value);
+    if (!isNaN(v) && v > 0) { total += v; count++; }
+  });
+  const cur = document.getElementById('ex-cur').value;
+  const sym = cur === 'JPY' ? '¥' : cur === 'KRW' ? '₩' : cur === 'USD' ? '$' : '';
+  document.getElementById('ex-total-value').textContent = sym + total.toLocaleString();
+  document.getElementById('ex-row-count').textContent = `(${count}개)`;
+}
+
+function buildExpenseItems() {
+  const date = document.getElementById('ex-date').value;
+  const time = document.getElementById('ex-time').value;
+  const pay = document.getElementById('ex-pay').value;
+  const cur = document.getElementById('ex-cur').value;
+  const memo = document.getElementById('ex-memo').value.trim();
+  if (!date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
+  const items = [];
+  const ts = Date.now();
+  document.querySelectorAll('#ex-rows-container .ex-row').forEach((row, i) => {
+    const cat = row.querySelector('.ex-row-cat').value;
+    const name = row.querySelector('.ex-row-name').value.trim();
+    const amount = parseFloat(row.querySelector('.ex-row-amount').value);
+    if (!name || isNaN(amount) || amount <= 0) return;
+    items.push({
+      type: 'expense',
+      id: ts.toString() + '-' + i,
+      category: cat,
+      name,
+      date, time,
+      payment: pay,
+      currency: cur,
+      cost: amount,
+      memo,
+    });
+  });
+  if (items.length === 0) { showToast('⚠️ 항목명과 금액을 1개 이상 입력하세요'); return null; }
+  return items;
+}
+
 function onRentalCompanyChange() {
   const sel = document.getElementById('rt-company');
   const custom = document.getElementById('rt-company-custom');
@@ -3507,15 +3570,15 @@ function clearModalFields(type) {
     document.getElementById('fe-loc-display').textContent = '위치 미지정';
     document.getElementById('fe-memo').value = '';
   } else if (type === 'expense') {
-    document.getElementById('ex-category').value = '🍜 식비';
-    document.getElementById('ex-name').value = '';
     document.getElementById('ex-date').value = today;
     document.getElementById('ex-time').value = '';
-    document.getElementById('ex-cost').value = '';
     document.getElementById('ex-cur').value = 'JPY';
     document.getElementById('ex-pay').value = '현금';
-    document.getElementById('ex-people').value = 1;
     document.getElementById('ex-memo').value = '';
+    document.getElementById('ex-rows-container').innerHTML = '';
+    addExpenseRow();
+    document.getElementById('ex-add-row').style.display = '';
+    updateExpenseTotal();
   } else if (type === 'other') {
     document.getElementById('o-name').value = '';
     document.getElementById('o-date').value = today;
@@ -3639,15 +3702,15 @@ function fillModalFields(type, it) {
       updateLocDisplay('ferry', it.lat, it.lng);
     }
   } else if (type === 'expense') {
-    document.getElementById('ex-category').value = it.category || '🍜 식비';
-    document.getElementById('ex-name').value = it.name || '';
     document.getElementById('ex-date').value = it.date || '';
     document.getElementById('ex-time').value = it.time || '';
-    document.getElementById('ex-cost').value = it.cost != null ? it.cost : '';
     document.getElementById('ex-cur').value = it.currency || 'JPY';
     document.getElementById('ex-pay').value = it.payment || '현금';
-    document.getElementById('ex-people').value = it.people || 1;
     document.getElementById('ex-memo').value = it.memo || '';
+    document.getElementById('ex-rows-container').innerHTML = '';
+    addExpenseRow({ category: it.category, name: it.name, cost: it.cost });
+    document.getElementById('ex-add-row').style.display = 'none';
+    updateExpenseTotal();
   }
 }
 
@@ -3778,17 +3841,21 @@ function buildItemFromModal(type) {
     if (!base.name) { showToast('⚠️ 유람선/페리명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 탑승 날짜를 입력하세요'); return null; }
   } else if (type === 'expense') {
-    base.category = document.getElementById('ex-category').value;
-    base.name = document.getElementById('ex-name').value.trim();
+    // Edit mode: 단일 행에서 값 읽기
+    const row = document.querySelector('#ex-rows-container .ex-row');
+    if (!row) { showToast('⚠️ 항목을 입력하세요'); return null; }
+    base.category = row.querySelector('.ex-row-cat').value;
+    base.name = row.querySelector('.ex-row-name').value.trim();
+    const amount = parseFloat(row.querySelector('.ex-row-amount').value);
+    base.cost = isNaN(amount) ? null : amount;
+    base.currency = document.getElementById('ex-cur').value;
     base.date = document.getElementById('ex-date').value;
     base.time = document.getElementById('ex-time').value;
     base.payment = document.getElementById('ex-pay').value;
-    base.people = Number(document.getElementById('ex-people').value) || 1;
     base.memo = document.getElementById('ex-memo').value.trim();
-    readCost('ex');
     if (!base.name) { showToast('⚠️ 항목명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
-    if (base.cost == null || isNaN(base.cost)) { showToast('⚠️ 금액을 입력하세요'); return null; }
+    if (base.cost == null || base.cost <= 0) { showToast('⚠️ 금액을 입력하세요'); return null; }
   } else {
     base.name = document.getElementById('o-name').value.trim();
     base.date = document.getElementById('o-date').value;
@@ -3804,6 +3871,22 @@ function buildItemFromModal(type) {
 
 function saveItineraryItem() {
   const type = currentModalType || 'other';
+
+  // 신규 추가 시 소요경비는 다중 행 저장
+  if (type === 'expense' && !editingId) {
+    const newItems = buildExpenseItems();
+    if (!newItems) return;
+    let items = getItinerary();
+    newItems.forEach(it => items.push(it));
+    saveItinerary(items);
+    closeAddModal();
+    showToast(`✅ ${newItems.length}개 경비 항목 저장됨`);
+    editingId = null;
+    switchTab('itinerary', document.querySelector('.nav-btn'));
+    renderItinerary();
+    return;
+  }
+
   const item = buildItemFromModal(type);
   if (!item) return;
 

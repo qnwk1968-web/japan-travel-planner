@@ -951,6 +951,32 @@
   .trip-bar-sub { font-size: 11px; opacity: 0.78; margin-top: 2px; font-weight: 500; }
   .trip-bar-arrow { font-size: 22px; opacity: 0.7; flex-shrink: 0; font-weight: 300; }
 
+  /* 현재 위치 날씨 카드 */
+  .loc-weather-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
+    border-radius: var(--radius); padding: 12px 16px; margin-bottom: 14px;
+    color: #fff; cursor: pointer; user-select: none;
+    box-shadow: 0 4px 14px rgba(99,102,241,0.28);
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .loc-weather-card:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(99,102,241,0.2); }
+  .lw-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+  .lw-icon { font-size: 32px; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+  .lw-info { flex: 1; min-width: 0; }
+  .lw-place { font-size: 13px; font-weight: 800; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lw-desc { font-size: 11px; opacity: 0.85; margin-top: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lw-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .lw-temp { font-size: 26px; font-weight: 900; letter-spacing: -1px; }
+  .lw-refresh {
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    width: 28px; height: 28px; border-radius: 50%;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lw-refresh:active { background: rgba(255,255,255,0.35); }
+  [data-theme="dark"] .loc-weather-card { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
+
   /* ===== TRIP MANAGER OVERLAY ===== */
   #tripManagerOverlay {
     position: fixed; inset: 0; background: var(--bg); z-index: 260;
@@ -1443,6 +1469,21 @@
           <div class="trip-bar-sub" id="currentTripSub">탭하여 여행 관리</div>
         </div>
         <div class="trip-bar-arrow">›</div>
+      </div>
+
+      <!-- 현재 위치 날씨 요약 카드 -->
+      <div id="locWeatherCard" class="loc-weather-card" style="display:none;" onclick="onLocWeatherClick()">
+        <div class="lw-left">
+          <div class="lw-icon" id="lwIcon">🌤</div>
+          <div class="lw-info">
+            <div class="lw-place" id="lwPlace">현재 위치</div>
+            <div class="lw-desc" id="lwDesc">날씨 확인 중...</div>
+          </div>
+        </div>
+        <div class="lw-right">
+          <div class="lw-temp" id="lwTemp">--°</div>
+          <button class="lw-refresh" onclick="event.stopPropagation(); refreshLocWeather()" title="새로고침">↻</button>
+        </div>
       </div>
       <!-- Expense summary card -->
       <div id="expenseCard"></div>
@@ -2950,6 +2991,8 @@ function closeThemePicker() {
       el.classList.toggle('active', el.dataset.theme === saved);
     });
     renderToolbarGrid();
+    // 위치 권한 자동 요청 + 날씨 카드 로드 (지연 실행)
+    setTimeout(() => { try { initLocWeather(); } catch(e) { console.warn(e); } }, 800);
   });
 })();
 
@@ -5108,6 +5151,80 @@ function confirmAddCity() {
   renderCityGrid();
   loadWeather(en);
   showToast(`✅ ${ko} 추가됨`);
+}
+
+// ========== 현재 위치 날씨 ==========
+let locWeatherData = null;
+let locWeatherFetching = false;
+
+function initLocWeather() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    pos => loadLocWeather(pos.coords.latitude, pos.coords.longitude),
+    err => { console.warn('geo denied', err); /* 카드 숨김 유지 */ },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+  );
+}
+
+async function loadLocWeather(lat, lon) {
+  if (locWeatherFetching) return;
+  locWeatherFetching = true;
+  const card = document.getElementById('locWeatherCard');
+  if (!card) { locWeatherFetching = false; return; }
+  card.style.display = '';
+  document.getElementById('lwDesc').textContent = '날씨 확인 중...';
+  try {
+    const [wRes, gRes] = await Promise.all([
+      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OWM_KEY}&units=metric&lang=kr`),
+      fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${OWM_KEY}`)
+    ]);
+    if (!wRes.ok) throw new Error('weather api');
+    const w = await wRes.json();
+    let placeName = w.name || '현재 위치';
+    if (gRes.ok) {
+      const g = await gRes.json();
+      if (g && g[0]) {
+        placeName = (g[0].local_names && (g[0].local_names.ko || g[0].local_names.ja)) || g[0].name || placeName;
+      }
+    }
+    const id = w.weather[0].id;
+    const emoji = getWeatherEmoji(id);
+    const desc = w.weather[0].description;
+    const temp = Math.round(w.main.temp);
+    const feels = Math.round(w.main.feels_like);
+    const humidity = w.main.humidity;
+    locWeatherData = { lat, lon, placeName, id, emoji, desc, temp, feels, humidity, ts: Date.now() };
+    renderLocWeather();
+  } catch (e) {
+    console.warn('loadLocWeather', e);
+    document.getElementById('lwDesc').textContent = '날씨 정보 불러오기 실패';
+  } finally {
+    locWeatherFetching = false;
+  }
+}
+
+function renderLocWeather() {
+  if (!locWeatherData) return;
+  const { placeName, emoji, desc, temp, feels, humidity } = locWeatherData;
+  document.getElementById('lwIcon').textContent = emoji;
+  document.getElementById('lwPlace').textContent = `📍 ${placeName}`;
+  document.getElementById('lwDesc').textContent = `${desc} · 체감 ${feels}° · 습도 ${humidity}%`;
+  document.getElementById('lwTemp').textContent = `${temp}°`;
+}
+
+function refreshLocWeather() {
+  if (locWeatherData) {
+    loadLocWeather(locWeatherData.lat, locWeatherData.lon);
+  } else {
+    initLocWeather();
+  }
+  showToast('🔄 날씨 새로고침');
+}
+
+function onLocWeatherClick() {
+  // 카드 탭 시 날씨 탭으로 이동
+  const navBtns = document.querySelectorAll('.nav-btn');
+  if (navBtns[4]) switchTab('weather', navBtns[4]);
 }
 
 async function loadWeather(city) {

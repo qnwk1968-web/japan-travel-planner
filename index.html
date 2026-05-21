@@ -488,6 +488,40 @@
   [data-theme="dark"] .btn-type.t-shop    { background: linear-gradient(145deg,#3B1F8C,#6D28D9); color: #DDD6FE; border-bottom: 3px solid #5B21B6; }
   [data-theme="dark"] .btn-type.t-other   { background: linear-gradient(145deg,#2D3748,#475569); color: #CBD5E1; border-bottom: 3px solid #374151; }
 
+  /* 신규 메뉴 버튼 */
+  .btn-type.t-rental   { background: linear-gradient(145deg,#BBF7D0,#DCFCE7); color: #166534; border-bottom: 3px solid #86EFAC; }
+  .btn-type.t-ferry    { background: linear-gradient(145deg,#BAE6FD,#E0F2FE); color: #0C4A6E; border-bottom: 3px solid #7DD3FC; }
+  .btn-type.t-gas      { background: linear-gradient(145deg,#FEF08A,#FEF9C3); color: #854D0E; border-bottom: 3px solid #FDE047; }
+  .btn-type.t-pharmacy { background: linear-gradient(145deg,#FDA4AF,#FFE4E6); color: #9F1239; border-bottom: 3px solid #FB7185; }
+  [data-theme="dark"] .btn-type.t-rental   { background: linear-gradient(145deg,#14532D,#166534); color: #BBF7D0; border-bottom: 3px solid #15803D; }
+  [data-theme="dark"] .btn-type.t-ferry    { background: linear-gradient(145deg,#0C4A6E,#0369A1); color: #BAE6FD; border-bottom: 3px solid #075985; }
+  [data-theme="dark"] .btn-type.t-gas      { background: linear-gradient(145deg,#713F12,#A16207); color: #FEF08A; border-bottom: 3px solid #92400E; }
+  [data-theme="dark"] .btn-type.t-pharmacy { background: linear-gradient(145deg,#881337,#9F1239); color: #FDA4AF; border-bottom: 3px solid #9F1239; }
+
+  /* 설정 메뉴 토글 */
+  .settings-section-title { font-size:12px; font-weight:800; color:var(--text-dim); margin:14px 0 6px; letter-spacing:0.5px; }
+  .menu-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 2px; border-bottom:1px solid var(--divider,#eee); }
+  .menu-toggle-row:last-child { border-bottom:none; }
+  .menu-toggle-info { display:flex; align-items:center; gap:10px; }
+  .menu-toggle-icon { font-size:20px; width:32px; text-align:center; }
+  .menu-toggle-name { font-size:14px; font-weight:700; }
+  .menu-toggle-switch { position:relative; width:44px; height:24px; flex-shrink:0; }
+  .menu-toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+  .menu-toggle-slider { position:absolute; cursor:pointer; inset:0; background:#ccc; border-radius:12px; transition:.3s; }
+  .menu-toggle-slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+  input:checked + .menu-toggle-slider { background: var(--primary,#D64F7B); }
+  input:checked + .menu-toggle-slider:before { transform:translateX(20px); }
+
+  /* 사고 안내 */
+  .accident-step { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--divider,#eee); }
+  .accident-step:last-child { border-bottom:none; }
+  .accident-step-num { width:28px; height:28px; border-radius:50%; background:var(--primary,#D64F7B); color:white; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex-shrink:0; margin-top:2px; }
+  .accident-step-content { flex:1; }
+  .accident-step-title { font-size:13px; font-weight:800; margin-bottom:3px; }
+  .accident-step-desc { font-size:12px; color:var(--text-dim); line-height:1.6; }
+  .accident-call-btn { display:inline-flex; align-items:center; gap:5px; background:var(--primary,#D64F7B); color:white; border:none; border-radius:8px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; margin-top:6px; text-decoration:none; }
+  .accident-note { background:#FFF3CD; border-left:3px solid #FFC107; padding:10px 12px; border-radius:0 8px 8px 0; font-size:12px; line-height:1.6; margin-top:8px; }
+
   /* ===== 다크 테마 전용 텍스트/배경 오버라이드 ===== */
   [data-theme="dark"] .btn-outline {
     background: #2C2C2E; border-color: #48484A; color: #FFFFFF;
@@ -1392,6 +1426,7 @@
       <button id="installBtn" class="install-btn" onclick="onInstallClick()" style="display:none;" title="앱 설치">📲 앱 설치</button>
       <button class="refresh-btn" onclick="openShareModal()" title="일정 공유" style="font-size:12px;font-weight:900;width:auto;padding:0 10px;">공유</button>
       <button class="refresh-btn" onclick="openThemePicker()" title="테마 변경" style="font-size:12px;font-weight:900;width:auto;padding:0 10px;">테마</button>
+      <button class="refresh-btn" onclick="openGridSettings()" title="그리드 메뉴 설정" style="font-size:12px;font-weight:900;width:auto;padding:0 10px;">설정</button>
       <button class="refresh-btn" onclick="location.reload()" title="새로고침">↻</button>
     </div>
   </div>
@@ -1412,32 +1447,7 @@
 
       <!-- Quick-add toolbar -->
       <div class="itin-toolbar">
-        <div class="itin-toolbar-grid">
-          <button class="btn-type t-arrive" onclick="openTypedModal('flight_arrival')">
-            <span class="bt-icon">✈️</span><span class="bt-label">도착항공</span>
-          </button>
-          <button class="btn-type t-depart" onclick="openTypedModal('flight_departure')">
-            <span class="bt-icon">🛫</span><span class="bt-label">출발항공</span>
-          </button>
-          <button class="btn-type t-hotel" onclick="openTypedModal('hotel')">
-            <span class="bt-icon">🏨</span><span class="bt-label">숙박</span>
-          </button>
-          <button class="btn-type t-city" onclick="openTypedModal('city')">
-            <span class="bt-icon">🏙️</span><span class="bt-label">도시이동</span>
-          </button>
-          <button class="btn-type t-sight" onclick="openTypedModal('sight')">
-            <span class="bt-icon">🏯</span><span class="bt-label">관광지</span>
-          </button>
-          <button class="btn-type t-food" onclick="openTypedModal('food')">
-            <span class="bt-icon">🍜</span><span class="bt-label">맛집</span>
-          </button>
-          <button class="btn-type t-shop" onclick="openTypedModal('shop')">
-            <span class="bt-icon">🛍️</span><span class="bt-label">쇼핑</span>
-          </button>
-          <button class="btn-type t-other" onclick="switchTab('phrase',document.querySelectorAll('.nav-btn')[6])">
-            <span class="bt-icon">💬</span><span class="bt-label">회화</span>
-          </button>
-        </div>
+        <div class="itin-toolbar-grid" id="toolbarGrid"></div>
         <div class="itin-toolbar-bottom">
           <button class="btn btn-outline" style="flex:1;" onclick="showItineraryMap()">🗺️ 전체 지도</button>
           <button class="btn btn-outline" style="flex:1;" onclick="openPlanOverlay()">📋 전체 동선</button>
@@ -2024,6 +2034,105 @@
         </div>
       </div>
 
+      <!-- RENTAL CAR fields -->
+      <div id="fields-rental" class="type-fields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">렌트카 회사 *</label>
+          <input class="form-input" id="rt-company" placeholder="Times, Orix, Nippon 등">
+        </div>
+        <div class="form-group">
+          <label class="form-label">예약번호</label>
+          <input class="form-input" id="rt-resno" placeholder="예약 확인 번호">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">대여 시작일 *</label>
+            <input class="form-input" id="rt-start" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">반납일 *</label>
+            <input class="form-input" id="rt-end" type="date">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">총 렌트비</label>
+            <input class="form-input" id="rt-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="rt-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">전화번호</label>
+          <input class="form-input" id="rt-phone" type="tel" placeholder="렌트카 회사 연락처">
+        </div>
+        <div class="form-group">
+          <label class="form-label">픽업 위치</label>
+          <div class="loc-pick-row">
+            <button class="btn btn-blue btn-sm" onclick="startLocPick('rental')">🗺 지도에서 위치 지정</button>
+            <span class="loc-display" id="rt-loc-display">위치 미지정</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">메모</label>
+          <input class="form-input" id="rt-memo" placeholder="차종, 보험 등">
+        </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-outline" style="width:100%;background:#FFF0F3;border-color:#D64F7B;color:#D64F7B;font-weight:800;" onclick="openAccidentGuide()">🚨 일본 차량사고 발생 시 대처 절차</button>
+        </div>
+      </div>
+
+      <!-- FERRY fields -->
+      <div id="fields-ferry" class="type-fields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">유람선/페리명 *</label>
+          <input class="form-input" id="fe-name" placeholder="선박명 또는 항로명">
+        </div>
+        <div class="form-group">
+          <label class="form-label">항로 (출발 → 도착)</label>
+          <input class="form-input" id="fe-route" placeholder="예: 후쿠오카 → 오키나와">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">탑승 날짜 *</label>
+            <input class="form-input" id="fe-date" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">탑승 시간</label>
+            <input class="form-input" id="fe-time" type="time">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">요금</label>
+            <input class="form-input" id="fe-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="fe-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">탑승 위치 (터미널)</label>
+          <div class="loc-pick-row">
+            <button class="btn btn-blue btn-sm" onclick="startLocPick('ferry')">🗺 지도에서 위치 지정</button>
+            <span class="loc-display" id="fe-loc-display">위치 미지정</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">예약번호 / 메모</label>
+          <input class="form-input" id="fe-memo" placeholder="예약번호, 좌석등급 등">
+        </div>
+      </div>
+
       <!-- OTHER fields -->
       <div id="fields-other" class="type-fields" style="display:none;">
         <div class="form-group">
@@ -2100,6 +2209,84 @@
     <div class="sheet-footer">
       <button class="btn btn-outline" onclick="closeQuickAdd()">취소</button>
       <button class="btn btn-primary" onclick="confirmQuickAdd()">✅ 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grid Settings Sheet -->
+<div class="overlay" id="gridSettingsOverlay" style="z-index:1100;" onclick="closeGridSettings()">
+  <div class="sheet" id="gridSettingsSheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">⚙️ 그리드 메뉴 설정</div>
+    </div>
+    <div class="sheet-body" id="gridSettingsBody">
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">표시할 메뉴를 선택하세요. 최대 8개까지 노출됩니다.</p>
+      <div id="gridToggleList"></div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-outline" onclick="closeGridSettings()">닫기</button>
+      <button class="btn btn-primary" onclick="saveGridSettings()">✅ 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Accident Guide Sheet -->
+<div class="overlay" id="accidentOverlay" style="z-index:1200;" onclick="closeAccidentGuide()">
+  <div class="sheet" id="accidentSheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🚨 일본 차량사고 대처 절차</div>
+    </div>
+    <div class="sheet-body">
+      <div class="accident-note">⚠️ 침착하게 대응하세요. 일본은 경찰 신고가 법적 의무입니다.</div>
+      <div class="accident-step">
+        <div class="accident-step-num">1</div>
+        <div class="accident-step-content">
+          <div class="accident-step-title">부상자 확인 및 안전 확보</div>
+          <div class="accident-step-desc">즉시 차를 세우고 부상자가 있으면 119(구급차)에 신고합니다. 2차 사고 방지를 위해 비상등을 켜고 삼각대를 설치하세요.</div>
+          <a href="tel:119" class="accident-call-btn">📞 119 구급차</a>
+        </div>
+      </div>
+      <div class="accident-step">
+        <div class="accident-step-num">2</div>
+        <div class="accident-step-content">
+          <div class="accident-step-title">경찰에 신고 (법적 의무)</div>
+          <div class="accident-step-desc">일본에서는 사고 시 경찰 신고가 의무입니다. 110에 전화하여 사고 위치와 상황을 설명하세요. 신고 없이 자리를 떠나면 도주로 처리됩니다.</div>
+          <a href="tel:110" class="accident-call-btn">📞 110 경찰</a>
+        </div>
+      </div>
+      <div class="accident-step">
+        <div class="accident-step-num">3</div>
+        <div class="accident-step-content">
+          <div class="accident-step-title">렌트카 회사에 즉시 연락</div>
+          <div class="accident-step-desc">렌트카 회사에 전화하여 사고 발생 사실을 알리세요. 회사에서 이후 절차(대차, 보험 처리 등)를 안내해 줍니다. 렌트 계약서에 긴급 연락처가 있습니다.</div>
+        </div>
+      </div>
+      <div class="accident-step">
+        <div class="accident-step-num">4</div>
+        <div class="accident-step-content">
+          <div class="accident-step-title">상대방 정보 교환</div>
+          <div class="accident-step-desc">상대방 이름·연락처·차량번호·보험사를 기록하세요. 절대 현장에서 금전 합의를 하지 마세요. 사진으로 차량 파손 상태와 현장을 촬영해 두세요.</div>
+        </div>
+      </div>
+      <div class="accident-step">
+        <div class="accident-step-num">5</div>
+        <div class="accident-step-content">
+          <div class="accident-step-title">경찰 사고 증명서 수령</div>
+          <div class="accident-step-desc">경찰이 발급하는 사고 증명서 번호를 받아두세요. 보험 청구와 렌트카 회사 처리 모두에 필요합니다.</div>
+        </div>
+      </div>
+      <div class="accident-step">
+        <div class="accident-step-num">6</div>
+        <div class="accident-step-content">
+          <div class="accident-step-title">여행자 보험사에 연락</div>
+          <div class="accident-step-desc">본인이 가입한 여행자보험 또는 신용카드 부수 보험의 해외 긴급 연락처에 전화하세요. 대부분 24시간 한국어 서비스를 제공합니다.</div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-primary" onclick="closeAccidentGuide()">확인</button>
     </div>
   </div>
 </div>
@@ -2432,6 +2619,91 @@ function applyTheme(theme) {
   });
   closeThemePicker();
 }
+// ========== GRID MENU SETTINGS ==========
+const ALL_MENU_ITEMS = [
+  { key:'flight_arrival',  icon:'✈️',  label:'도착항공',  cssClass:'t-arrive',  action:"openTypedModal('flight_arrival')" },
+  { key:'flight_departure',icon:'🛫',  label:'출발항공',  cssClass:'t-depart',  action:"openTypedModal('flight_departure')" },
+  { key:'hotel',           icon:'🏨',  label:'숙박',      cssClass:'t-hotel',   action:"openTypedModal('hotel')" },
+  { key:'rental',          icon:'🚗',  label:'렌트카',    cssClass:'t-rental',  action:"openTypedModal('rental')" },
+  { key:'sight',           icon:'🏯',  label:'관광지',    cssClass:'t-sight',   action:"openTypedModal('sight')" },
+  { key:'food',            icon:'🍜',  label:'카페/맛집', cssClass:'t-food',    action:"openTypedModal('food')" },
+  { key:'shop',            icon:'🛍️', label:'쇼핑',      cssClass:'t-shop',    action:"openTypedModal('shop')" },
+  { key:'phrase',          icon:'💬',  label:'회화',      cssClass:'t-other',   action:"switchTab('phrase',document.querySelectorAll('.nav-btn')[6])" },
+  { key:'city',            icon:'🏙️', label:'도시이동',  cssClass:'t-city',    action:"openTypedModal('city')" },
+  { key:'ferry',           icon:'⛴️', label:'유람선',    cssClass:'t-ferry',   action:"openTypedModal('ferry')" },
+  { key:'gasstation',      icon:'⛽',  label:'주유소',    cssClass:'t-gas',     action:"openGasMap()" },
+  { key:'pharmacy',        icon:'💊',  label:'약국',      cssClass:'t-pharmacy',action:"openPharmacyMap()" },
+];
+const DEFAULT_GRID_KEYS = ['flight_arrival','flight_departure','hotel','rental','sight','food','shop','phrase'];
+
+function loadGridKeys() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('grid-menu-keys'));
+    if (Array.isArray(saved) && saved.length > 0) return saved;
+  } catch(e) {}
+  return [...DEFAULT_GRID_KEYS];
+}
+function renderToolbarGrid() {
+  const keys = loadGridKeys();
+  const grid = document.getElementById('toolbarGrid');
+  if (!grid) return;
+  grid.innerHTML = keys.map(k => {
+    const m = ALL_MENU_ITEMS.find(x => x.key === k);
+    if (!m) return '';
+    return `<button class="btn-type ${m.cssClass}" onclick="${m.action}">
+      <span class="bt-icon">${m.icon}</span><span class="bt-label">${m.label}</span>
+    </button>`;
+  }).join('');
+}
+function openGridSettings() {
+  const keys = loadGridKeys();
+  const list = document.getElementById('gridToggleList');
+  list.innerHTML = ALL_MENU_ITEMS.map(m => `
+    <div class="menu-toggle-row">
+      <div class="menu-toggle-info">
+        <span class="menu-toggle-icon">${m.icon}</span>
+        <span class="menu-toggle-name">${m.label}</span>
+      </div>
+      <label class="menu-toggle-switch">
+        <input type="checkbox" data-key="${m.key}" ${keys.includes(m.key) ? 'checked' : ''}>
+        <span class="menu-toggle-slider"></span>
+      </label>
+    </div>`).join('');
+  document.getElementById('gridSettingsOverlay').classList.add('open');
+}
+function closeGridSettings() {
+  document.getElementById('gridSettingsOverlay').classList.remove('open');
+}
+function saveGridSettings() {
+  const checks = document.querySelectorAll('#gridToggleList input[type=checkbox]');
+  const keys = [];
+  checks.forEach(cb => { if (cb.checked) keys.push(cb.dataset.key); });
+  if (keys.length === 0) { showToast('⚠️ 최소 1개 이상 선택하세요'); return; }
+  if (keys.length > 8) { showToast('⚠️ 최대 8개까지만 선택 가능합니다'); return; }
+  localStorage.setItem('grid-menu-keys', JSON.stringify(keys));
+  renderToolbarGrid();
+  closeGridSettings();
+  showToast('✅ 메뉴 설정이 저장되었습니다');
+}
+function openGasMap() {
+  navigator.geolocation.getCurrentPosition(
+    pos => { window.open(`https://www.google.com/maps/search/주유소/@${pos.coords.latitude},${pos.coords.longitude},15z`, '_blank'); },
+    () =>  { window.open('https://www.google.com/maps/search/ガソリンスタンド+Japan', '_blank'); }
+  );
+}
+function openPharmacyMap() {
+  navigator.geolocation.getCurrentPosition(
+    pos => { window.open(`https://www.google.com/maps/search/약국/@${pos.coords.latitude},${pos.coords.longitude},15z`, '_blank'); },
+    () =>  { window.open('https://www.google.com/maps/search/薬局+Japan', '_blank'); }
+  );
+}
+function openAccidentGuide() {
+  document.getElementById('accidentOverlay').classList.add('open');
+}
+function closeAccidentGuide() {
+  document.getElementById('accidentOverlay').classList.remove('open');
+}
+
 function openThemePicker() {
   document.getElementById('themeOverlay').classList.add('open');
   document.getElementById('themeSheet').classList.add('open');
@@ -2447,6 +2719,7 @@ function closeThemePicker() {
     document.querySelectorAll('.theme-item').forEach(el => {
       el.classList.toggle('active', el.dataset.theme === saved);
     });
+    renderToolbarGrid();
   });
 })();
 
@@ -2950,6 +3223,8 @@ const MODAL_TITLES = {
   sight: '🏯 관광지 추가',
   food: '🍜 맛집 추가',
   shop: '🛍️ 쇼핑 추가',
+  rental: '🚗 렌트카 추가',
+  ferry: '⛴️ 유람선/페리 추가',
   other: '📌 기타 추가',
 };
 
@@ -3043,6 +3318,25 @@ function clearModalFields(type) {
     document.getElementById('sh-loc-display').textContent = '위치 미지정';
     document.getElementById('sh-cost').value = '';
     document.getElementById('sh-cur').value = 'JPY';
+  } else if (type === 'rental') {
+    document.getElementById('rt-company').value = '';
+    document.getElementById('rt-resno').value = '';
+    document.getElementById('rt-start').value = today;
+    document.getElementById('rt-end').value = '';
+    document.getElementById('rt-cost').value = '';
+    document.getElementById('rt-cur').value = 'JPY';
+    document.getElementById('rt-phone').value = '';
+    document.getElementById('rt-loc-display').textContent = '위치 미지정';
+    document.getElementById('rt-memo').value = '';
+  } else if (type === 'ferry') {
+    document.getElementById('fe-name').value = '';
+    document.getElementById('fe-route').value = '';
+    document.getElementById('fe-date').value = today;
+    document.getElementById('fe-time').value = '';
+    document.getElementById('fe-cost').value = '';
+    document.getElementById('fe-cur').value = 'JPY';
+    document.getElementById('fe-loc-display').textContent = '위치 미지정';
+    document.getElementById('fe-memo').value = '';
   } else if (type === 'other') {
     document.getElementById('o-name').value = '';
     document.getElementById('o-date').value = today;
@@ -3130,11 +3424,36 @@ function fillModalFields(type, it) {
     document.getElementById('o-memo').value = it.memo || '';
     document.getElementById('o-cost').value = it.cost != null ? it.cost : '';
     document.getElementById('o-cur').value = it.currency || 'JPY';
+  } else if (type === 'rental') {
+    document.getElementById('rt-company').value = it.company || '';
+    document.getElementById('rt-resno').value = it.resno || '';
+    document.getElementById('rt-start').value = it.start || it.date || '';
+    document.getElementById('rt-end').value = it.end || '';
+    document.getElementById('rt-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('rt-cur').value = it.currency || 'JPY';
+    document.getElementById('rt-phone').value = it.phone || '';
+    document.getElementById('rt-memo').value = it.memo || '';
+    if (it.lat && it.lng) {
+      locPickLat = it.lat; locPickLng = it.lng;
+      updateLocDisplay('rental', it.lat, it.lng);
+    }
+  } else if (type === 'ferry') {
+    document.getElementById('fe-name').value = it.name || '';
+    document.getElementById('fe-route').value = it.route || '';
+    document.getElementById('fe-date').value = it.date || '';
+    document.getElementById('fe-time').value = it.time || '';
+    document.getElementById('fe-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('fe-cur').value = it.currency || 'JPY';
+    document.getElementById('fe-memo').value = it.memo || '';
+    if (it.lat && it.lng) {
+      locPickLat = it.lat; locPickLng = it.lng;
+      updateLocDisplay('ferry', it.lat, it.lng);
+    }
   }
 }
 
 function updateLocDisplay(type, lat, lng, label) {
-  const idMap = { hotel: 'h-loc-display', sight: 'si-loc-display', food: 'fo-loc-display', shop: 'sh-loc-display' };
+  const idMap = { hotel: 'h-loc-display', sight: 'si-loc-display', food: 'fo-loc-display', shop: 'sh-loc-display', rental: 'rt-loc-display', ferry: 'fe-loc-display' };
   const elId = idMap[type];
   if (!elId) return;
   const el = document.getElementById(elId);
@@ -3229,6 +3548,33 @@ function buildItemFromModal(type) {
     readCost('sh');
     if (!base.name) { showToast('⚠️ 장소명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
+  } else if (type === 'rental') {
+    base.company = document.getElementById('rt-company').value.trim();
+    base.resno = document.getElementById('rt-resno').value.trim();
+    base.start = document.getElementById('rt-start').value;
+    base.end = document.getElementById('rt-end').value;
+    base.phone = document.getElementById('rt-phone').value.trim();
+    base.memo = document.getElementById('rt-memo').value.trim();
+    base.lat = locPickLat;
+    base.lng = locPickLng;
+    base.name = base.company || '렌트카';
+    base.date = base.start;
+    readCost('rt');
+    if (!base.company) { showToast('⚠️ 렌트카 회사를 입력하세요'); return null; }
+    if (!base.start) { showToast('⚠️ 대여 시작일을 입력하세요'); return null; }
+    if (!base.end) { showToast('⚠️ 반납일을 입력하세요'); return null; }
+    if (base.end < base.start) { showToast('⚠️ 반납일은 시작일 이후여야 합니다'); return null; }
+  } else if (type === 'ferry') {
+    base.name = document.getElementById('fe-name').value.trim();
+    base.route = document.getElementById('fe-route').value.trim();
+    base.date = document.getElementById('fe-date').value;
+    base.time = document.getElementById('fe-time').value;
+    base.memo = document.getElementById('fe-memo').value.trim();
+    base.lat = locPickLat;
+    base.lng = locPickLng;
+    readCost('fe');
+    if (!base.name) { showToast('⚠️ 유람선/페리명을 입력하세요'); return null; }
+    if (!base.date) { showToast('⚠️ 탑승 날짜를 입력하세요'); return null; }
   } else {
     base.name = document.getElementById('o-name').value.trim();
     base.date = document.getElementById('o-date').value;

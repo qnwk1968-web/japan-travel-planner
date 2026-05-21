@@ -493,10 +493,12 @@
   .btn-type.t-ferry    { background: linear-gradient(145deg,#BAE6FD,#E0F2FE); color: #0C4A6E; border-bottom: 3px solid #7DD3FC; }
   .btn-type.t-gas      { background: linear-gradient(145deg,#FEF08A,#FEF9C3); color: #854D0E; border-bottom: 3px solid #FDE047; }
   .btn-type.t-pharmacy { background: linear-gradient(145deg,#FDA4AF,#FFE4E6); color: #9F1239; border-bottom: 3px solid #FB7185; }
+  .btn-type.t-expense  { background: linear-gradient(145deg,#FCD34D,#FEF3C7); color: #92400E; border-bottom: 3px solid #FBBF24; }
   [data-theme="dark"] .btn-type.t-rental   { background: linear-gradient(145deg,#14532D,#166534); color: #BBF7D0; border-bottom: 3px solid #15803D; }
   [data-theme="dark"] .btn-type.t-ferry    { background: linear-gradient(145deg,#0C4A6E,#0369A1); color: #BAE6FD; border-bottom: 3px solid #075985; }
   [data-theme="dark"] .btn-type.t-gas      { background: linear-gradient(145deg,#713F12,#A16207); color: #FEF08A; border-bottom: 3px solid #92400E; }
   [data-theme="dark"] .btn-type.t-pharmacy { background: linear-gradient(145deg,#881337,#9F1239); color: #FDA4AF; border-bottom: 3px solid #9F1239; }
+  [data-theme="dark"] .btn-type.t-expense  { background: linear-gradient(145deg,#78350F,#92400E); color: #FCD34D; border-bottom: 3px solid #B45309; }
 
   /* 설정 메뉴 토글 */
   .settings-section-title { font-size:12px; font-weight:800; color:var(--text-dim); margin:14px 0 6px; letter-spacing:0.5px; }
@@ -2038,7 +2040,18 @@
       <div id="fields-rental" class="type-fields" style="display:none;">
         <div class="form-group">
           <label class="form-label">렌트카 회사 *</label>
-          <input class="form-input" id="rt-company" placeholder="Times, Orix, Nippon 등">
+          <select class="form-select" id="rt-company" onchange="onRentalCompanyChange()">
+            <option value="타임즈 렌터카" selected>타임즈 렌터카 (Times)</option>
+            <option value="토요타 렌터카">토요타 렌터카 (Toyota)</option>
+            <option value="닛산 렌터카">닛산 렌터카 (Nissan)</option>
+            <option value="닛폰 렌터카">닛폰 렌터카 (Nippon)</option>
+            <option value="오릭스 렌터카">오릭스 렌터카 (Orix)</option>
+            <option value="버젯 렌터카">버젯 렌터카 (Budget)</option>
+            <option value="재팬 렌터카">재팬 렌터카 (J-net)</option>
+            <option value="에키 렌터카">에키 렌터카 (Eki / JR역)</option>
+            <option value="__custom__">✏️ 직접 입력...</option>
+          </select>
+          <input class="form-input" id="rt-company-custom" placeholder="회사명 입력" style="margin-top:6px;display:none;">
         </div>
         <div class="form-group">
           <label class="form-label">예약번호</label>
@@ -2130,6 +2143,73 @@
         <div class="form-group">
           <label class="form-label">예약번호 / 메모</label>
           <input class="form-input" id="fe-memo" placeholder="예약번호, 좌석등급 등">
+        </div>
+      </div>
+
+      <!-- EXPENSE fields -->
+      <div id="fields-expense" class="type-fields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">카테고리 *</label>
+          <select class="form-select" id="ex-category">
+            <option value="🍜 식비">🍜 식비</option>
+            <option value="🚇 교통">🚇 교통</option>
+            <option value="🏨 숙박">🏨 숙박</option>
+            <option value="🏯 관광/입장료">🏯 관광/입장료</option>
+            <option value="🛍️ 쇼핑">🛍️ 쇼핑</option>
+            <option value="⛽ 주유/렌트카">⛽ 주유/렌트카</option>
+            <option value="📱 통신/Wi-Fi">📱 통신/Wi-Fi</option>
+            <option value="🎫 입장권/티켓">🎫 입장권/티켓</option>
+            <option value="💊 의료/약품">💊 의료/약품</option>
+            <option value="🎁 선물">🎁 선물</option>
+            <option value="📌 기타">📌 기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">항목명 *</label>
+          <input class="form-input" id="ex-name" placeholder="예: 라멘, 지하철, 입장료">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">날짜 *</label>
+            <input class="form-input" id="ex-date" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">시간</label>
+            <input class="form-input" id="ex-time" type="time">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">금액 *</label>
+            <input class="form-input" id="ex-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="ex-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+              <option value="USD">$ 달러</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">결제수단</label>
+          <select class="form-select" id="ex-pay">
+            <option value="현금">💵 현금</option>
+            <option value="신용카드">💳 신용카드</option>
+            <option value="체크카드">💳 체크카드</option>
+            <option value="IC카드">🔖 IC카드 (Suica/PASMO/ICOCA)</option>
+            <option value="QR페이">📱 QR페이 (PayPay 등)</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">인원수</label>
+          <input class="form-input" id="ex-people" type="number" inputmode="numeric" placeholder="1" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">메모</label>
+          <input class="form-input" id="ex-memo" placeholder="영수증 번호, 상세 내용 등">
         </div>
       </div>
 
@@ -2282,6 +2362,81 @@
         <div class="accident-step-content">
           <div class="accident-step-title">여행자 보험사에 연락</div>
           <div class="accident-step-desc">본인이 가입한 여행자보험 또는 신용카드 부수 보험의 해외 긴급 연락처에 전화하세요. 대부분 24시간 한국어 서비스를 제공합니다.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;padding-top:18px;border-top:2px dashed var(--divider,#ddd);">
+        <div style="font-size:15px;font-weight:900;margin-bottom:6px;">🚗 일본 운전 핵심 주의사항</div>
+        <div class="accident-note" style="background:#E3F2FD;border-left-color:#1976D2;">💡 한국과 다른 점이 많습니다. 운전 전 반드시 숙지하세요.</div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">1</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">좌측통행 · 우측 운전석</div>
+            <div class="accident-step-desc">일본은 좌측통행입니다. 운전석은 우측, 와이퍼와 방향지시등 위치가 한국과 반대입니다. 교차로·주차장 진출입 시 차로 방향을 항상 확인하세요.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">2</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">국제운전면허증 필수 (제네바 협약)</div>
+            <div class="accident-step-desc">한국 운전면허만으로는 운전 불가. 출국 전 경찰서·운전면허시험장에서 국제운전면허증을 발급받으세요. 여권·국내면허증·국제면허증을 항상 휴대해야 합니다.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">3</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">음주운전 무관용 (한 잔도 금지)</div>
+            <div class="accident-step-desc">혈중알코올 0.03% 이상 시 면허취소·최대 징역 5년·벌금 100만엔. 동승자·차량 제공자까지 처벌됩니다. 전날 술도 주의하세요.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">4</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">적색 신호에서 우회전 금지</div>
+            <div class="accident-step-desc">한국과 달리 일본은 적색 신호 시 좌회전(우측통행 기준 한국의 우회전 격) 일체 불가. 반드시 녹색 신호 또는 화살표 신호에서만 진행하세요.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">5</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">"止まれ(토마레)" 표지 → 완전 정지</div>
+            <div class="accident-step-desc">빨간 역삼각형 STOP 표지에서는 반드시 차량을 완전히 멈추고 좌우 확인 후 출발해야 합니다. 서행 통과 시 위반 처리됩니다.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">6</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">횡단보도 보행자 절대 우선</div>
+            <div class="accident-step-desc">횡단보도 앞에 사람이 한 명이라도 서 있으면 무조건 정지. 미정지 시 보행자 방해 위반(벌점 2점·범칙금). 어린이·노약자는 특히 주의.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">7</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">속도 제한 엄격 (자동 단속 多)</div>
+            <div class="accident-step-desc">일반도로 50~60km/h, 고속도로 80~100km/h. 자동단속(オービス) 카메라가 곳곳에 있어 +25km/h 이상 초과 시 면허 정지·벌금형입니다.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">8</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">고속도로 통행료 + ETC 카드</div>
+            <div class="accident-step-desc">고속도로는 유료(예: 도쿄→오사카 약 ¥11,000). ETC 카드가 없으면 "一般(잇판)" 차로로 진입해 현금 결제하세요. 렌트카에서 ETC 카드 대여 가능.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">9</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">주정차 단속 매우 엄격</div>
+            <div class="accident-step-desc">노상 주차 거의 불가. 코인파킹(コインパーキング) 이용 필수. 위반 시 ¥10,000~25,000 벌금 + 차량 견인. 호텔·관광지 사전 주차 위치 확인.</div>
+          </div>
+        </div>
+        <div class="accident-step">
+          <div class="accident-step-num" style="background:#1976D2;">10</div>
+          <div class="accident-step-content">
+            <div class="accident-step-title">전조등 · 안전벨트 · 어린이 카시트</div>
+            <div class="accident-step-desc">해 진 후·터널·악천후 시 전조등 점등 의무. 전 좌석 안전벨트 의무. 6세 미만 어린이는 카시트 필수(미설치 시 위반). 렌트 시 미리 요청하세요.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2633,6 +2788,7 @@ const ALL_MENU_ITEMS = [
   { key:'ferry',           icon:'⛴️', label:'유람선',    cssClass:'t-ferry',   action:"openTypedModal('ferry')" },
   { key:'gasstation',      icon:'⛽',  label:'주유소',    cssClass:'t-gas',     action:"openGasMap()" },
   { key:'pharmacy',        icon:'💊',  label:'약국',      cssClass:'t-pharmacy',action:"openPharmacyMap()" },
+  { key:'expense',         icon:'💴',  label:'소요경비',  cssClass:'t-expense', action:"openTypedModal('expense')" },
 ];
 const DEFAULT_GRID_KEYS = ['flight_arrival','flight_departure','hotel','rental','sight','food','shop','phrase'];
 
@@ -2696,6 +2852,16 @@ function openPharmacyMap() {
     pos => { window.open(`https://www.google.com/maps/search/약국/@${pos.coords.latitude},${pos.coords.longitude},15z`, '_blank'); },
     () =>  { window.open('https://www.google.com/maps/search/薬局+Japan', '_blank'); }
   );
+}
+function onRentalCompanyChange() {
+  const sel = document.getElementById('rt-company');
+  const custom = document.getElementById('rt-company-custom');
+  if (sel.value === '__custom__') {
+    custom.style.display = '';
+    custom.focus();
+  } else {
+    custom.style.display = 'none';
+  }
 }
 function openAccidentGuide() {
   document.getElementById('accidentOverlay').classList.add('open');
@@ -3225,6 +3391,7 @@ const MODAL_TITLES = {
   shop: '🛍️ 쇼핑 추가',
   rental: '🚗 렌트카 추가',
   ferry: '⛴️ 유람선/페리 추가',
+  expense: '💴 소요경비 추가',
   other: '📌 기타 추가',
 };
 
@@ -3319,7 +3486,9 @@ function clearModalFields(type) {
     document.getElementById('sh-cost').value = '';
     document.getElementById('sh-cur').value = 'JPY';
   } else if (type === 'rental') {
-    document.getElementById('rt-company').value = '';
+    document.getElementById('rt-company').value = '타임즈 렌터카';
+    document.getElementById('rt-company-custom').value = '';
+    document.getElementById('rt-company-custom').style.display = 'none';
     document.getElementById('rt-resno').value = '';
     document.getElementById('rt-start').value = today;
     document.getElementById('rt-end').value = '';
@@ -3337,6 +3506,16 @@ function clearModalFields(type) {
     document.getElementById('fe-cur').value = 'JPY';
     document.getElementById('fe-loc-display').textContent = '위치 미지정';
     document.getElementById('fe-memo').value = '';
+  } else if (type === 'expense') {
+    document.getElementById('ex-category').value = '🍜 식비';
+    document.getElementById('ex-name').value = '';
+    document.getElementById('ex-date').value = today;
+    document.getElementById('ex-time').value = '';
+    document.getElementById('ex-cost').value = '';
+    document.getElementById('ex-cur').value = 'JPY';
+    document.getElementById('ex-pay').value = '현금';
+    document.getElementById('ex-people').value = 1;
+    document.getElementById('ex-memo').value = '';
   } else if (type === 'other') {
     document.getElementById('o-name').value = '';
     document.getElementById('o-date').value = today;
@@ -3425,7 +3604,17 @@ function fillModalFields(type, it) {
     document.getElementById('o-cost').value = it.cost != null ? it.cost : '';
     document.getElementById('o-cur').value = it.currency || 'JPY';
   } else if (type === 'rental') {
-    document.getElementById('rt-company').value = it.company || '';
+    const preset = ['타임즈 렌터카','토요타 렌터카','닛산 렌터카','닛폰 렌터카','오릭스 렌터카','버젯 렌터카','재팬 렌터카','에키 렌터카'];
+    const c = it.company || '타임즈 렌터카';
+    if (preset.includes(c)) {
+      document.getElementById('rt-company').value = c;
+      document.getElementById('rt-company-custom').style.display = 'none';
+      document.getElementById('rt-company-custom').value = '';
+    } else {
+      document.getElementById('rt-company').value = '__custom__';
+      document.getElementById('rt-company-custom').style.display = '';
+      document.getElementById('rt-company-custom').value = c;
+    }
     document.getElementById('rt-resno').value = it.resno || '';
     document.getElementById('rt-start').value = it.start || it.date || '';
     document.getElementById('rt-end').value = it.end || '';
@@ -3449,6 +3638,16 @@ function fillModalFields(type, it) {
       locPickLat = it.lat; locPickLng = it.lng;
       updateLocDisplay('ferry', it.lat, it.lng);
     }
+  } else if (type === 'expense') {
+    document.getElementById('ex-category').value = it.category || '🍜 식비';
+    document.getElementById('ex-name').value = it.name || '';
+    document.getElementById('ex-date').value = it.date || '';
+    document.getElementById('ex-time').value = it.time || '';
+    document.getElementById('ex-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('ex-cur').value = it.currency || 'JPY';
+    document.getElementById('ex-pay').value = it.payment || '현금';
+    document.getElementById('ex-people').value = it.people || 1;
+    document.getElementById('ex-memo').value = it.memo || '';
   }
 }
 
@@ -3549,7 +3748,10 @@ function buildItemFromModal(type) {
     if (!base.name) { showToast('⚠️ 장소명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'rental') {
-    base.company = document.getElementById('rt-company').value.trim();
+    const sel = document.getElementById('rt-company').value;
+    base.company = (sel === '__custom__')
+      ? document.getElementById('rt-company-custom').value.trim()
+      : sel;
     base.resno = document.getElementById('rt-resno').value.trim();
     base.start = document.getElementById('rt-start').value;
     base.end = document.getElementById('rt-end').value;
@@ -3575,6 +3777,18 @@ function buildItemFromModal(type) {
     readCost('fe');
     if (!base.name) { showToast('⚠️ 유람선/페리명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 탑승 날짜를 입력하세요'); return null; }
+  } else if (type === 'expense') {
+    base.category = document.getElementById('ex-category').value;
+    base.name = document.getElementById('ex-name').value.trim();
+    base.date = document.getElementById('ex-date').value;
+    base.time = document.getElementById('ex-time').value;
+    base.payment = document.getElementById('ex-pay').value;
+    base.people = Number(document.getElementById('ex-people').value) || 1;
+    base.memo = document.getElementById('ex-memo').value.trim();
+    readCost('ex');
+    if (!base.name) { showToast('⚠️ 항목명을 입력하세요'); return null; }
+    if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
+    if (base.cost == null || isNaN(base.cost)) { showToast('⚠️ 금액을 입력하세요'); return null; }
   } else {
     base.name = document.getElementById('o-name').value.trim();
     base.date = document.getElementById('o-date').value;

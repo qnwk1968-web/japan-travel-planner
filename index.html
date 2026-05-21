@@ -1509,14 +1509,15 @@
       <div class="add-city-form" id="addCityForm" style="display:none;">
         <div class="form-row">
           <div class="form-group" style="flex:1">
-            <label class="form-label">도시명 (영어) *</label>
-            <input class="form-input" id="newCityEn" placeholder="예: Hiroshima">
+            <label class="form-label">도시명 (한글) *</label>
+            <input class="form-input" id="newCityKo" placeholder="예: 히로시마" oninput="onCityKoInput()">
           </div>
           <div class="form-group" style="flex:1">
-            <label class="form-label">표시명 (한글)</label>
-            <input class="form-input" id="newCityKo" placeholder="예: 히로시마">
+            <label class="form-label">영문명 (자동)</label>
+            <input class="form-input" id="newCityEn" placeholder="자동 입력됨">
           </div>
         </div>
+        <div id="cityHint" style="display:none;font-size:11px;color:#D64F7B;margin:-4px 0 8px 2px;">⚠️ 지원 도시 목록에 없습니다. 영문명을 직접 입력하세요.</div>
         <div class="add-city-form-btns">
           <button class="btn btn-outline btn-sm" onclick="hideAddCityForm()">취소</button>
           <button class="btn btn-primary btn-sm" onclick="confirmAddCity()">추가</button>
@@ -5043,22 +5044,64 @@ function deleteWeatherCity(city) {
 
 function showAddCityForm() {
   document.getElementById('addCityForm').style.display = 'block';
-  document.getElementById('newCityEn').focus();
+  document.getElementById('newCityKo').focus();
 }
 function hideAddCityForm() {
   document.getElementById('addCityForm').style.display = 'none';
   document.getElementById('newCityEn').value = '';
   document.getElementById('newCityKo').value = '';
+  document.getElementById('newCityEn').style.background = '';
+  document.getElementById('cityHint').style.display = 'none';
+}
+// 한글 도시명 입력 → 영문/이모지 자동 채움
+function onCityKoInput() {
+  const ko = document.getElementById('newCityKo').value.trim();
+  const enEl = document.getElementById('newCityEn');
+  const hint = document.getElementById('cityHint');
+  if (!ko) {
+    enEl.value = '';
+    enEl.style.background = '';
+    hint.style.display = 'none';
+    return;
+  }
+  const data = KOREAN_CITY_MAP[ko];
+  if (data) {
+    enEl.value = data.en;
+    enEl.style.background = '#E8F5E9';
+    enEl.dataset.matched = '1';
+    hint.style.display = 'none';
+  } else {
+    // 부분 매칭 시도 (예: '닛코시' → '닛코')
+    let partial = null;
+    for (const key of Object.keys(KOREAN_CITY_MAP)) {
+      if (ko.includes(key) || key.includes(ko)) { partial = KOREAN_CITY_MAP[key]; break; }
+    }
+    if (partial) {
+      enEl.value = partial.en;
+      enEl.style.background = '#FFF8E1';
+      enEl.dataset.matched = 'partial';
+      hint.style.display = 'none';
+    } else {
+      // 매칭 안되면 영문 비우고 사용자가 직접 입력하도록
+      if (enEl.dataset.matched === '1' || enEl.dataset.matched === 'partial') enEl.value = '';
+      enEl.style.background = '';
+      enEl.dataset.matched = '';
+      hint.style.display = 'block';
+    }
+  }
 }
 function confirmAddCity() {
+  const ko = document.getElementById('newCityKo').value.trim();
   const en = document.getElementById('newCityEn').value.trim();
-  const ko = document.getElementById('newCityKo').value.trim() || en;
-  if (!en) { showToast('⚠️ 도시명(영어)을 입력하세요'); return; }
+  if (!ko) { showToast('⚠️ 한글 도시명을 입력하세요'); return; }
+  if (!en) { showToast('⚠️ 영문명을 입력하세요 (자동 매칭 안됨)'); return; }
+  const data = KOREAN_CITY_MAP[ko];
+  const emoji = data ? data.emoji : '📍';
   const cities = getWeatherCities();
   if (cities.find(c => c.city.toLowerCase() === en.toLowerCase())) {
     showToast('⚠️ 이미 추가된 지역입니다'); return;
   }
-  cities.push({ city: en, label: ko, emoji: '📍' });
+  cities.push({ city: en, label: ko, emoji });
   saveWeatherCities(cities);
   hideAddCityForm();
   currentWeatherCity = en;

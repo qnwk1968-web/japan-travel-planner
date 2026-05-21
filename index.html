@@ -2289,6 +2289,52 @@
         </div>
       </div>
 
+      <!-- PHARMACY fields -->
+      <div id="fields-pharmacy" class="type-fields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">약국명 *</label>
+          <input class="form-input" id="ph-name" placeholder="예: 마쓰모토 키요시 시부야점">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">날짜 *</label>
+            <input class="form-input" id="ph-date" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">시간</label>
+            <input class="form-input" id="ph-time" type="time">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">주소</label>
+          <input class="form-input" id="ph-addr" placeholder="주소 (선택)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">위치</label>
+          <div class="loc-pick-row">
+            <button class="btn btn-blue btn-sm" onclick="startLocPick('pharmacy')">🗺 지도에서 위치 지정</button>
+            <span class="loc-display" id="ph-loc-display">위치 미지정</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">예상 지출</label>
+            <input class="form-input" id="ph-cost" type="number" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">통화</label>
+            <select class="form-select" id="ph-cur">
+              <option value="JPY">¥ 엔</option>
+              <option value="KRW">₩ 원</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">메모</label>
+          <input class="form-input" id="ph-memo" placeholder="필요한 약 (감기약, 두통약, 정장제 등)">
+        </div>
+      </div>
+
       <!-- EXPENSE fields (multi-row) -->
       <div id="fields-expense" class="type-fields" style="display:none;">
         <div class="form-row">
@@ -2623,6 +2669,61 @@
     </div>
     <div class="sheet-footer">
       <button class="btn btn-outline" style="width:100%;" onclick="closeGasMode()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 약국 모드 선택 -->
+<div class="overlay" id="pharmModeOverlay" style="z-index:1100;" onclick="closePharmacyMode()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">💊 약국</div>
+    </div>
+    <div class="sheet-body">
+      <div class="gas-mode-choice" onclick="openPharmacyNearby()">
+        <div class="gas-mode-icon">📍</div>
+        <div class="gas-mode-info">
+          <div class="gas-mode-title">내 주변 약국 찾기</div>
+          <div class="gas-mode-desc">현재 위치 기준 가장 가까운 약국·드러그스토어</div>
+        </div>
+        <div class="gas-mode-arrow">›</div>
+      </div>
+      <div class="gas-mode-choice" onclick="closePharmacyMode(); openTypedModal('pharmacy');">
+        <div class="gas-mode-icon">📝</div>
+        <div class="gas-mode-info">
+          <div class="gas-mode-title">일정에 미리 등록</div>
+          <div class="gas-mode-desc">관광지처럼 약국 위치를 사전 추가</div>
+        </div>
+        <div class="gas-mode-arrow">›</div>
+      </div>
+      <div style="margin-top:10px;padding:10px 12px;background:#E8F5E9;border-radius:8px;font-size:11px;color:#1B5E20;line-height:1.5;">
+        💡 일본 약국 종류<br>
+        • 調剤薬局 (조제약국): 처방약<br>
+        • ドラッグストア (드러그스토어): 일반의약품·화장품·간식
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-outline" style="width:100%;" onclick="closePharmacyMode()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 가까운 약국 결과 -->
+<div class="overlay" id="pharmNearbyOverlay" style="z-index:1150;" onclick="closePharmacyNearby()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">📍 가까운 약국</div>
+    </div>
+    <div class="sheet-body">
+      <div id="pharmNearbyList" style="max-height:55vh;overflow-y:auto;">
+        <div style="text-align:center;padding:30px;color:var(--text-dim);">불러오는 중...</div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-outline" style="flex:1" onclick="closePharmacyNearby()">닫기</button>
+      <button class="btn btn-primary" style="flex:1" onclick="openPharmacyNearby()">🔄 새로고침</button>
     </div>
   </div>
 </div>
@@ -2991,7 +3092,7 @@ const ALL_MENU_ITEMS = [
   { key:'city',            icon:'🏙️', label:'도시이동',  cssClass:'t-city',    action:"openTypedModal('city')" },
   { key:'ferry',           icon:'⛴️', label:'유람선',    cssClass:'t-ferry',   action:"openTypedModal('ferry')" },
   { key:'gasstation',      icon:'⛽',  label:'주유소',    cssClass:'t-gas',     action:"openGasModeChoice()" },
-  { key:'pharmacy',        icon:'💊',  label:'약국',      cssClass:'t-pharmacy',action:"openPharmacyMap()" },
+  { key:'pharmacy',        icon:'💊',  label:'약국',      cssClass:'t-pharmacy',action:"openPharmacyModeChoice()" },
   { key:'expense',         icon:'💴',  label:'소요경비',  cssClass:'t-expense', action:"openTypedModal('expense')" },
 ];
 const DEFAULT_GRID_KEYS = ['flight_arrival','flight_departure','hotel','rental','sight','food','shop','phrase'];
@@ -3151,11 +3252,93 @@ function addGasFromNearby(payload) {
     });
   } catch(e) { console.warn(e); showToast('⚠️ 일정 추가 실패'); }
 }
-function openPharmacyMap() {
+// ========== 약국 (위치 기반 + 일정 등록) ==========
+function openPharmacyModeChoice() {
+  document.getElementById('pharmModeOverlay').classList.add('open');
+}
+function closePharmacyMode() {
+  document.getElementById('pharmModeOverlay').classList.remove('open');
+}
+function closePharmacyNearby() {
+  document.getElementById('pharmNearbyOverlay').classList.remove('open');
+}
+function openPharmacyNearby() {
+  closePharmacyMode();
+  document.getElementById('pharmNearbyOverlay').classList.add('open');
+  const list = document.getElementById('pharmNearbyList');
+  list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);"><div class="spinner" style="display:inline-block;"></div><br>현재 위치 확인 중...</div>';
+  if (!navigator.geolocation) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 이 브라우저는 위치 기능을 지원하지 않습니다.</div>';
+    return;
+  }
   navigator.geolocation.getCurrentPosition(
-    pos => { window.open(`https://www.google.com/maps/search/약국/@${pos.coords.latitude},${pos.coords.longitude},15z`, '_blank'); },
-    () =>  { window.open('https://www.google.com/maps/search/薬局+Japan', '_blank'); }
+    pos => fetchNearbyPharmacy(pos.coords.latitude, pos.coords.longitude),
+    err => {
+      list.innerHTML = `<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 위치 권한이 필요합니다.<br><small style="color:var(--text-dim);">설정에서 위치 접근을 허용해 주세요.</small></div>`;
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
   );
+}
+function fetchNearbyPharmacy(lat, lng) {
+  const list = document.getElementById('pharmNearbyList');
+  if (!window.google || !google.maps || !google.maps.places) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 지도 API 로드 실패. 새로고침 후 다시 시도하세요.</div>';
+    return;
+  }
+  const dummyDiv = document.createElement('div');
+  const service = new google.maps.places.PlacesService(map || dummyDiv);
+  service.nearbySearch({
+    location: { lat, lng },
+    radius: 2000, // 2km (도심 약국 밀도 고려)
+    type: ['pharmacy']
+  }, (results, status) => {
+    if (status !== google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim);">주변 2km 내 약국을 찾지 못했습니다.</div>';
+      return;
+    }
+    const enriched = results.map(p => {
+      const pLat = p.geometry.location.lat();
+      const pLng = p.geometry.location.lng();
+      const dist = haversine(lat, lng, pLat, pLng);
+      return { p, lat: pLat, lng: pLng, dist };
+    }).sort((a, b) => a.dist - b.dist).slice(0, 10);
+
+    list.innerHTML = enriched.map(({ p, lat: pLat, lng: pLng, dist }) => {
+      const name = (p.name || '약국').replace(/"/g, '&quot;');
+      const addr = (p.vicinity || '').replace(/"/g, '&quot;');
+      const rating = p.rating ? `⭐ ${p.rating} (${p.user_ratings_total || 0})` : '';
+      const open = p.opening_hours ? (p.opening_hours.open_now ? '🟢 영업중' : '🔴 영업종료') : '';
+      const distStr = dist < 1000 ? `${Math.round(dist)}m` : `${(dist/1000).toFixed(1)}km`;
+      const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${p.place_id}`;
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ name: p.name, addr: p.vicinity, lat: pLat, lng: pLng }))));
+      return `
+        <div class="gas-near-item">
+          <div class="gas-near-info">
+            <div class="gas-near-name">${name}</div>
+            ${addr ? `<div class="gas-near-meta">📍 ${addr}</div>` : ''}
+            <div class="gas-near-meta">${rating} ${open ? '· ' + open : ''}</div>
+            <div class="gas-near-actions">
+              <a class="gas-near-btn b-map" href="${mapUrl}" target="_blank" rel="noopener">🗺 지도 열기</a>
+              <button class="gas-near-btn b-plan" onclick="addPharmacyFromNearby('${payload}')">📌 일정 추가</button>
+            </div>
+          </div>
+          <div class="gas-near-dist">${distStr}</div>
+        </div>`;
+    }).join('');
+  });
+}
+function addPharmacyFromNearby(payload) {
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(payload))));
+    closePharmacyNearby();
+    openTypedModal('pharmacy', {
+      name: data.name,
+      addr: data.addr,
+      lat: data.lat,
+      lng: data.lng,
+      date: new Date().toISOString().slice(0,10)
+    });
+  } catch(e) { console.warn(e); showToast('⚠️ 일정 추가 실패'); }
 }
 // ========== EXPENSE MULTI-ROW ==========
 const EXPENSE_CATEGORIES = ['🍜 식비','🚇 교통','🏨 숙박','🏯 관광/입장료','🛍️ 쇼핑','⛽ 주유/렌트카','📱 통신/Wi-Fi','🎫 입장권/티켓','💊 의료/약품','🎁 선물','📌 기타'];
@@ -3254,7 +3437,7 @@ function closeAccidentGuide() {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.0.0';
 const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v13';
+const APP_CACHE = 'v14';
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
@@ -3810,6 +3993,7 @@ const MODAL_TITLES = {
   rental: '🚗 렌트카 추가',
   ferry: '⛴️ 유람선/페리 추가',
   gasstation: '⛽ 주유소 추가',
+  pharmacy: '💊 약국 추가',
   expense: '💴 소요경비 추가',
   other: '📌 기타 추가',
 };
@@ -3934,6 +4118,15 @@ function clearModalFields(type) {
     document.getElementById('gs-cost').value = '';
     document.getElementById('gs-cur').value = 'JPY';
     document.getElementById('gs-memo').value = '';
+  } else if (type === 'pharmacy') {
+    document.getElementById('ph-name').value = '';
+    document.getElementById('ph-date').value = today;
+    document.getElementById('ph-time').value = '';
+    document.getElementById('ph-addr').value = '';
+    document.getElementById('ph-loc-display').textContent = '위치 미지정';
+    document.getElementById('ph-cost').value = '';
+    document.getElementById('ph-cur').value = 'JPY';
+    document.getElementById('ph-memo').value = '';
   } else if (type === 'expense') {
     document.getElementById('ex-date').value = today;
     document.getElementById('ex-time').value = '';
@@ -4078,6 +4271,18 @@ function fillModalFields(type, it) {
       locPickLat = it.lat; locPickLng = it.lng;
       updateLocDisplay('gasstation', it.lat, it.lng);
     }
+  } else if (type === 'pharmacy') {
+    document.getElementById('ph-name').value = it.name || '';
+    document.getElementById('ph-date').value = it.date || '';
+    document.getElementById('ph-time').value = it.time || '';
+    document.getElementById('ph-addr').value = it.addr || '';
+    document.getElementById('ph-cost').value = it.cost != null ? it.cost : '';
+    document.getElementById('ph-cur').value = it.currency || 'JPY';
+    document.getElementById('ph-memo').value = it.memo || '';
+    if (it.lat && it.lng) {
+      locPickLat = it.lat; locPickLng = it.lng;
+      updateLocDisplay('pharmacy', it.lat, it.lng);
+    }
   } else if (type === 'expense') {
     document.getElementById('ex-date').value = it.date || '';
     document.getElementById('ex-time').value = it.time || '';
@@ -4092,7 +4297,7 @@ function fillModalFields(type, it) {
 }
 
 function updateLocDisplay(type, lat, lng, label) {
-  const idMap = { hotel: 'h-loc-display', sight: 'si-loc-display', food: 'fo-loc-display', shop: 'sh-loc-display', rental: 'rt-loc-display', ferry: 'fe-loc-display', gasstation: 'gs-loc-display' };
+  const idMap = { hotel: 'h-loc-display', sight: 'si-loc-display', food: 'fo-loc-display', shop: 'sh-loc-display', rental: 'rt-loc-display', ferry: 'fe-loc-display', gasstation: 'gs-loc-display', pharmacy: 'ph-loc-display' };
   const elId = idMap[type];
   if (!elId) return;
   const el = document.getElementById(elId);
@@ -4227,6 +4432,17 @@ function buildItemFromModal(type) {
     base.lng = locPickLng;
     readCost('gs');
     if (!base.name) { showToast('⚠️ 주유소명을 입력하세요'); return null; }
+    if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
+  } else if (type === 'pharmacy') {
+    base.name = document.getElementById('ph-name').value.trim();
+    base.date = document.getElementById('ph-date').value;
+    base.time = document.getElementById('ph-time').value;
+    base.addr = document.getElementById('ph-addr').value.trim();
+    base.memo = document.getElementById('ph-memo').value.trim();
+    base.lat = locPickLat;
+    base.lng = locPickLng;
+    readCost('ph');
+    if (!base.name) { showToast('⚠️ 약국명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'expense') {
     // Edit mode: 단일 행에서 값 읽기

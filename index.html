@@ -2042,8 +2042,15 @@
       <!-- FOOD fields -->
       <div id="fields-food" class="type-fields" style="display:none;">
         <div class="form-group">
+          <label class="form-label">구분 *</label>
+          <select class="form-select" id="fo-kind">
+            <option value="restaurant" selected>🍜 맛집</option>
+            <option value="cafe">☕ 카페</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label class="form-label">장소명 *</label>
-          <input class="form-input" id="fo-name" placeholder="식당명 입력">
+          <input class="form-input" id="fo-name" placeholder="식당·카페명 입력">
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -2971,10 +2978,14 @@ const TYPE_CONFIG = {
   other:           { icon: '📌',  label: '기타',       color: '#8892a4' },
 };
 
-function getTypeIcon(type) {
+function getTypeIcon(type, kind) {
+  // food 타입에서 카페 구분 시 ☕ 사용
+  if (type === 'food' && kind === 'cafe') return '☕';
   return (TYPE_CONFIG[type] || TYPE_CONFIG.other).icon;
 }
-function getTypeLabel(type) {
+function getTypeLabel(type, kind) {
+  if (type === 'food' && kind === 'cafe') return '카페';
+  if (type === 'food') return '맛집';
   return (TYPE_CONFIG[type] || TYPE_CONFIG.other).label;
 }
 
@@ -3455,7 +3466,7 @@ function closeAccidentGuide() {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.0.0';
 const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v15';
+const APP_CACHE = 'v16';
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
@@ -3896,7 +3907,7 @@ function formatDate(d) {
 
 function renderItineraryItem(it, contextDate, idxInDay, dayCount) {
   const type = it.type || 'other';
-  const icon = getTypeIcon(type);
+  const icon = getTypeIcon(type, it.kind);
   const id = escapeHtml(it.id);
 
   // Sub-details
@@ -4007,7 +4018,7 @@ const MODAL_TITLES = {
   hotel: '🏨 숙박 추가',
   city: '🏙️ 방문도시 추가',
   sight: '🏯 관광지 추가',
-  food: '🍜 맛집 추가',
+  food: '🍜 카페·맛집 추가',
   shop: '🛍️ 쇼핑 추가',
   rental: '🚗 렌트카 추가',
   ferry: '⛴️ 유람선/페리 추가',
@@ -4088,6 +4099,7 @@ function clearModalFields(type) {
     document.getElementById('si-cost').value = '';
     document.getElementById('si-cur').value = 'JPY';
   } else if (type === 'food') {
+    document.getElementById('fo-kind').value = 'restaurant';
     document.getElementById('fo-name').value = '';
     document.getElementById('fo-date').value = today;
     document.getElementById('fo-time').value = '';
@@ -4210,6 +4222,7 @@ function fillModalFields(type, it) {
       updateLocDisplay('sight', it.lat, it.lng);
     }
   } else if (type === 'food') {
+    document.getElementById('fo-kind').value = it.kind || 'restaurant';
     document.getElementById('fo-name').value = it.name || '';
     document.getElementById('fo-date').value = it.date || '';
     document.getElementById('fo-time').value = it.time || '';
@@ -4388,6 +4401,7 @@ function buildItemFromModal(type) {
     if (!base.name) { showToast('⚠️ 장소명을 입력하세요'); return null; }
     if (!base.date) { showToast('⚠️ 날짜를 입력하세요'); return null; }
   } else if (type === 'food') {
+    base.kind = document.getElementById('fo-kind').value;
     base.name = document.getElementById('fo-name').value.trim();
     base.date = document.getElementById('fo-date').value;
     base.time = document.getElementById('fo-time').value;
@@ -4951,7 +4965,7 @@ function renderPlanOverlay(items) {
     let prevTimeMin = null;
     dayItems.forEach(it => {
       const type = it.type || 'other';
-      const icon = getTypeIcon(type);
+      const icon = getTypeIcon(type, it.kind);
       const name = it.name || '(이름 없음)';
       const time = it.time || '';
       const isFlight = type === 'flight_arrival' || type === 'flight_departure';

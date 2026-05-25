@@ -3101,18 +3101,27 @@ function checkIncomingShare() {
 }
 
 function importSharedTrip() {
-  if (!_sharedTripData) return;
-  const trip = JSON.parse(JSON.stringify(_sharedTripData));
-  trip.id = 'trip_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-  trip.name = (trip.name || '공유 여행') + ' (공유받음)';
-  const all = getAllTrips();
-  all.push(trip);
-  saveTrips(all);
-  setActiveTripId(trip.id);
-  document.getElementById('shareImportOverlay').classList.remove('open');
-  renderItinerary();
-  showToast('✅ 일정이 추가됐습니다!');
-  _sharedTripData = null;
+  if (!_sharedTripData) { showToast('⚠️ 공유 데이터가 없습니다'); return; }
+  try {
+    const trip = JSON.parse(JSON.stringify(_sharedTripData));
+    trip.id = 'trip_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    trip.name = (trip.name || '공유 여행') + ' (공유받음)';
+    const all = getAllTrips();
+    all.push(trip);
+    saveAllTrips(all);
+    setActiveTripId(trip.id);
+    document.getElementById('shareImportOverlay').classList.remove('open');
+    // 현재 화면이 일정 탭이 아닐 수 있으니 강제 전환
+    const navBtns = document.querySelectorAll('.nav-btn');
+    if (navBtns[0]) switchTab('itinerary', navBtns[0]);
+    renderItinerary();
+    showToast(`✅ "${trip.name}" 일정이 추가됐습니다! (${(trip.items||[]).length}개 항목)`);
+    if (window.trackEvent) trackEvent('import_shared_trip', { items: (trip.items||[]).length });
+    _sharedTripData = null;
+  } catch (e) {
+    console.error('importSharedTrip', e);
+    showToast('⚠️ 일정 추가 실패: ' + e.message.substring(0,60));
+  }
 }
 
 async function installSharedApp() {
@@ -3750,7 +3759,7 @@ function closeAccidentGuide() {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.0.0';
 const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v20';
+const APP_CACHE = 'v21';
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;

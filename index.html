@@ -3084,20 +3084,64 @@ function checkIncomingShare() {
   const hash = location.hash;
   if (!hash.startsWith('#share=')) return;
   const encoded = hash.slice(7);
+  // 디버그: 어디까지 진행됐는지 표시
+  console.log('[share] received encoded length:', encoded.length);
   history.replaceState(null, '', location.pathname);
   try {
-    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
-    if (!data.trip) return;
+    if (!encoded) throw new Error('빈 공유 데이터');
+    const decoded = atob(encoded);
+    const data = JSON.parse(decodeURIComponent(escape(decoded)));
+    console.log('[share] parsed:', data);
+    if (!data || !data.trip) throw new Error('trip 필드 없음');
     _sharedTripData = data.trip;
     const trip = data.trip;
     const items = trip.items || [];
     const dates = items.map(i => i.date || i.checkin).filter(Boolean).sort();
     const meta = `일정 ${items.length}개${dates.length ? ' · ' + dates[0] + (dates[dates.length-1] !== dates[0] ? ' ~ ' + dates[dates.length-1] : '') : ''}`;
-    document.getElementById('shareImportName').textContent = trip.name;
-    document.getElementById('shareImportMeta').textContent = meta;
-    if (_deferredInstallPrompt) document.getElementById('shareInstallBtn').style.display = '';
-    document.getElementById('shareImportOverlay').classList.add('open');
-  } catch(e) { console.warn('share parse error', e); }
+    const nameEl = document.getElementById('shareImportName');
+    const metaEl = document.getElementById('shareImportMeta');
+    const overlayEl = document.getElementById('shareImportOverlay');
+    if (!nameEl || !metaEl || !overlayEl) {
+      // 화면 요소가 아직 준비 안 됐으면 지연 재시도
+      setTimeout(() => checkIncomingShare_retry(data.trip), 500);
+      return;
+    }
+    nameEl.textContent = trip.name || '(이름 없음)';
+    metaEl.textContent = meta;
+    if (typeof _deferredInstallPrompt !== 'undefined' && _deferredInstallPrompt) {
+      const installBtn = document.getElementById('shareInstallBtn');
+      if (installBtn) installBtn.style.display = '';
+    }
+    overlayEl.classList.add('open');
+    if (window.trackEvent) trackEvent('share_received', { items: items.length });
+  } catch(e) {
+    console.error('[share] parse error:', e, 'encoded:', encoded.substring(0,60));
+    // 사용자에게도 알림
+    setTimeout(() => {
+      if (typeof showToast === 'function') {
+        showToast('⚠️ 공유 링크 분석 실패: ' + e.message);
+      } else {
+        alert('공유 링크를 읽을 수 없습니다.\n' + e.message);
+      }
+    }, 500);
+  }
+}
+
+function checkIncomingShare_retry(tripData) {
+  _sharedTripData = tripData;
+  const nameEl = document.getElementById('shareImportName');
+  const metaEl = document.getElementById('shareImportMeta');
+  const overlayEl = document.getElementById('shareImportOverlay');
+  if (!nameEl || !overlayEl) {
+    console.warn('[share] retry: elements still missing');
+    return;
+  }
+  const items = tripData.items || [];
+  const dates = items.map(i => i.date || i.checkin).filter(Boolean).sort();
+  const meta = `일정 ${items.length}개${dates.length ? ' · ' + dates[0] + (dates[dates.length-1] !== dates[0] ? ' ~ ' + dates[dates.length-1] : '') : ''}`;
+  nameEl.textContent = tripData.name || '(이름 없음)';
+  metaEl.textContent = meta;
+  overlayEl.classList.add('open');
 }
 
 function importSharedTrip() {
@@ -3759,7 +3803,7 @@ function closeAccidentGuide() {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.0.0';
 const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v21';
+const APP_CACHE = 'v22';
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
@@ -3798,6 +3842,12 @@ function closeThemePicker() {
     renderToolbarGrid();
     // 위치 권한 자동 요청 + 날씨 카드 로드 (지연 실행)
     setTimeout(() => { try { initLocWeather(); } catch(e) { console.warn(e); } }, 800);
+    // 공유 받기 처리 — Google Maps 로드 기다리지 않고 즉시 시도
+    setTimeout(() => { try { checkIncomingShare(); } catch(e) { console.warn('checkIncomingShare', e); } }, 100);
+    // PWA가 이미 백그라운드일 때 새 공유 링크 들어오면 hashchange로 감지
+    window.addEventListener('hashchange', () => {
+      try { checkIncomingShare(); } catch(e) { console.warn('hashchange share', e); }
+    });
     // 버전 정보 동기화
     try {
       const v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : '';
@@ -3825,7 +3875,7 @@ function initApp() {
   initTrips();
   renderItinerary();
   renderCityGrid();
-  checkIncomingShare();
+  // checkIncomingShare는 DOMContentLoaded에서 이미 호출됨
   // Background fetch FX rate so expense card uses live rate
   loadFxRate(false);
 }

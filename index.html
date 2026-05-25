@@ -3036,7 +3036,9 @@ window.addEventListener('beforeinstallprompt', e => {
 function generateShareUrl(trip) {
   try {
     const data = JSON.stringify({ trip });
-    const encoded = btoa(unescape(encodeURIComponent(data)));
+    // URL-safe base64: +/=  ->  -_~  (메신저 URL 인코딩에서 안전)
+    const encoded = btoa(unescape(encodeURIComponent(data)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '~');
     return SHARE_BASE_URL + '#share=' + encoded;
   } catch(e) { return SHARE_BASE_URL; }
 }
@@ -3083,12 +3085,19 @@ async function doShare(type) {
 function checkIncomingShare() {
   const hash = location.hash;
   if (!hash.startsWith('#share=')) return;
-  const encoded = hash.slice(7);
+  let encoded = hash.slice(7);
   // 디버그: 어디까지 진행됐는지 표시
-  console.log('[share] received encoded length:', encoded.length);
+  console.log('[share] raw encoded length:', encoded.length, 'preview:', encoded.substring(0,40));
   history.replaceState(null, '', location.pathname);
   try {
     if (!encoded) throw new Error('빈 공유 데이터');
+    // 1. 메신저가 percent-encode 했을 수 있으니 디코드
+    try { encoded = decodeURIComponent(encoded); } catch(de) { console.log('[share] decodeURI skip'); }
+    // 2. URL-safe base64 (-_~) -> 표준 base64 (+/=)
+    encoded = encoded.replace(/-/g, '+').replace(/_/g, '/').replace(/~/g, '=');
+    // 3. 패딩 보정 (길이가 4의 배수가 되도록)
+    while (encoded.length % 4) encoded += '=';
+    console.log('[share] normalized length:', encoded.length);
     const decoded = atob(encoded);
     const data = JSON.parse(decodeURIComponent(escape(decoded)));
     console.log('[share] parsed:', data);
@@ -3803,7 +3812,7 @@ function closeAccidentGuide() {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.0.0';
 const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v22';
+const APP_CACHE = 'v23';
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;

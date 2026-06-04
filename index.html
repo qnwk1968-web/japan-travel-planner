@@ -1506,7 +1506,7 @@
   <div class="header">
     <div class="header-text">
       <h1>🗾 일본 여행 플래너</h1>
-      <p>스마트한 일본 여행 올인원 앱 · <span id="hdrVer" style="opacity:0.7;font-size:10px;font-weight:700;letter-spacing:0.3px;">v1.0</span></p>
+      <p>스마트한 일본 여행 올인원 앱 · <span id="hdrVer" style="opacity:0.7;font-size:10px;font-weight:700;letter-spacing:0.3px;cursor:pointer;" onclick="openGridSettings()" title="앱 정보">v1.0</span></p>
     </div>
     <div class="header-right">
       <button id="installBtn" class="install-btn" onclick="onInstallClick()" style="display:none;" title="앱 설치">📲 앱 설치</button>
@@ -2529,9 +2529,14 @@
           <span id="infoBuild" style="font-weight:700;">2026-05-21</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
-          <span style="color:var(--text-dim);">캐시 버전</span>
-          <span id="infoCache" style="font-weight:700;">v11</span>
+          <span style="color:var(--text-dim);">커밋</span>
+          <span id="infoCommit" style="font-weight:700;font-family:monospace;font-size:12px;">-</span>
         </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+          <span style="color:var(--text-dim);">캐시 버전</span>
+          <span id="infoCache" style="font-weight:700;">v24</span>
+        </div>
+        <div id="infoChangelog" style="margin-top:10px;border-top:1px dashed rgba(0,0,0,0.08);padding-top:10px;"></div>
         <div style="margin-top:10px;display:flex;gap:6px;">
           <a href="https://github.com/qnwk1968-web/japan-travel-planner" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:9px;background:#1a1a1a;color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">🐙 GitHub</a>
           <button onclick="forceUpdateApp()" style="flex:1;padding:9px;background:#0EA5E9;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🔄 강제 업데이트</button>
@@ -3838,9 +3843,14 @@ function closeAccidentGuide() {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.0.0';
-const APP_BUILD = '2026-05-21';
-const APP_CACHE = 'v23';
+const APP_VERSION = '1.1.0';
+const APP_BUILD = '2026-06-04';
+const APP_COMMIT = '721d009';
+const APP_CACHE = 'v24';
+const APP_CHANGELOG = [
+  { ver: '1.1.0', date: '2026-06-04', note: '영수증 OCR 자동저장 · 경비합계 카드 표시 수정' },
+  { ver: '1.0.0', date: '2026-05-21', note: '최초 출시' },
+];
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
@@ -3889,11 +3899,28 @@ function closeThemePicker() {
     try {
       const v = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : '';
       if (v) {
+        // 헤더 뱃지: v1.1.0 · 2026-06-04 · #721d009
         const hdr = document.getElementById('hdrVer');
-        if (hdr) hdr.textContent = 'v' + v.split('.').slice(0,2).join('.');
+        if (hdr) {
+          hdr.textContent = `v${v} · ${APP_BUILD} · #${APP_COMMIT}`;
+          hdr.title = `버전 ${v} (${APP_BUILD}) — 클릭해서 자세히 보기`;
+        }
         const iv = document.getElementById('infoVer'); if (iv) iv.textContent = 'v' + v;
         const ib = document.getElementById('infoBuild'); if (ib) ib.textContent = APP_BUILD;
+        const icommit = document.getElementById('infoCommit'); if (icommit) icommit.textContent = '#' + APP_COMMIT;
         const ic = document.getElementById('infoCache'); if (ic) ic.textContent = APP_CACHE;
+        // 변경 이력
+        const cl = document.getElementById('infoChangelog');
+        if (cl && typeof APP_CHANGELOG !== 'undefined' && APP_CHANGELOG.length) {
+          cl.innerHTML = '<div style="font-size:11px;font-weight:800;color:var(--text-dim);margin-bottom:6px;">📋 변경 이력</div>' +
+            APP_CHANGELOG.map(c =>
+              `<div style="display:flex;gap:8px;padding:4px 0;font-size:11px;border-bottom:1px solid rgba(0,0,0,0.04);">
+                <span style="color:var(--pink);font-weight:800;white-space:nowrap;">v${c.ver}</span>
+                <span style="color:var(--text-dim);white-space:nowrap;">${c.date}</span>
+                <span style="color:var(--text);">${c.note}</span>
+              </div>`
+            ).join('');
+        }
       }
     } catch(e) {}
   });

@@ -3608,23 +3608,25 @@ async function scanReceipt(input) {
 
     const prompt = `이 일본 영수증 사진을 분석해 JSON 한 줄로만 답하세요. 인식 안 된 항목은 빈 문자열 "" 또는 null 로 두세요.
 
-일본 영수증 금액 구조 (중요):
-  小計/本体価格 = 세전 공급가액 (부가세 미포함, 보통 크게 표시됨)
-  消費税/内税/外税 = 부가세
-  合計/税込合計/お支払金額 = 세액포함 최종 결제금액 (공급가 + 부가세, 합계란 가장 큰 숫자)
-  → total 에는 반드시 세액포함 최종금액을 넣을 것. 공급가액(税抜)만 넣으면 안 됨.
+【핵심 규칙】일본 영수증에는 보통 세 가지 금액이 나옵니다:
+  A. 공급가액(税抜/本体) — 부가세 빠진 금액
+  B. 소비税 — 부가세 금액
+  C. 합계(税込/合計/お支払) — A + B = 실제 결제금액 ← total은 반드시 이것
+
+영수증에서 A=903, B=100, C=1003 이 보이면 → total=1003 (절대 903이 아님)
+검증: subtotal + tax = total 이 성립해야 함. 성립하지 않으면 더 큰 금액을 total로.
+거스름돈(お釣り/おつり)은 절대 total로 사용하지 말 것.
 
 추출 항목:
 - store: 상점명 (영수증 그대로, 일본어 OK)
 - date: 영수증 날짜 (YYYY-MM-DD, 없으면 "")
-- total: 세액포함 최종 결제금액. 우선순위: ①お支払金額/税込合計/税込金額/お会計 → ②合計/お買上計 → ③subtotal+tax 합산. 거스름돈(お釣り) 절대 사용 금지. 숫자만, 없으면 null
-- subtotal: 세전 공급가액 숫자 (税抜金額/本体価格/小計의 税抜 부분, 없으면 null)
-- tax: 소비세액 숫자 (消費税/内税/外税 금액, 없으면 null)
+- total: 세액포함 최종 결제금액 (A+B의 합, 영수증에서 가장 마지막/가장 큰 합계 숫자). 숫자만, 없으면 null
+- subtotal: 세전 공급가액 A (税抜/本体価格, 없으면 null)
+- tax: 소비세액 B (消費税/内税/外税, 없으면 null)
 - currency: 일본 영수증이면 "JPY", 모르면 ""
 - category: 다음 중 하나 - "🍜 식비"(편의점/식당/카페), "🚇 교통"(지하철/버스/택시), "🏨 숙박"(호텔), "🏯 관광/입장료"(입장료), "🛍️ 쇼핑"(의류/잡화/마트), "⛽ 주유/렌트카"(주유소), "📱 통신/Wi-Fi"(통신사), "💊 의료/약품"(약국/병원), "🎁 선물", "📌 기타", 모르면 "📌 기타"
 
-예시 — 공급가 ¥1,500 + 消費税 ¥150 = 합계 ¥1,650 인 영수증:
-응답: {"store":"ローソン","date":"2026-06-05","total":1650,"subtotal":1500,"tax":150,"currency":"JPY","category":"🍜 식비"}`;
+응답 예시(903+100=1003): {"store":"ファミリーマート","date":"2026-06-05","total":1003,"subtotal":903,"tax":100,"currency":"JPY","category":"🍜 식비"}`;
 
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
@@ -3961,7 +3963,7 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_BUILD_NO = 8;   // 기능 변경마다 +1
+const APP_BUILD_NO = 9;   // 기능 변경마다 +1
 const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },

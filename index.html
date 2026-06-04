@@ -1156,6 +1156,31 @@
     font-size: 12px; color: var(--gold); display: flex; align-items: center; gap: 8px;
   }
 
+  /* ===== EXPENSE LIST MODAL ===== */
+  .exlist-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;display:none;align-items:flex-end; }
+  .exlist-overlay.open { display:flex; }
+  .exlist-sheet { background:var(--card);border-radius:24px 24px 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom); }
+  .exlist-header { padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--card-border); }
+  .exlist-title { font-size:15px;font-weight:900;color:var(--text); }
+  .exlist-filters { display:flex;gap:6px;padding:10px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0; }
+  .exlist-filters::-webkit-scrollbar { display:none; }
+  .exlist-chip { padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid var(--card-border);background:var(--surface);color:var(--text-dim);cursor:pointer;white-space:nowrap;flex-shrink:0; }
+  .exlist-chip.active { background:var(--gold);color:#fff;border-color:var(--gold); }
+  .exlist-body { overflow-y:auto;flex:1;padding:0 16px 16px; }
+  .exlist-item { display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05); }
+  .exlist-item:last-child { border-bottom:none; }
+  .exlist-cat-icon { width:36px;height:36px;border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0; }
+  .exlist-info { flex:1;min-width:0; }
+  .exlist-name { font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .exlist-meta { font-size:11px;color:var(--text-dim);margin-top:2px; }
+  .exlist-amount { font-size:14px;font-weight:900;color:var(--gold);flex-shrink:0;text-align:right; }
+  .exlist-amount small { display:block;font-size:10px;font-weight:600;color:var(--text-dim); }
+  .exlist-empty { text-align:center;padding:40px 0;color:var(--text-dim);font-size:13px; }
+  .exlist-summary { display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;background:var(--surface);margin:0 16px 10px;border-radius:12px; }
+  .exlist-sum-item { text-align:center; }
+  .exlist-sum-label { font-size:10px;color:var(--text-dim);font-weight:600; }
+  .exlist-sum-value { font-size:15px;font-weight:900;color:var(--gold);margin-top:2px; }
+
   /* ===== EXPENSE TRACKER ===== */
   .expense-card {
     background: linear-gradient(135deg, #fff 60%, #FFFBEB 100%);
@@ -2564,6 +2589,19 @@
   </div>
 </div>
 
+<!-- Expense List Modal -->
+<div class="exlist-overlay" id="exlistOverlay" onclick="closeExpenseList()">
+  <div class="exlist-sheet" onclick="event.stopPropagation()">
+    <div class="exlist-header">
+      <div class="exlist-title">💴 경비 내역 조회</div>
+      <button onclick="closeExpenseList()" style="background:none;border:none;font-size:22px;color:var(--text-dim);cursor:pointer;padding:0 4px;">✕</button>
+    </div>
+    <div class="exlist-summary" id="exlistSummary"></div>
+    <div class="exlist-filters" id="exlistFilters"></div>
+    <div class="exlist-body" id="exlistBody"></div>
+  </div>
+</div>
+
 <!-- Accident Guide Sheet -->
 <div class="overlay" id="accidentOverlay" style="z-index:1200;" onclick="closeAccidentGuide()">
   <div class="sheet" id="accidentSheet" onclick="event.stopPropagation()">
@@ -3657,43 +3695,16 @@ async function scanReceipt(input) {
     if (got.date) okItems.push(`날짜: ${got.date}`);
     okItems.push(`분류: ${got.category}`);
 
-    // 금액이 인식됐으면 즉시 자동 저장 (DOM 폼 읽기 없이 got 데이터 직접 사용)
-    if (got.total) {
-      const expDate = (got.date && /^\d{4}-\d{2}-\d{2}$/.test(got.date))
-        ? got.date
-        : (document.getElementById('ex-date').value || new Date().toISOString().split('T')[0]);
-      const expItem = {
-        type: 'expense',
-        id: Date.now().toString(),
-        category: got.category || '📌 기타',
-        name: got.store || '영수증',
-        date: expDate,
-        time: document.getElementById('ex-time').value || '',
-        payment: document.getElementById('ex-pay').value || '현금',
-        currency: got.currency || 'JPY',
-        cost: got.total,
-        memo: document.getElementById('ex-memo').value.trim() || '',
-      };
-      let itinerary = getItinerary();
-      itinerary.push(expItem);
-      saveItinerary(itinerary);
-      renderItinerary();
-      closeAddModal();
-      showToast(`✅ 저장됨 — ${okItems.join(' · ')}`);
-      if (window.trackEvent) trackEvent('scan_receipt', { ok: 1, auto_saved: 1 });
-      return;
-    }
-
-    // 금액 미인식 — 폼에 채워두고 수동 저장 유도
+    // 결과 배너 표시 후 수동 저장 유도
     if (missing.length === 0) {
-      showScanResult('ok', '✅ 인식 완료', okItems.join(' · '));
-      showToast('✅ 영수증 인식 완료');
+      showScanResult('ok', '✅ 인식 완료 — 아래 저장 버튼을 눌러주세요', okItems.join(' · '));
+      showToast('✅ 영수증 인식 완료 · 저장 버튼으로 저장하세요');
     } else {
       showScanResult('warn',
-        `⚠️ ${missing.join(', ')} 인식 실패 — 빨간 칸을 입력 후 저장하세요`,
+        `⚠️ ${missing.join(', ')} 인식 실패 — 빨간 칸 입력 후 저장하세요`,
         okItems.length > 0 ? '인식된 항목: ' + okItems.join(' · ') : ''
       );
-      showToast(`⚠️ 금액을 직접 입력 후 저장하세요`);
+      showToast(`⚠️ ${missing.join(', ')} 직접 입력 후 저장하세요`);
     }
     if (window.trackEvent) trackEvent('scan_receipt', { ok: missing.length === 0 ? 1 : 0, missing: missing.join(',') });
 
@@ -3842,12 +3853,94 @@ function closeAccidentGuide() {
   document.getElementById('accidentOverlay').classList.remove('open');
 }
 
+// ========== EXPENSE LIST ==========
+let _exlistFilter = 'all';
+
+function openExpenseList() {
+  _exlistFilter = 'all';
+  renderExpenseList();
+  document.getElementById('exlistOverlay').classList.add('open');
+  if (window.trackEvent) trackEvent('open_expense_list');
+}
+function closeExpenseList() {
+  document.getElementById('exlistOverlay').classList.remove('open');
+}
+
+function renderExpenseList() {
+  const all = getItinerary().filter(it => it.type === 'expense' && it.cost > 0);
+  const cats = ['all', ...new Set(all.map(it => it.category || '📌 기타'))];
+
+  // 필터 칩
+  const filterEl = document.getElementById('exlistFilters');
+  filterEl.innerHTML = cats.map(c => `
+    <div class="exlist-chip${_exlistFilter === c ? ' active' : ''}" onclick="setExlistFilter('${c.replace(/'/g,"\\'")}')">
+      ${c === 'all' ? '전체' : c}
+    </div>`).join('');
+
+  // 필터 적용
+  const items = _exlistFilter === 'all' ? all : all.filter(it => (it.category || '📌 기타') === _exlistFilter);
+  const totalJPY = items.reduce((s, it) => s + (it.currency === 'KRW' ? (it.cost / getCurrentRate()) : it.cost), 0);
+  const totalKRW = totalJPY * getCurrentRate();
+
+  // 요약
+  document.getElementById('exlistSummary').innerHTML = `
+    <div class="exlist-sum-item">
+      <div class="exlist-sum-label">엔화 합계</div>
+      <div class="exlist-sum-value">¥${Math.round(totalJPY).toLocaleString()}</div>
+    </div>
+    <div class="exlist-sum-item">
+      <div class="exlist-sum-label">원화 환산</div>
+      <div class="exlist-sum-value">₩${Math.round(totalKRW).toLocaleString()}</div>
+    </div>`;
+
+  // 항목 목록 (날짜 내림차순)
+  const sorted = [...items].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || ''));
+  const body = document.getElementById('exlistBody');
+  if (!sorted.length) {
+    body.innerHTML = '<div class="exlist-empty">경비 내역이 없습니다</div>';
+    return;
+  }
+
+  let html = '';
+  let lastDate = '';
+  sorted.forEach(it => {
+    const d = it.date || '날짜 미정';
+    if (d !== lastDate) {
+      html += `<div style="font-size:11px;font-weight:800;color:var(--text-dim);padding:12px 0 4px;letter-spacing:0.3px;">📅 ${d}</div>`;
+      lastDate = d;
+    }
+    const catIcon = (it.category || '📌 기타').split(' ')[0];
+    const amtJPY = it.currency === 'KRW' ? Math.round(it.cost / getCurrentRate()) : it.cost;
+    const amtKRW = Math.round(amtJPY * getCurrentRate());
+    html += `
+      <div class="exlist-item">
+        <div class="exlist-cat-icon">${catIcon}</div>
+        <div class="exlist-info">
+          <div class="exlist-name">${escapeHtml(it.name || '미입력')}</div>
+          <div class="exlist-meta">${escapeHtml(it.category || '📌 기타')}${it.payment ? ' · ' + escapeHtml(it.payment) : ''}${it.time ? ' · ' + it.time : ''}</div>
+        </div>
+        <div class="exlist-amount">
+          ¥${Number(it.cost).toLocaleString()}
+          <small>≈₩${amtKRW.toLocaleString()}</small>
+        </div>
+        <button onclick="deleteItem('${it.id}');renderExpenseList();renderItinerary();" style="background:none;border:none;color:#9ca3af;font-size:16px;cursor:pointer;padding:0 2px;flex-shrink:0;">🗑</button>
+      </div>`;
+  });
+  body.innerHTML = html;
+}
+
+function setExlistFilter(cat) {
+  _exlistFilter = cat;
+  renderExpenseList();
+}
+
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.1.0';
-const APP_BUILD = '2026-06-04';
-const APP_COMMIT = '721d009';
-const APP_CACHE = 'v24';
+const APP_VERSION = '1.2.0';
+const APP_BUILD = '2026-06-05';
+const APP_COMMIT = 'pending';
+const APP_CACHE = 'v25';
 const APP_CHANGELOG = [
+  { ver: '1.2.0', date: '2026-06-05', note: 'OCR 수동저장 복구 · 경비 항목별 내역 조회 추가' },
   { ver: '1.1.0', date: '2026-06-04', note: '영수증 OCR 자동저장 · 경비합계 카드 표시 수정' },
   { ver: '1.0.0', date: '2026-05-21', note: '최초 출시' },
 ];
@@ -6722,7 +6815,10 @@ function renderExpenseCard() {
           <div class="expense-total">¥${Math.round(totalJPY).toLocaleString()}</div>
           <div class="expense-total-krw">≈ ₩${Math.round(totalKRW).toLocaleString()} · ${itemsWithCost.length}건</div>
         </div>
-        <div class="expense-toggle">▾</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="event.stopPropagation();openExpenseList()" style="padding:6px 12px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;">내역 조회</button>
+          <div class="expense-toggle">▾</div>
+        </div>
       </div>
       <div class="expense-detail">
         <div style="font-size:11px;font-weight:800;color:var(--text-dim);letter-spacing:0.4px;text-transform:uppercase;margin:4px 0 6px;">카테고리별</div>

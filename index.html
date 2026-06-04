@@ -3655,12 +3655,32 @@ async function scanReceipt(input) {
 
     // 정규화
     const toNum = v => (v != null && !isNaN(Number(v)) && Number(v) > 0) ? Number(v) : null;
+    const rawTotal    = toNum(data.total);
+    const rawSubtotal = toNum(data.subtotal);
+    const rawTax      = toNum(data.tax);
+
+    // ── 세액포함 합계 보정 ──────────────────────────────────────────
+    // subtotal + tax 가 성립하면 그 합산값이 진짜 total
+    // ex) Gemini가 903을 total로 반환했지만 subtotal=903, tax=100 → 보정 → 1003
+    let correctedTotal = rawTotal;
+    if (rawSubtotal && rawTax) {
+      const computed = Math.round(rawSubtotal + rawTax);
+      // Gemini가 공급가액을 total로 착각한 경우: total ≈ subtotal (오차 5 이내)
+      if (!rawTotal || Math.abs(rawTotal - rawSubtotal) <= 5) {
+        correctedTotal = computed;
+      }
+      // 또는 computed가 rawTotal보다 크면 computed가 진짜 세액포함가
+      else if (computed > rawTotal + 5) {
+        correctedTotal = computed;
+      }
+    }
+
     const got = {
       store: (data.store || '').trim(),
       date: (data.date || '').trim(),
-      total: toNum(data.total),
-      subtotal: toNum(data.subtotal),
-      tax: toNum(data.tax),
+      total: correctedTotal,
+      subtotal: rawSubtotal,
+      tax: rawTax,
       currency: ['JPY','KRW','USD'].includes(data.currency) ? data.currency : null,
       category: EXPENSE_CATEGORIES.includes(data.category) ? data.category : '📌 기타'
     };
@@ -3963,7 +3983,7 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_BUILD_NO = 9;   // 기능 변경마다 +1
+const APP_BUILD_NO = 10;   // 기능 변경마다 +1
 const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },

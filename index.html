@@ -1555,8 +1555,8 @@
           </div>
         </div>
       </div>
-      <!-- Expense summary card (비활성화) -->
-      <div id="expenseCard" style="display:none;"></div>
+      <!-- Expense summary card -->
+      <div id="expenseCard"></div>
 
       <!-- Quick-add toolbar -->
       <div class="itin-toolbar">
@@ -3652,15 +3652,43 @@ async function scanReceipt(input) {
     if (got.date) okItems.push(`날짜: ${got.date}`);
     okItems.push(`분류: ${got.category}`);
 
+    // 금액이 인식됐으면 즉시 자동 저장 (DOM 폼 읽기 없이 got 데이터 직접 사용)
+    if (got.total) {
+      const expDate = (got.date && /^\d{4}-\d{2}-\d{2}$/.test(got.date))
+        ? got.date
+        : (document.getElementById('ex-date').value || new Date().toISOString().split('T')[0]);
+      const expItem = {
+        type: 'expense',
+        id: Date.now().toString(),
+        category: got.category || '📌 기타',
+        name: got.store || '영수증',
+        date: expDate,
+        time: document.getElementById('ex-time').value || '',
+        payment: document.getElementById('ex-pay').value || '현금',
+        currency: got.currency || 'JPY',
+        cost: got.total,
+        memo: document.getElementById('ex-memo').value.trim() || '',
+      };
+      let itinerary = getItinerary();
+      itinerary.push(expItem);
+      saveItinerary(itinerary);
+      renderItinerary();
+      closeAddModal();
+      showToast(`✅ 저장됨 — ${okItems.join(' · ')}`);
+      if (window.trackEvent) trackEvent('scan_receipt', { ok: 1, auto_saved: 1 });
+      return;
+    }
+
+    // 금액 미인식 — 폼에 채워두고 수동 저장 유도
     if (missing.length === 0) {
       showScanResult('ok', '✅ 인식 완료', okItems.join(' · '));
       showToast('✅ 영수증 인식 완료');
     } else {
       showScanResult('warn',
-        `⚠️ ${missing.join(', ')} 인식 실패 — 빨간 칸을 직접 입력해주세요`,
+        `⚠️ ${missing.join(', ')} 인식 실패 — 빨간 칸을 입력 후 저장하세요`,
         okItems.length > 0 ? '인식된 항목: ' + okItems.join(' · ') : ''
       );
-      showToast(`⚠️ ${missing.join(', ')} 직접 입력 필요`);
+      showToast(`⚠️ 금액을 직접 입력 후 저장하세요`);
     }
     if (window.trackEvent) trackEvent('scan_receipt', { ok: missing.length === 0 ? 1 : 0, missing: missing.join(',') });
 
@@ -3772,9 +3800,9 @@ function buildExpenseItems() {
   const ts = Date.now();
   document.querySelectorAll('#ex-rows-container .ex-row').forEach((row, i) => {
     const cat = row.querySelector('.ex-row-cat').value;
-    const name = row.querySelector('.ex-row-name').value.trim();
+    const name = row.querySelector('.ex-row-name').value.trim() || '미입력';
     const amount = parseFloat(row.querySelector('.ex-row-amount').value);
-    if (!name || isNaN(amount) || amount <= 0) return;
+    if (isNaN(amount) || amount <= 0) return;
     items.push({
       type: 'expense',
       id: ts.toString() + '-' + i,

@@ -2554,7 +2554,7 @@
           <span id="infoBuild" style="font-weight:700;">2026-05-21</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
-          <span style="color:var(--text-dim);">커밋</span>
+          <span style="color:var(--text-dim);">빌드 번호</span>
           <span id="infoCommit" style="font-weight:700;font-family:monospace;font-size:12px;">-</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
@@ -3954,7 +3954,7 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_COMMIT = 'c8fc203';
+const APP_BUILD_NO = 7;   // 기능 변경마다 +1
 const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },
@@ -4013,12 +4013,12 @@ function closeThemePicker() {
         // 헤더 뱃지: v1.1.0 · 2026-06-04 · #721d009
         const hdr = document.getElementById('hdrVer');
         if (hdr) {
-          hdr.textContent = `v${v} · ${APP_BUILD} · #${APP_COMMIT}`;
-          hdr.title = `버전 ${v} (${APP_BUILD}) — 클릭해서 자세히 보기`;
+          hdr.textContent = `v${v} · ${APP_BUILD} · build ${APP_BUILD_NO}`;
+          hdr.title = `버전 ${v} · build ${APP_BUILD_NO} (${APP_BUILD}) — 클릭해서 자세히 보기`;
         }
         const iv = document.getElementById('infoVer'); if (iv) iv.textContent = 'v' + v;
         const ib = document.getElementById('infoBuild'); if (ib) ib.textContent = APP_BUILD;
-        const icommit = document.getElementById('infoCommit'); if (icommit) icommit.textContent = '#' + APP_COMMIT;
+        const icommit = document.getElementById('infoCommit'); if (icommit) icommit.textContent = 'build ' + APP_BUILD_NO;
         const ic = document.getElementById('infoCache'); if (ic) ic.textContent = APP_CACHE;
         // 변경 이력
         const cl = document.getElementById('infoChangelog');

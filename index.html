@@ -3611,11 +3611,13 @@ async function scanReceipt(input) {
 추출 항목:
 - store: 상점명 (영수증 그대로, 일본어 OK)
 - date: 영수증 날짜 (YYYY-MM-DD, 없으면 "")
-- total: 최종 결제 금액 숫자 (合計, お買上計, お支払 중 최종, 거스름돈 아님), 모르면 null
+- total: 실제 결제 금액 (세액포함 최종금액). 우선순위: ①税込合計/税込金額/お支払金額/お会計 → ②合計/お買上計 → ③소계+소비税 직접 합산. 거스름돈(お釣り) 제외. 숫자만, 모르면 null
+- subtotal: 세전 공급가액 숫자 (税抜/本体価格/小計, 없으면 null)
+- tax: 소비세액 숫자 (消費税/内税/外税, 없으면 null)
 - currency: 일본 영수증이면 "JPY", 모르면 ""
 - category: 다음 중 하나 - "🍜 식비"(편의점/식당/카페), "🚇 교통"(지하철/버스/택시), "🏨 숙박"(호텔), "🏯 관광/입장료"(입장료), "🛍️ 쇼핑"(의류/잡화/마트), "⛽ 주유/렌트카"(주유소), "📱 통신/Wi-Fi"(통신사), "💊 의료/약품"(약국/병원), "🎁 선물", "📌 기타", 모르면 "📌 기타"
 
-응답: {"store":"...","date":"...","total":1500,"currency":"JPY","category":"🍜 식비"}`;
+응답: {"store":"...","date":"...","total":1650,"subtotal":1500,"tax":150,"currency":"JPY","category":"🍜 식비"}`;
 
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
@@ -3643,10 +3645,13 @@ async function scanReceipt(input) {
     }
 
     // 정규화
+    const toNum = v => (v != null && !isNaN(Number(v)) && Number(v) > 0) ? Number(v) : null;
     const got = {
       store: (data.store || '').trim(),
       date: (data.date || '').trim(),
-      total: (data.total != null && !isNaN(Number(data.total)) && Number(data.total) > 0) ? Number(data.total) : null,
+      total: toNum(data.total),
+      subtotal: toNum(data.subtotal),
+      tax: toNum(data.tax),
       currency: ['JPY','KRW','USD'].includes(data.currency) ? data.currency : null,
       category: EXPENSE_CATEGORIES.includes(data.category) ? data.category : '📌 기타'
     };
@@ -3674,6 +3679,9 @@ async function scanReceipt(input) {
     row.querySelector('.ex-row-cat').value = got.category; // 미인식 시에도 📌 기타 기본 적용
     if (got.store) row.querySelector('.ex-row-name').value = got.store;
     if (got.total) row.querySelector('.ex-row-amount').value = got.total;
+    // 세금 정보 숨김 데이터로 보관 (저장 시 함께 기록)
+    row.dataset.subtotal = got.subtotal || '';
+    row.dataset.tax = got.tax || '';
 
     // 누락 항목 빨간 테두리
     const missing = [];
@@ -3691,7 +3699,12 @@ async function scanReceipt(input) {
     // 결과 배너 + 토스트
     const okItems = [];
     if (got.store) okItems.push(`상점: <b>${escapeHtml(got.store)}</b>`);
-    if (got.total) okItems.push(`금액: <b>¥${got.total.toLocaleString()}</b>`);
+    if (got.total) {
+      const taxNote = (got.subtotal && got.tax)
+        ? ` <span style="font-size:10px;opacity:0.75;">(공급가 ¥${got.subtotal.toLocaleString()} + 세금 ¥${got.tax.toLocaleString()})</span>`
+        : (got.tax ? ` <span style="font-size:10px;opacity:0.75;">(세금 ¥${got.tax.toLocaleString()} 포함)</span>` : '');
+      okItems.push(`금액: <b>¥${got.total.toLocaleString()}</b>${taxNote}`);
+    }
     if (got.date) okItems.push(`날짜: ${got.date}`);
     okItems.push(`분류: ${got.category}`);
 
@@ -3819,6 +3832,8 @@ function buildExpenseItems() {
     const name = row.querySelector('.ex-row-name').value.trim() || '미입력';
     const amount = parseFloat(row.querySelector('.ex-row-amount').value);
     if (isNaN(amount) || amount <= 0) return;
+    const subtotal = parseFloat(row.dataset.subtotal) || null;
+    const tax = parseFloat(row.dataset.tax) || null;
     items.push({
       type: 'expense',
       id: ts.toString() + '-' + i,
@@ -3828,6 +3843,8 @@ function buildExpenseItems() {
       payment: pay,
       currency: cur,
       cost: amount,
+      subtotal: subtotal || undefined,
+      tax: tax || undefined,
       memo,
     });
   });
@@ -3917,11 +3934,11 @@ function renderExpenseList() {
         <div class="exlist-cat-icon">${catIcon}</div>
         <div class="exlist-info">
           <div class="exlist-name">${escapeHtml(it.name || '미입력')}</div>
-          <div class="exlist-meta">${escapeHtml(it.category || '📌 기타')}${it.payment ? ' · ' + escapeHtml(it.payment) : ''}${it.time ? ' · ' + it.time : ''}</div>
+          <div class="exlist-meta">${escapeHtml(it.category || '📌 기타')}${it.payment ? ' · ' + escapeHtml(it.payment) : ''}${it.time ? ' · ' + it.time : ''}${it.tax ? ` · 세금 ¥${Number(it.tax).toLocaleString()}` : ''}</div>
         </div>
         <div class="exlist-amount">
           ¥${Number(it.cost).toLocaleString()}
-          <small>≈₩${amtKRW.toLocaleString()}</small>
+          <small>${it.subtotal ? `공급가 ¥${Number(it.subtotal).toLocaleString()} | ` : ''}≈₩${amtKRW.toLocaleString()}</small>
         </div>
         <button onclick="deleteItem('${it.id}');renderExpenseList();renderItinerary();" style="background:none;border:none;color:#9ca3af;font-size:16px;cursor:pointer;padding:0 2px;flex-shrink:0;">🗑</button>
       </div>`;
@@ -3935,11 +3952,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_COMMIT = 'b6ed3d0';
-const APP_CACHE = 'v25';
+const APP_COMMIT = 'pending';
+const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
+  { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },
   { ver: '1.2.0', date: '2026-06-05', note: 'OCR 수동저장 복구 · 경비 항목별 내역 조회 추가' },
   { ver: '1.1.0', date: '2026-06-04', note: '영수증 OCR 자동저장 · 경비합계 카드 표시 수정' },
   { ver: '1.0.0', date: '2026-05-21', note: '최초 출시' },

@@ -3628,7 +3628,7 @@ async function scanReceipt(input) {
 
 응답 예시(903+100=1003): {"store":"ファミリーマート","date":"2026-06-05","total":1003,"subtotal":903,"tax":100,"currency":"JPY","category":"🍜 식비"}`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -3983,7 +3983,7 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_BUILD_NO = 10;   // 기능 변경마다 +1
+const APP_BUILD_NO = 11;   // 기능 변경마다 +1
 const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },

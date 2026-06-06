@@ -2568,12 +2568,12 @@
           <button onclick="forceUpdateApp()" style="flex:1;padding:9px;background:#0EA5E9;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🔄 강제 업데이트</button>
         </div>
 
-        <!-- Gemini API 키 -->
+        <!-- OCR API 키 -->
         <div style="margin-top:18px;padding:12px;background:#F3F4F6;border-radius:10px;">
-          <div style="font-size:12px;font-weight:800;margin-bottom:6px;">🔑 Gemini API 키 (영수증 OCR용)</div>
+          <div style="font-size:12px;font-weight:800;margin-bottom:6px;">🔑 OCR API 키 (영수증 스캔용)</div>
           <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;line-height:1.5;">
-            영수증 스캔에 사용됩니다. 본인의 키를 직접 발급받아 입력하세요 (무료, 분당 60건).<br>
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:#0EA5E9;">aistudio.google.com/apikey →</a>
+            영수증 스캔에 사용됩니다. 무료 발급 후 입력하세요 (월 25,000건 무료).<br>
+            <a href="https://ocr.space/ocrapi" target="_blank" rel="noopener" style="color:#0EA5E9;">ocr.space/ocrapi → 무료 API 키 발급</a>
           </div>
           <div style="display:flex;gap:6px;">
             <input type="password" id="geminiKeyInput" placeholder="API 키 붙여넣기..." autocomplete="off" style="flex:1;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:8px;font-size:12px;font-family:monospace;">
@@ -3307,7 +3307,7 @@ function saveGeminiKeyFromInput() {
   const status = document.getElementById('geminiKeyStatus');
   const key = input.value.trim();
   if (!key) {
-    setGeminiKey('');
+    setOcrKey('');
     status.textContent = '🗑 키 삭제됨';
     status.style.color = '#6b7280';
     return;
@@ -3317,7 +3317,7 @@ function saveGeminiKeyFromInput() {
     status.style.color = '#dc2626';
     return;
   }
-  setGeminiKey(key);
+  setOcrKey(key);
   status.textContent = '✅ 저장됨';
   status.style.color = '#059669';
   input.value = key.substring(0,8) + '••••••••' + key.substring(key.length-4);
@@ -3329,7 +3329,7 @@ function refreshGeminiKeyStatus() {
   const input = document.getElementById('geminiKeyInput');
   const status = document.getElementById('geminiKeyStatus');
   if (!input || !status) return;
-  const k = getGeminiKey();
+  const k = getOcrKey();
   const qrBtn = document.getElementById('geminiQrBtn');
   if (k) {
     input.value = k.substring(0,8) + '••••••••' + k.substring(k.length-4);
@@ -3581,6 +3581,12 @@ function getGeminiKey() {
 function setGeminiKey(key) {
   localStorage.setItem('gemini-api-key', (key || '').trim());
 }
+function getOcrKey() {
+  return (localStorage.getItem('ocr-space-key') || '').trim();
+}
+function setOcrKey(key) {
+  localStorage.setItem('ocr-space-key', (key || '').trim());
+}
 
 function showScanResult(level, msg, detail) {
   const banner = document.getElementById('ex-scan-result');
@@ -3610,12 +3616,12 @@ async function scanReceipt(input) {
   const file = input.files && input.files[0];
   if (!file) return;
   // 키 확인
-  const apiKey = getGeminiKey();
+  const apiKey = getOcrKey();
   if (!apiKey) {
     input.value = '';
     showScanResult('err',
-      '🔑 Gemini API 키가 설정되지 않았습니다',
-      '설정(⚙️) → 앱 정보 → "Gemini API 키 설정" 에서 무료 키를 등록하세요.<br><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">aistudio.google.com/apikey</a> 에서 발급 가능합니다.'
+      '🔑 OCR API 키가 설정되지 않았습니다',
+      '설정(⚙️) → OCR API 키를 등록하세요.<br><a href="https://ocr.space/ocrapi" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">ocr.space/ocrapi</a> 에서 무료 발급 가능합니다.'
     );
     return;
   }
@@ -3631,47 +3637,20 @@ async function scanReceipt(input) {
 
   try {
     const dataUrl = await compressImage(file, 1280, 0.85);
-    const base64 = dataUrl.split(',')[1];
-    const mime = dataUrl.match(/data:([^;]+);/)[1];
 
-    const prompt = `이 일본 영수증 사진을 분석해 JSON 한 줄로만 답하세요. 인식 안 된 항목은 빈 문자열 "" 또는 null 로 두세요.
+    // OCR.space API 호출
+    const formData = new FormData();
+    formData.append('base64Image', dataUrl);
+    formData.append('language', 'jpn');
+    formData.append('OCREngine', '2');
+    formData.append('scale', 'true');
+    formData.append('isTable', 'true');
+    formData.append('detectOrientation', 'true');
 
-【핵심 규칙】일본 영수증에는 보통 세 가지 금액이 나옵니다:
-  A. 공급가액(税抜/本体) — 부가세 빠진 금액
-  B. 소비税 — 부가세 금액
-  C. 합계(税込/合計/お支払) — A + B = 실제 결제금액 ← total은 반드시 이것
-
-영수증에서 A=903, B=100, C=1003 이 보이면 → total=1003 (절대 903이 아님)
-검증: subtotal + tax = total 이 성립해야 함. 성립하지 않으면 더 큰 금액을 total로.
-거스름돈(お釣り/おつり)은 절대 total로 사용하지 말 것.
-
-추출 항목:
-- store: 상점명 (영수증 그대로, 일본어 OK)
-- date: 영수증 날짜 (YYYY-MM-DD, 없으면 "")
-- total: 세액포함 최종 결제금액 (A+B의 합, 영수증에서 가장 마지막/가장 큰 합계 숫자). 숫자만, 없으면 null
-- subtotal: 세전 공급가액 A (税抜/本体価格, 없으면 null)
-- tax: 소비세액 B (消費税/内税/外税, 없으면 null)
-- currency: 일본 영수증이면 "JPY", 모르면 ""
-- category: 다음 중 하나 - "🍜 식비"(편의점/식당/카페), "🚇 교통"(지하철/버스/택시), "🏨 숙박"(호텔), "🏯 관광/입장료"(입장료), "🛍️ 쇼핑"(의류/잡화/마트), "⛽ 주유/렌트카"(주유소), "📱 통신/Wi-Fi"(통신사), "💊 의료/약품"(약국/병원), "🎁 선물", "📌 기타", 모르면 "📌 기타"
-
-응답 예시(903+100=1003): {"store":"ファミリーマート","date":"2026-06-05","total":1003,"subtotal":903,"tax":100,"currency":"JPY","category":"🍜 식비"}`;
-
-    const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-    const geminiHeaders = {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey
-    };
-
-    const res = await fetch(geminiUrl, {
+    const res = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
-      headers: geminiHeaders,
-      body: JSON.stringify({
-        contents: [{ parts: [
-          { text: prompt },
-          { inline_data: { mime_type: mime, data: base64 } }
-        ] }],
-        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
-      })
+      headers: { 'apikey': apiKey },
+      body: formData
     });
 
     if (!res.ok) {
@@ -3679,45 +3658,14 @@ async function scanReceipt(input) {
       throw new Error(`API_ERR_${res.status}|${errText.substring(0,120)}`);
     }
     const json = await res.json();
-    const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    let data;
-    try {
-      data = JSON.parse(text.replace(/```json|```/g, '').trim());
-    } catch (pe) {
-      throw new Error(`PARSE_ERR|${text.substring(0,80)}`);
+    if (json.IsErroredOnProcessing) {
+      throw new Error(`PARSE_ERR|${json.ErrorMessage?.[0] || 'OCR 처리 실패'}`);
     }
+    const ocrText = json.ParsedResults?.[0]?.ParsedText || '';
+    if (!ocrText.trim()) throw new Error('PARSE_ERR|텍스트를 인식하지 못했습니다');
 
-    // 정규화
-    const toNum = v => (v != null && !isNaN(Number(v)) && Number(v) > 0) ? Number(v) : null;
-    const rawTotal    = toNum(data.total);
-    const rawSubtotal = toNum(data.subtotal);
-    const rawTax      = toNum(data.tax);
-
-    // ── 세액포함 합계 보정 ──────────────────────────────────────────
-    // subtotal + tax 가 성립하면 그 합산값이 진짜 total
-    // ex) Gemini가 903을 total로 반환했지만 subtotal=903, tax=100 → 보정 → 1003
-    let correctedTotal = rawTotal;
-    if (rawSubtotal && rawTax) {
-      const computed = Math.round(rawSubtotal + rawTax);
-      // Gemini가 공급가액을 total로 착각한 경우: total ≈ subtotal (오차 5 이내)
-      if (!rawTotal || Math.abs(rawTotal - rawSubtotal) <= 5) {
-        correctedTotal = computed;
-      }
-      // 또는 computed가 rawTotal보다 크면 computed가 진짜 세액포함가
-      else if (computed > rawTotal + 5) {
-        correctedTotal = computed;
-      }
-    }
-
-    const got = {
-      store: (data.store || '').trim(),
-      date: (data.date || '').trim(),
-      total: correctedTotal,
-      subtotal: rawSubtotal,
-      tax: rawTax,
-      currency: ['JPY','KRW','USD'].includes(data.currency) ? data.currency : null,
-      category: EXPENSE_CATEGORIES.includes(data.category) ? data.category : '📌 기타'
-    };
+    // 일본 영수증 텍스트 파싱
+    const got = parseJapaneseReceiptText(ocrText);
 
     // 모달 공통 값 (있을 때만)
     if (got.date && /^\d{4}-\d{2}-\d{2}$/.test(got.date)) {
@@ -3881,6 +3829,87 @@ function updateExpenseTotal() {
   document.getElementById('ex-row-count').textContent = `(${count}개)`;
 }
 
+function parseJapaneseReceiptText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+  // 상점명: 첫 번째 의미있는 줄
+  let store = '';
+  for (const line of lines) {
+    if (line.length > 1 && !/^[\d\s¥￥,\.\-\/]+$/.test(line)) {
+      store = line.replace(/[*＊★☆◆◇■□▲△●○]/g, '').trim();
+      if (store) break;
+    }
+  }
+
+  // 날짜 추출
+  let date = '';
+  const datePatterns = [
+    { re: /(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/, fmt: (m) => `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` },
+    { re: /令和\s*(\d+)年\s*(\d{1,2})月\s*(\d{1,2})日/, fmt: (m) => `${2018+parseInt(m[1])}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` },
+    { re: /(\d{2})[\/\.](\d{1,2})[\/\.](\d{1,2})/, fmt: (m) => `20${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` },
+  ];
+  for (const line of lines) {
+    for (const { re, fmt } of datePatterns) {
+      const m = line.match(re);
+      if (m) { date = fmt(m); break; }
+    }
+    if (date) break;
+  }
+
+  // 금액 추출 함수
+  const extractAmt = (keywords, src) => {
+    for (const kw of keywords) {
+      const re = new RegExp(kw + '[^\\d]{0,5}([\\d,]+)', 'g');
+      const results = [];
+      let m;
+      while ((m = re.exec(src)) !== null) {
+        const n = parseInt(m[1].replace(/,/g, ''));
+        if (!isNaN(n) && n > 0) results.push(n);
+      }
+      if (results.length) return Math.max(...results);
+    }
+    return null;
+  };
+
+  const rawTotal    = extractAmt(['税込合計','税込金額','お支払金額','お支払い','お会計','合計','お買上計','ご請求'], text);
+  const rawSubtotal = extractAmt(['税抜合計','税抜金額','本体価格','本体合計','小計'], text);
+  const rawTax      = extractAmt(['消費税','内税','外税','税額'], text);
+
+  // subtotal+tax 합산 보정
+  let total = rawTotal;
+  if (rawSubtotal && rawTax) {
+    const computed = rawSubtotal + rawTax;
+    if (!total || Math.abs(total - rawSubtotal) <= 5 || computed > total + 5) {
+      total = computed;
+    }
+  }
+  // 그래도 없으면 ¥ 기호 붙은 금액 중 최대값
+  if (!total) {
+    const yenAmts = [...text.matchAll(/[¥￥]([0-9,]+)/g)].map(m => parseInt(m[1].replace(/,/g,'')));
+    if (yenAmts.length) total = Math.max(...yenAmts);
+  }
+
+  // 카테고리 자동 분류
+  let category = '📌 기타';
+  if (/食|弁当|ランチ|レストラン|カフェ|コーヒー|ファミリーマート|ローソン|セブン|コンビニ|飲食|寿司|ラーメン|居酒屋/.test(text)) category = '🍜 식비';
+  else if (/薬|ドラッグ|薬局|マツキヨ|ウエルシア|クスリ|調剤/.test(text)) category = '💊 의료/약품';
+  else if (/電車|バス|タクシー|鉄道|JR|メトロ|交通|乗車|新幹線/.test(text)) category = '🚇 교통';
+  else if (/ホテル|宿泊|旅館|inn|hotel/i.test(text)) category = '🏨 숙박';
+  else if (/ガソリン|給油|スタンド|石油|軽油/.test(text)) category = '⛽ 주유/렌트카';
+  else if (/博物館|美術館|入場|観光|チケット|遊園|水族館/.test(text)) category = '🏯 관광/입장료';
+  else if (/ショッピング|衣|服|靴|雑貨|百貨店|イオン|ドンキ|アパレル/.test(text)) category = '🛍️ 쇼핑';
+
+  return {
+    store: store || '',
+    date,
+    total: total || null,
+    subtotal: rawSubtotal || null,
+    tax: rawTax || null,
+    currency: 'JPY',
+    category
+  };
+}
+
 function buildExpenseItems() {
   const date = document.getElementById('ex-date').value;
   const time = document.getElementById('ex-time').value;
@@ -3933,9 +3962,9 @@ function closeAccidentGuide() {
   document.getElementById('accidentOverlay').classList.remove('open');
 }
 
-// ========== GEMINI API TEST ==========
+// ========== OCR API TEST ==========
 async function testGeminiKey() {
-  const key = getGeminiKey();
+  const key = getOcrKey();
   const resultEl = document.getElementById('geminiTestResult');
   if (!key) { showToast('⚠️ 키를 먼저 저장하세요'); return; }
   resultEl.style.display = '';
@@ -3943,20 +3972,23 @@ async function testGeminiKey() {
   resultEl.style.color = '#374151';
   resultEl.textContent = '🔍 테스트 중...';
   try {
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
+    const formData = new FormData();
+    formData.append('base64Image', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+    formData.append('language', 'jpn');
+    const res = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({ contents: [{ parts: [{ text: '1+1=' }] }] })
+      headers: { 'apikey': key },
+      body: formData
     });
-    const body = await res.text();
-    if (res.ok) {
+    const body = await res.json();
+    if (res.ok && !body.IsErroredOnProcessing) {
       resultEl.style.background = '#d1fae5';
       resultEl.style.color = '#065f46';
       resultEl.textContent = '✅ 연결 성공! 키가 정상 작동합니다.';
     } else {
       resultEl.style.background = '#fee2e2';
       resultEl.style.color = '#991b1b';
-      resultEl.textContent = `❌ HTTP ${res.status} — ${body.substring(0, 200)}`;
+      resultEl.textContent = `❌ ${JSON.stringify(body).substring(0, 150)}`;
     }
   } catch (e) {
     resultEl.style.background = '#fee2e2';
@@ -3965,9 +3997,9 @@ async function testGeminiKey() {
   }
 }
 
-// ========== GEMINI QR SHARE ==========
+// ========== OCR QR SHARE ==========
 function openGeminiQR() {
-  const key = getGeminiKey();
+  const key = getOcrKey();
   if (!key) { showToast('⚠️ 저장된 키가 없습니다'); return; }
   const url = `${location.origin}${location.pathname}#apikey=${encodeURIComponent(key)}`;
   document.getElementById('geminiQrOverlay').classList.add('open');
@@ -3984,7 +4016,7 @@ function checkApiKeyFromUrl() {
   if (!hash.startsWith('#apikey=')) return;
   const key = decodeURIComponent(hash.slice('#apikey='.length));
   if (key.length < 10) return;
-  setGeminiKey(key);
+  setOcrKey(key);
   // URL 해시 제거 (키 노출 방지)
   history.replaceState(null, '', location.pathname + location.search);
   showToast('✅ API 키가 자동으로 저장됐습니다!');
@@ -4074,7 +4106,7 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_BUILD_NO = 16;   // 기능 변경마다 +1
+const APP_BUILD_NO = 17;   // 기능 변경마다 +1
 const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },

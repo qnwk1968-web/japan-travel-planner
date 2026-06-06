@@ -3656,9 +3656,16 @@ async function scanReceipt(input) {
 
 응답 예시(903+100=1003): {"store":"ファミリーマート","date":"2026-06-05","total":1003,"subtotal":903,"tax":100,"currency":"JPY","category":"🍜 식비"}`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    const isOAuth = !apiKey.startsWith('AIzaSy');
+    const geminiUrl = isOAuth
+      ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+      : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const geminiHeaders = { 'Content-Type': 'application/json' };
+    if (isOAuth) geminiHeaders['Authorization'] = `Bearer ${apiKey}`;
+
+    const res = await fetch(geminiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: geminiHeaders,
       body: JSON.stringify({
         contents: [{ parts: [
           { text: prompt },
@@ -3937,9 +3944,15 @@ async function testGeminiKey() {
   resultEl.style.color = '#374151';
   resultEl.textContent = '🔍 테스트 중...';
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`, {
+    const isOAuth = !key.startsWith('AIzaSy');
+    const testUrl = isOAuth
+      ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+      : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const testHeaders = { 'Content-Type': 'application/json' };
+    if (isOAuth) testHeaders['Authorization'] = `Bearer ${key}`;
+    const res = await fetch(testUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: testHeaders,
       body: JSON.stringify({ contents: [{ parts: [{ text: '1+1=' }] }] })
     });
     const body = await res.text();
@@ -4068,7 +4081,7 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_BUILD_NO = 14;   // 기능 변경마다 +1
+const APP_BUILD_NO = 15;   // 기능 변경마다 +1
 const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },

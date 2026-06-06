@@ -23,6 +23,7 @@
     try { gtag('event', name, params || {}); } catch(e) {}
   };
 </script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&family=Gothic+A1:wght@400;600;700;800;900&family=Do+Hyeon&family=Sunflower:wght@300;500;700&family=Jua&display=swap" rel="stylesheet">
 <style>
@@ -2579,12 +2580,30 @@
             <button onclick="saveGeminiKeyFromInput()" style="padding:8px 14px;background:#10b981;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">저장</button>
           </div>
           <div id="geminiKeyStatus" style="margin-top:6px;font-size:11px;font-weight:700;"></div>
+          <button id="geminiQrBtn" onclick="openGeminiQR()" style="display:none;width:100%;margin-top:8px;padding:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;">📲 가족 공유용 QR코드 생성</button>
         </div>
       </div>
     </div>
     <div class="sheet-footer">
       <button class="btn btn-outline" onclick="closeGridSettings()">닫기</button>
       <button class="btn btn-primary" onclick="saveGridSettings()">✅ 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Gemini QR Modal -->
+<div class="exlist-overlay" id="geminiQrOverlay" onclick="closeGeminiQR()">
+  <div class="exlist-sheet" onclick="event.stopPropagation()" style="padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:15px;font-weight:900;">📲 가족 공유용 QR코드</div>
+      <button onclick="closeGeminiQR()" style="background:none;border:none;font-size:22px;color:var(--text-dim);cursor:pointer;">✕</button>
+    </div>
+    <div style="text-align:center;padding:16px;background:white;border-radius:16px;margin-bottom:16px;">
+      <canvas id="geminiQrCanvas"></canvas>
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.6;text-align:center;">
+      가족이 이 QR을 스캔하면<br>앱이 열리면서 <b>API 키가 자동 저장</b>됩니다.<br>
+      <span style="color:#ef4444;font-weight:700;">⚠️ 키가 포함된 QR — 가족 외 공유 금지</span>
     </div>
   </div>
 </div>
@@ -3299,20 +3318,25 @@ function saveGeminiKeyFromInput() {
   status.style.color = '#059669';
   input.value = key.substring(0,8) + '••••••••' + key.substring(key.length-4);
   showToast('✅ API 키 저장됨');
+  const qrBtn = document.getElementById('geminiQrBtn');
+  if (qrBtn) qrBtn.style.display = '';
 }
 function refreshGeminiKeyStatus() {
   const input = document.getElementById('geminiKeyInput');
   const status = document.getElementById('geminiKeyStatus');
   if (!input || !status) return;
   const k = getGeminiKey();
+  const qrBtn = document.getElementById('geminiQrBtn');
   if (k) {
     input.value = k.substring(0,8) + '••••••••' + k.substring(k.length-4);
     status.textContent = '✅ 등록됨';
     status.style.color = '#059669';
+    if (qrBtn) qrBtn.style.display = '';
   } else {
     input.value = '';
     status.textContent = '⚠️ 미등록 — 영수증 OCR 비활성';
     status.style.color = '#92400E';
+    if (qrBtn) qrBtn.style.display = 'none';
   }
 }
 
@@ -3899,6 +3923,31 @@ function closeAccidentGuide() {
   document.getElementById('accidentOverlay').classList.remove('open');
 }
 
+// ========== GEMINI QR SHARE ==========
+function openGeminiQR() {
+  const key = getGeminiKey();
+  if (!key) { showToast('⚠️ 저장된 키가 없습니다'); return; }
+  const url = `${location.origin}${location.pathname}#apikey=${encodeURIComponent(key)}`;
+  document.getElementById('geminiQrOverlay').classList.add('open');
+  const canvas = document.getElementById('geminiQrCanvas');
+  QRCode.toCanvas(canvas, url, { width: 220, margin: 2, color: { dark: '#1E293B', light: '#ffffff' } }, err => {
+    if (err) { showToast('QR 생성 실패'); console.error(err); }
+  });
+}
+function closeGeminiQR() {
+  document.getElementById('geminiQrOverlay').classList.remove('open');
+}
+function checkApiKeyFromUrl() {
+  const hash = location.hash;
+  if (!hash.startsWith('#apikey=')) return;
+  const key = decodeURIComponent(hash.slice('#apikey='.length));
+  if (!/^AIzaSy[A-Za-z0-9_-]{30,}$/.test(key)) return;
+  setGeminiKey(key);
+  // URL 해시 제거 (키 노출 방지)
+  history.replaceState(null, '', location.pathname + location.search);
+  showToast('✅ API 키가 자동으로 저장됐습니다!');
+}
+
 // ========== EXPENSE LIST ==========
 let _exlistFilter = 'all';
 
@@ -3983,7 +4032,7 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.2.1';
 const APP_BUILD = '2026-06-05';
-const APP_BUILD_NO = 11;   // 기능 변경마다 +1
+const APP_BUILD_NO = 12;   // 기능 변경마다 +1
 const APP_CACHE = 'v26';
 const APP_CHANGELOG = [
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },
@@ -4029,10 +4078,13 @@ function closeThemePicker() {
     renderToolbarGrid();
     // 위치 권한 자동 요청 + 날씨 카드 로드 (지연 실행)
     setTimeout(() => { try { initLocWeather(); } catch(e) { console.warn(e); } }, 800);
+    // API 키 URL 자동 저장 (QR 스캔)
+    try { checkApiKeyFromUrl(); } catch(e) { console.warn(e); }
     // 공유 받기 처리 — Google Maps 로드 기다리지 않고 즉시 시도
     setTimeout(() => { try { checkIncomingShare(); } catch(e) { console.warn('checkIncomingShare', e); } }, 100);
     // PWA가 이미 백그라운드일 때 새 공유 링크 들어오면 hashchange로 감지
     window.addEventListener('hashchange', () => {
+      try { checkApiKeyFromUrl(); } catch(e) {}
       try { checkIncomingShare(); } catch(e) { console.warn('hashchange share', e); }
     });
     // 버전 정보 동기화

@@ -4104,11 +4104,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.2.1';
-const APP_BUILD = '2026-06-05';
-const APP_BUILD_NO = 17;   // 기능 변경마다 +1
-const APP_CACHE = 'v26';
+const APP_VERSION = '1.2.2';
+const APP_BUILD = '2026-11-17';
+const APP_BUILD_NO = 18;   // 기능 변경마다 +1
+const APP_CACHE = 'v27';
 const APP_CHANGELOG = [
+  { ver: '1.2.2', date: '2026-11-17', note: '지도 열기 수정 — place_id 항목이 모바일 구글맵에서 안 열리던 문제' },
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },
   { ver: '1.2.0', date: '2026-06-05', note: 'OCR 수동저장 복구 · 경비 항목별 내역 조회 추가' },
   { ver: '1.1.0', date: '2026-06-04', note: '영수증 OCR 자동저장 · 경비합계 카드 표시 수정' },
@@ -5531,7 +5532,11 @@ async function translateJaToKo(text) {
 function openGoogleMaps(placeId, name, addr) {
   let url;
   if (placeId) {
-    url = 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(placeId);
+    // 구글맵 모바일 앱은 ?q=place_id: 형식을 해석하지 못하고 텍스트로 검색한다.
+    // 문서화된 api=1 형식만 웹/앱 양쪽에서 동작한다. query 는 필수 파라미터.
+    const q = [name, addr].filter(Boolean).join(' ') || placeId;
+    url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q)
+        + '&query_place_id=' + encodeURIComponent(placeId);
   } else {
     const q = [name, addr].filter(Boolean).join(' ');
     if (!q) return;

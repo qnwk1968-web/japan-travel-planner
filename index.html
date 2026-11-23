@@ -533,7 +533,7 @@
   [data-theme="dark"] .itin-toolbar-bottom .btn-outline,
   [data-theme="dark"] .btn-rec-food { background: #2C2C2E; color: #EBEBF5; border-color: #48484A; }
   [data-theme="dark"] .date-header-left { color: #FFFFFF; }
-  [data-theme="dark"] .trip-bar { background: linear-gradient(135deg, var(--pink), var(--pink2)); }
+  [data-theme="dark"] .trip-bar { background: linear-gradient(135deg, #1E4FC2, #15327A); }
   [data-theme="dark"] .weather-card { background: #1C1C1E; color: #FFFFFF; }
   [data-theme="dark"] .car-card { background: #1C1C1E; color: #FFFFFF; }
   [data-theme="dark"] .checklist-item { background: #2C2C2E; border-color: #48484A; color: #FFFFFF; }
@@ -880,13 +880,13 @@
   .trip-bar:active { transform: scale(0.98); box-shadow: 0 3px 10px rgba(214,79,123,0.2); }
   .trip-bar-icon { font-size: 30px; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
   .trip-bar-info { flex: 1; min-width: 0; }
-  .trip-bar-name { font-size: 16px; font-weight: 900; letter-spacing: -0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .trip-bar-sub { font-size: 11px; opacity: 0.78; margin-top: 2px; font-weight: 500; }
+  .trip-bar-name { font-size: 17px; font-weight: 900; letter-spacing: -0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trip-bar-sub { font-size: 11.5px; opacity: 0.92; margin-top: 3px; font-weight: 600; }
   .trip-bar-arrow { font-size: 22px; opacity: 0.7; flex-shrink: 0; font-weight: 300; }
 
   /* 현재 위치 날씨 카드 (3구간) */
   .loc-weather-card {
-    background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
     border-radius: var(--radius); padding: 14px 18px; margin-bottom: 14px;
     color: #fff; cursor: pointer; user-select: none;
     box-shadow: 0 4px 14px rgba(99,102,241,0.28);
@@ -908,9 +908,9 @@
   .lw-refresh:active { background: rgba(255,255,255,0.4); }
   .lw-slots { display: flex; align-items: center; gap: 2px; }
   .lw-slot { flex: 1; text-align: center; }
-  .lw-slot-lbl { font-size: 11px; font-weight: 600; opacity: 0.85; margin-bottom: 4px; }
+  .lw-slot-lbl { font-size: 11.5px; font-weight: 700; opacity: 0.95; margin-bottom: 4px; }
   .lw-slot-icon { font-size: 22px; line-height: 1; margin-bottom: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)); }
-  .lw-slot-val { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .lw-slot-val { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
   .lw-slot-div { width: 1px; height: 52px; background: rgba(255,255,255,0.3); flex-shrink: 0; align-self: center; }
   [data-theme="dark"] .loc-weather-card { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
 
@@ -4012,11 +4012,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 22;   // 기능 변경마다 +1
-const APP_CACHE = 'v36';
+const APP_BUILD_NO = 23;   // 기능 변경마다 +1
+const APP_CACHE = 'v37';
 const APP_CHANGELOG = [
+  { ver: '1.3.1', date: '2026-11-23', note: '헤더 개선 — 여행 제목·날씨 카드 시인성 강화(진한 파랑·굵은 글자). 날씨를 현재 위치 대신 「여행지(숙소 기준)」 날씨로 표시 — 여행을 불러오면 그 지역 날씨로 자동 전환(여행 없으면 현재 위치)' },
   { ver: '1.3.0', date: '2026-11-23', note: '테마 개편 — 깨짐의 진짜 원인은 장식 폰트(Do Hyeon·Sunflower·Jua). 테마를 「밝은·다크」 2종(Noto Sans KR)으로 정리하고 박스·글자 대비를 강화. 기존 민트·선셋·아이폰블루·벚꽃은 밝은으로 통합' },
   { ver: '1.2.5', date: '2026-11-23', note: '일정·날짜 카드 평면화(그림자·그라데이션·border-image 제거)' },
   { ver: '1.2.4', date: '2026-11-23', note: 'GPU 합성 효과(backdrop-filter·blob blur·애니메이션) 전면 제거' },
@@ -4066,7 +4067,7 @@ function closeThemePicker() {
     });
     renderToolbarGrid();
     // 위치 권한 자동 요청 + 날씨 카드 로드 (지연 실행)
-    setTimeout(() => { try { initLocWeather(); } catch(e) { console.warn(e); } }, 800);
+    setTimeout(() => { try { loadHeaderWeather(); } catch(e) { console.warn(e); } }, 800);
     // API 키 URL 자동 저장 (QR 스캔)
     try { checkApiKeyFromUrl(); } catch(e) { console.warn(e); }
     // 공유 받기 처리 — Google Maps 로드 기다리지 않고 즉시 시도
@@ -4248,6 +4249,8 @@ function updateTripBar() {
     const idx = trips.findIndex(t => t.id === trip.id) + 1;
     subEl.textContent = `일정 ${cnt}개 · ${trip.createdAt || ''} · 총 ${trips.length}개 여행`;
   }
+  // 여행지 날씨로 헤더 갱신(목적지 바뀌면)
+  try { loadHeaderWeather(); } catch(e) { console.warn('headerWeather', e); }
 }
 function openTripManager() {
   renderTripManager();
@@ -6346,6 +6349,26 @@ function confirmAddCity() {
 let locWeatherData = null;
 let locWeatherFetching = false;
 
+let lastHeaderWeatherKey = null;
+// 활성 여행의 대표 목적지 좌표(숙소 우선 → 첫 좌표)
+function getTripDestination() {
+  const trip = (typeof getActiveTrip === 'function') ? getActiveTrip() : null;
+  if (!trip || !Array.isArray(trip.items)) return null;
+  const geo = trip.items.filter(it => typeof it.lat === 'number' && typeof it.lng === 'number' && (it.lat || it.lng));
+  if (!geo.length) return null;
+  const hotel = geo.find(it => it.type === 'hotel');
+  const p = hotel || geo[0];
+  return { lat: p.lat, lon: p.lng };
+}
+// 헤더 날씨: 활성 여행지가 있으면 그곳, 없으면 현재 위치
+function loadHeaderWeather(force) {
+  const dest = getTripDestination();
+  const key = dest ? (dest.lat.toFixed(2) + ',' + dest.lon.toFixed(2)) : 'geo';
+  if (!force && key === lastHeaderWeatherKey) return;
+  lastHeaderWeatherKey = key;
+  if (dest) loadLocWeather(dest.lat, dest.lon, '여행지');
+  else initLocWeather();
+}
 function initLocWeather() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
@@ -6355,7 +6378,7 @@ function initLocWeather() {
   );
 }
 
-async function loadLocWeather(lat, lon) {
+async function loadLocWeather(lat, lon, tag) {
   if (locWeatherFetching) return;
   locWeatherFetching = true;
   const card = document.getElementById('locWeatherCard');
@@ -6379,7 +6402,7 @@ async function loadLocWeather(lat, lon) {
     }
     // 3구간 그룹핑 (오전 06-11 / 오후 12-17 / 저녁 18-23)
     const slots = bucketForecast(f.list);
-    locWeatherData = { lat, lon, placeName, slots, ts: Date.now() };
+    locWeatherData = { lat, lon, placeName, slots, tag: tag || null, ts: Date.now() };
     renderLocWeather();
   } catch (e) {
     console.warn('loadLocWeather', e);
@@ -6433,8 +6456,8 @@ function bucketForecast(list) {
 
 function renderLocWeather() {
   if (!locWeatherData) return;
-  const { placeName, slots } = locWeatherData;
-  document.getElementById('lwPlace').textContent = placeName;
+  const { placeName, slots, tag } = locWeatherData;
+  document.getElementById('lwPlace').textContent = placeName + (tag ? ' · ' + tag : '');
   const fmt = v => v == null ? '--°' : `${v}°`;
   document.getElementById('lwSlotM').textContent = fmt(slots.morning.temp);
   document.getElementById('lwSlotA').textContent = fmt(slots.afternoon.temp);
@@ -6446,9 +6469,9 @@ function renderLocWeather() {
 
 function refreshLocWeather() {
   if (locWeatherData) {
-    loadLocWeather(locWeatherData.lat, locWeatherData.lon);
+    loadLocWeather(locWeatherData.lat, locWeatherData.lon, locWeatherData.tag);
   } else {
-    initLocWeather();
+    loadHeaderWeather(true);
   }
   showToast('🔄 날씨 새로고침');
 }

@@ -603,7 +603,22 @@
   .item-name { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); letter-spacing: -0.3px; }
   .item-time { font-size: 11.5px; color: var(--pink); font-weight: 700; margin: 3px 0; }
   .item-addr { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
-  .item-mapcode { font-size: 11px; color: var(--blue); margin-top: 3px; }
+  .item-mapcode { font-size: 12px; margin-top: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .mcbadge { font-size: 10px; font-weight: 700; color: #fff; background: #0f766e; border-radius: 4px; padding: 1px 6px; }
+  .item-mapcode b { font-weight: 800; color: var(--text); letter-spacing: .3px; font-variant-numeric: tabular-nums; }
+  .mcsearch { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; }
+  .mcsearch-top { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 9px; }
+  .mcsub { font-size: 11px; color: #0f766e; font-weight: 700; margin-left: 7px; }
+  .mcbox { display: flex; gap: 8px; }
+  .mcbox input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 10px; background: var(--input-bg); color: var(--text); font-size: 14px; }
+  .mcbox button { padding: 10px 18px; border: none; border-radius: 10px; background: #0f766e; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+  .mcout { margin-top: 11px; font-size: 13px; color: var(--text-dim); }
+  .mcout a { color: var(--blue); }
+  .mcrname { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+  .mcrcode { font-size: 19px; color: var(--text); margin: 2px 0 7px; }
+  .mcrcode b { font-weight: 800; color: #0f766e; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+  .mccopy { margin-left: 8px; font-size: 11px; padding: 3px 10px; border: 1px solid var(--card-border); background: transparent; color: #0f766e; border-radius: 6px; cursor: pointer; font-weight: 700; }
+  .mcgm { font-size: 12.5px; color: var(--blue); }
   .item-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .item-actions { display: flex; gap: 6px; margin-top: 10px; }
   .item-btn-row { display: flex; gap: 5px; flex-shrink: 0; flex-direction: column; align-items: flex-end; }
@@ -1493,6 +1508,14 @@
           <button class="btn btn-outline" style="flex:1;" onclick="showItineraryMap()">🗺️ 전체 지도</button>
           <button class="btn btn-outline" style="flex:1;" onclick="openPlanOverlay()">📋 전체 동선</button>
         </div>
+      </div>
+      <div class="mcsearch">
+        <div class="mcsearch-top">🔎 맵코드 검색<span class="mcsub">렌터카 내비 입력용</span></div>
+        <div class="mcbox">
+          <input id="mcq" type="text" placeholder="장소 이름 또는  위도,경도" autocomplete="off" enterkeyhint="search" onkeydown="if(event.key==='Enter'){event.preventDefault();runMapcodeSearch();}">
+          <button id="mcbtn" type="button" onclick="runMapcodeSearch()">검색</button>
+        </div>
+        <div id="mcout" class="mcout" hidden></div>
       </div>
       <div id="itineraryList"></div>
     </div>
@@ -3875,22 +3898,27 @@ async function testGeminiKey() {
   resultEl.textContent = '🔍 테스트 중...';
   try {
     const formData = new FormData();
-    formData.append('base64Image', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+    // 1×1 투명 PNG (GIF는 Engine2 미지원이라 PNG로). 실제 OCR 경로(Engine2)와 같은 포맷.
+    formData.append('base64Image', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
     formData.append('language', 'jpn');
+    formData.append('OCREngine', '2');
     const res = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
       headers: { 'apikey': key },
       body: formData
     });
     const body = await res.json();
-    if (res.ok && !body.IsErroredOnProcessing) {
+    const em = Array.isArray(body.ErrorMessage) ? body.ErrorMessage.join(' ') : (body.ErrorMessage || '');
+    // 인증 실패만 실패로 본다. 빈 이미지라 '텍스트 없음'이 떠도 키는 정상.
+    const authFail = res.status === 401 || res.status === 403 || /invalid.*api|api\s*key|unauthor|not a valid/i.test(em);
+    if (res.ok && !authFail) {
       resultEl.style.background = '#d1fae5';
       resultEl.style.color = '#065f46';
       resultEl.textContent = '✅ 연결 성공! 키가 정상 작동합니다.';
     } else {
       resultEl.style.background = '#fee2e2';
       resultEl.style.color = '#991b1b';
-      resultEl.textContent = `❌ ${JSON.stringify(body).substring(0, 150)}`;
+      resultEl.textContent = `❌ 키 인증 실패: ${em || JSON.stringify(body).substring(0, 120)}`;
     }
   } catch (e) {
     resultEl.style.background = '#fee2e2';
@@ -4006,11 +4034,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.3.4';
+const APP_VERSION = '1.4.0';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 26;   // 기능 변경마다 +1
-const APP_CACHE = 'v40';
+const APP_BUILD_NO = 27;   // 기능 변경마다 +1
+const APP_CACHE = 'v41';
 const APP_CHANGELOG = [
+  { ver: '1.4.0', date: '2026-11-23', note: '맵코드(렌터카 내비) 지원 — 일정 카드마다 맵코드 표시(탭하면 복사), 상단에 「맵코드 검색」(장소 이름·좌표로 바로 변환). OCR 연결테스트 오류("Engine 2 has no GIF support") 수정(GIF→PNG, 인증만 통과하면 성공). 일정에 카페/식당 선택지(각 집 맵코드 포함)도 메모로 반영 — 새 일정 가져오기 필요' },
   { ver: '1.3.4', date: '2026-11-23', note: '날씨 탭에 가나자와·고마쓰 추가 — 좌표 기반 조회로 변경(도시명 검색이 요코하마 가나자와구로 오인되던 문제 해결), 고마쓰 도시맵 등록, 여행 불러오면 그 도시들이 날씨 탭에 자동 반영' },
   { ver: '1.3.3', date: '2026-11-23', note: '상단 여행·날씨 카드 유령/줄무늬 수정 — 이 둘만 남아있던 그라데이션·그림자·overflow·filter를 제거하고 솔리드 평면 카드로(아래 카드들과 동일 방식). 글자는 그대로 선명' },
   { ver: '1.3.2', date: '2026-11-23', note: '날씨 카드에 도시 전환 버튼(⇄) 추가 — 여행에 도시가 여러 곳이면(예: 고마쓰↔가나자와) 눌러서 전환. 헤더 테두리·그림자 테마 대응' },
@@ -4025,6 +4054,37 @@ const APP_CHANGELOG = [
   { ver: '1.1.0', date: '2026-06-04', note: '영수증 OCR 자동저장 · 경비합계 카드 표시 수정' },
   { ver: '1.0.0', date: '2026-05-21', note: '최초 출시' },
 ];
+
+// ===== 맵코드 (렌터카 내비) =====
+const MC_PROXY = 'https://park2.elx.co.kr/dash/ct/trip/mapcode';
+function copyMapcode(el, mc){
+  try { if (navigator.clipboard) navigator.clipboard.writeText(mc); } catch(e){}
+  if (typeof showToast === 'function') showToast('📋 맵코드 복사 · ' + mc);
+}
+async function mcGeocode(name){
+  const u = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=ko&countrycodes=jp&q=' + encodeURIComponent(name);
+  const r = await fetch(u); const a = await r.json();
+  return (a && a[0]) ? { lat: parseFloat(a[0].lat), lng: parseFloat(a[0].lon), name: a[0].display_name } : null;
+}
+async function mcLookup(lat, lng){
+  try { const r = await fetch(MC_PROXY + '?lat=' + lat + '&lng=' + lng); const j = await r.json(); return j.ok ? j.mapcode : null; } catch(e){ return null; }
+}
+async function runMapcodeSearch(){
+  const q = document.getElementById('mcq'), out = document.getElementById('mcout');
+  if (!q || !out) return;
+  const v = (q.value || '').trim(); if (!v) return;
+  out.hidden = false; out.textContent = '검색 중…';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  try {
+    let lat, lng, nm = v, c = v.indexOf(',');
+    if (c > 0) { const p1 = parseFloat(v.slice(0,c)), p2 = parseFloat(v.slice(c+1)); if (isFinite(p1) && isFinite(p2) && Math.abs(p1)<=90 && Math.abs(p2)<=180) { lat=p1; lng=p2; nm=p1.toFixed(5)+','+p2.toFixed(5); } }
+    if (lat === undefined) { const g = await mcGeocode(v); if (!g) { out.innerHTML = '<b>'+esc(v)+'</b> 을(를) 못 찾았습니다. <a href="https://japanmapcode.com/ko" target="_blank" rel="noopener">japanmapcode.com</a> 에서 직접 검색해 보세요.'; return; } lat=g.lat; lng=g.lng; nm=g.name; }
+    const mc = await mcLookup(lat, lng);
+    if (!mc) { out.innerHTML = '맵코드를 못 가져왔습니다. 잠시 후 다시 시도해 주세요.'; return; }
+    const gm = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
+    out.innerHTML = '<div class="mcrname">'+esc(nm)+'</div><div class="mcrcode"><span class="mcbadge">맵코드</span> <b>'+esc(mc)+'</b> <button type="button" class="mccopy" onclick="copyMapcode(this,\''+esc(mc)+'\')">복사</button></div><a class="mcgm" href="'+gm+'" target="_blank" rel="noopener">구글지도에서 보기</a>';
+  } catch(e) { out.textContent = '검색 중 오류가 났습니다. 다시 시도해 주세요.'; }
+}
 
 async function forceUpdateApp() {
   if (!confirm('캐시를 모두 비우고 앱을 다시 불러옵니다. 진행하시겠어요?')) return;
@@ -4551,6 +4611,7 @@ function renderItineraryItem(it, contextDate, idxInDay, dayCount) {
       <div class="item-name">${escapeHtml(name)}</div>
       ${time ? `<div class="item-time">⏰ ${escapeHtml(time)}</div>` : ''}
       ${subLines.map(l => `<div class="item-addr">${escapeHtml(l)}</div>`).join('')}
+      ${it.mapcode ? `<div class="item-mapcode" onclick="copyMapcode(this,'${escapeHtml(it.mapcode)}')" title="탭하여 복사"><span class="mcbadge">맵코드</span> <b>${escapeHtml(it.mapcode)}</b></div>` : ''}
       ${costStr ? `<div class="item-cost">💴 ${costStr}</div>` : ''}
       <div class="item-actions">
         ${showMap ? `<button class="btn btn-outline btn-sm" onclick="openItemMap('${id}')">🗺️ 구글지도</button>` : ''}

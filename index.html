@@ -637,11 +637,10 @@
   .date-header {
     font-size: 13px; font-weight: 900; color: var(--text);
     padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 10px;
-    background: linear-gradient(135deg, #fff 0%, #FAFBFF 100%);
-    box-shadow: var(--shadow-sm);
+    background: var(--card);
+    border: 1px solid var(--card-border);
     display: flex; align-items: center; gap: 8px; justify-content: space-between;
-    border-left: 4px solid transparent;
-    border-image: linear-gradient(180deg, var(--pink), var(--pink2)) 1;
+    border-left: 4px solid var(--pink);
     letter-spacing: -0.2px;
   }
   .date-header-left { display: flex; align-items: center; gap: 6px; }
@@ -655,22 +654,20 @@
 
   .itinerary-item {
     display: flex; align-items: flex-start; gap: 12px;
-    background: #fff;
-    border: 1px solid rgba(0,0,0,0.05);
+    background: var(--card);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-sm); padding: 14px 14px; margin-bottom: 9px;
-    border-left: 4px solid transparent;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-    position: relative; overflow: hidden;
+    border-left: 4px solid #94A3B8;
+    position: relative;
   }
-  .itinerary-item:active { transform: scale(0.99); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-  .itinerary-item.type-flight_arrival  { border-left-color: #3B82F6; background: linear-gradient(135deg, #fff 70%, #EFF6FF 100%); }
-  .itinerary-item.type-flight_departure { border-left-color: #6366F1; background: linear-gradient(135deg, #fff 70%, #EEF2FF 100%); }
-  .itinerary-item.type-hotel   { border-left-color: #D97706; background: linear-gradient(135deg, #fff 70%, #FFFBEB 100%); }
-  .itinerary-item.type-city    { border-left-color: #10B981; background: linear-gradient(135deg, #fff 70%, #ECFDF5 100%); }
-  .itinerary-item.type-sight   { border-left-color: #D64F7B; background: linear-gradient(135deg, #fff 70%, #FFF0F5 100%); }
-  .itinerary-item.type-food    { border-left-color: #EA580C; background: linear-gradient(135deg, #fff 70%, #FFF7ED 100%); }
-  .itinerary-item.type-shop    { border-left-color: #7C3AED; background: linear-gradient(135deg, #fff 70%, #F5F3FF 100%); }
+  .itinerary-item:active { background: var(--surface); }
+  .itinerary-item.type-flight_arrival  { border-left-color: #3B82F6; background: #EFF6FF; }
+  .itinerary-item.type-flight_departure { border-left-color: #6366F1; background: #EEF2FF; }
+  .itinerary-item.type-hotel   { border-left-color: #D97706; background: #FFFBEB; }
+  .itinerary-item.type-city    { border-left-color: #10B981; background: #ECFDF5; }
+  .itinerary-item.type-sight   { border-left-color: #D64F7B; background: #FFF0F5; }
+  .itinerary-item.type-food    { border-left-color: #EA580C; background: #FFF7ED; }
+  .itinerary-item.type-shop    { border-left-color: #7C3AED; background: #F5F3FF; }
   .itinerary-item.type-other   { border-left-color: #94A3B8; }
 
   .item-icon { font-size: 26px; flex-shrink: 0; margin-top: 0; }
@@ -1222,7 +1219,7 @@
   .phrase-ko { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
   .phrase-ja { font-size: 14px; font-weight: 600; color: var(--pink); margin-top: 4px; letter-spacing: -0.2px; }
   .phrase-pron { font-size: 17px; color: var(--text-dim); margin-top: 2px; font-style: italic; }
-  .phrase-emergency { border-left: 4px solid #DC2626; background: linear-gradient(135deg, #fff 70%, #FFF1F2 100%); }
+  .phrase-emergency { border-left: 4px solid #DC2626; background: #FFF1F2; }
 
   /* ===== CHECKLIST ===== */
   .chk-cat { margin-bottom: 14px; }
@@ -4099,12 +4096,13 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.2.4';
+const APP_VERSION = '1.2.5';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 20;   // 기능 변경마다 +1
-const APP_CACHE = 'v34';
+const APP_BUILD_NO = 21;   // 기능 변경마다 +1
+const APP_CACHE = 'v35';
 const APP_CHANGELOG = [
-  { ver: '1.2.4', date: '2026-11-23', note: '화면 깨짐 완전 수정 — backdrop-filter·배경 blur·blob 애니메이션 등 GPU 합성 효과를 전부 제거(새 WebView에서 줄무늬·덩어리 유발). 모양은 유지, 렌더링만 안정화' },
+  { ver: '1.2.5', date: '2026-11-23', note: '일정·날짜 카드 평면화 — 새 안드로이드 엔진이 카드의 그림자·그라데이션·border-image를 세로 줄무늬로 오그리는 문제 대응(테두리 색만 남긴 플랫 카드로 교체)' },
+  { ver: '1.2.4', date: '2026-11-23', note: 'GPU 합성 효과(backdrop-filter·blob blur·애니메이션) 전면 제거' },
   { ver: '1.2.3', date: '2026-11-23', note: '테마 화면 깨짐 수정(1차) — 제목 그라데이션 글자→솔리드, blob을 radial-gradient로' },
   { ver: '1.2.2', date: '2026-11-17', note: '지도 열기 수정 — place_id 항목이 모바일 구글맵에서 안 열리던 문제' },
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },

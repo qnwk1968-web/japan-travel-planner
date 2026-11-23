@@ -644,6 +644,18 @@
   .reco-meta { font-size: 11px; color: var(--text-dim); }
   .reco-mc { font-weight: 700; color: #0f766e; font-variant-numeric: tabular-nums; cursor: pointer; }
   [data-theme="dark"] .reco-mc { color: #5eead4; }
+  .ip-updated { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+  .ip-lot { margin-bottom: 14px; border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; }
+  .ip-lot-hd { font-size: 14px; font-weight: 800; color: var(--text); background: var(--surface); padding: 9px 13px; }
+  .ip-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 13px; border-top: 1px solid var(--card-border); }
+  .ip-label { font-size: 13px; color: var(--text); }
+  .ip-val { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 2px 10px; border-radius: 999px; }
+  .ip-val.ok { color: #047857; background: #d1fae5; }
+  .ip-val.busy { color: #b45309; background: #fef3c7; }
+  .ip-val.full { color: #b91c1c; background: #fee2e2; }
+  [data-theme="dark"] .ip-val.ok { color: #6ee7b7; background: #064e3b; }
+  [data-theme="dark"] .ip-val.busy { color: #fcd34d; background: #3a2d08; }
+  [data-theme="dark"] .ip-val.full { color: #fca5a5; background: #4a1414; }
   .item-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .item-actions { display: flex; gap: 6px; margin-top: 10px; }
   .item-btn-row { display: flex; gap: 5px; flex-shrink: 0; flex-direction: column; align-items: flex-end; }
@@ -2506,6 +2518,21 @@
   </div>
 </div>
 
+<!-- 인천공항 주차 현황 -->
+<div class="overlay" id="incheonOverlay" onclick="closeIncheonParking()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🅿️ 인천공항 주차 현황</div>
+    </div>
+    <div class="sheet-body" id="incheonBody" style="max-height:64vh;overflow-y:auto;"></div>
+    <div class="sheet-footer">
+      <button class="btn btn-outline" onclick="openIncheonParking()">🔄 새로고침</button>
+      <button class="btn btn-outline" onclick="closeIncheonParking()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- Grid Settings Sheet -->
 <div class="overlay" id="gridSettingsOverlay" style="z-index:1100;" onclick="closeGridSettings()">
   <div class="sheet" id="gridSettingsSheet" onclick="event.stopPropagation()">
@@ -3248,6 +3275,7 @@ const ALL_MENU_ITEMS = [
   { key:'sight',           icon:'🏯',  label:'관광지',    cssClass:'t-sight',   action:"openTypedModal('sight')" },
   { key:'food',            icon:'🍜',  label:'카페/맛집', cssClass:'t-food',    action:"openTypedModal('food')" },
   { key:'reco',            icon:'🍴',  label:'추천장소',  cssClass:'t-food',    action:"openRecoSheet()" },
+  { key:'incheon',         icon:'🅿️', label:'인천공항주차',cssClass:'t-rental',  action:"openIncheonParking()" },
   { key:'shop',            icon:'🛍️', label:'쇼핑',      cssClass:'t-shop',    action:"openTypedModal('shop')" },
   { key:'phrase',          icon:'💬',  label:'회화',      cssClass:'t-other',   action:"switchTab('phrase',document.querySelectorAll('.nav-btn')[6])" },
   { key:'city',            icon:'🏙️', label:'도시이동',  cssClass:'t-city',    action:"openTypedModal('city')" },
@@ -4084,11 +4112,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 33;   // 기능 변경마다 +1
-const APP_CACHE = 'v47';
+const APP_BUILD_NO = 34;   // 기능 변경마다 +1
+const APP_CACHE = 'v48';
 const APP_CHANGELOG = [
+  { ver: '1.6.0', date: '2026-11-23', note: '「인천공항주차」 메뉴 추가 — 조회 시점의 인천공항 실시간 주차 현황(T1·T2 단기·장기, 층/구역별 주차 가능 대수·만차 여부·업데이트 시각). 그리드 메뉴 설정에서 켜면 사용' },
   { ver: '1.5.0', date: '2026-11-23', note: '「추천장소」 메뉴 추가 — 그리드 메뉴 설정에서 켜면, 메뉴별 추천 식당(타코라이스·스프카레·야끼소바·야키토리 각 3곳)을 구글맵 버튼+맵코드로 보여줍니다(HTML 일정표와 동일)' },
   { ver: '1.4.5', date: '2026-11-23', note: '지도·상세 추가 폼에도 「일차」 칩 — 지도에서 찍어 추가할 때도 1일차·2일차… 를 눌러 날짜를 넣습니다(검색 추가와 동일). 관광지·맛집·쇼핑·도시이동·기타 등에 표시, 여행 날짜 자동 생성' },
   { ver: '1.4.4', date: '2026-11-23', note: '지도에서 찍어 추가해도 맵코드 자동 — 「지도에서 위치 지정」으로 지도를 탭해 넣은 장소(와 편집으로 위치 바뀐 경우)도 맵코드가 자동으로 채워집니다' },
@@ -4156,6 +4185,29 @@ function openRecoSheet(){
   document.getElementById('recoOverlay').classList.add('open');
 }
 function closeRecoSheet(){ document.getElementById('recoOverlay').classList.remove('open'); }
+
+// 인천공항 주차 현황 — 관제탑 프록시가 airport.kr 혼잡도 페이지를 읽어 중계
+const PARK_PROXY = 'https://park2.elx.co.kr/dash/ct/trip/incheon-parking';
+function openIncheonParking(){
+  const body = document.getElementById('incheonBody');
+  if (!body) return;
+  body.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:28px;">조회 중…</div>';
+  document.getElementById('incheonOverlay').classList.add('open');
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  fetch(PARK_PROXY + '?_=' + Date.now()).then(r => r.json()).then(d => {
+    if (!d || !d.ok || !d.lots) { body.innerHTML = '<div style="color:var(--text-dim);padding:20px;">조회 실패. 잠시 후 다시 시도해 주세요.</div>'; return; }
+    const upd = (d.lots.find(l => l.updated) || {}).updated || '';
+    body.innerHTML = (upd ? '<div class="ip-updated">업데이트: ' + esc(upd) + '</div>' : '') +
+      d.lots.map(l => '<div class="ip-lot"><div class="ip-lot-hd">' + esc(l.terminal) + ' ' + esc(l.type) + '주차장</div>' +
+        (l.items && l.items.length ? l.items.map(it => {
+          const cls = it.full ? 'full' : (it.available < 50 ? 'busy' : 'ok');
+          const val = it.full ? '만차' : (it.available + '대');
+          return '<div class="ip-row"><span class="ip-label">' + esc(it.label) + '</span><span class="ip-val ' + cls + '">' + val + '</span></div>';
+        }).join('') : '<div class="ip-row"><span class="ip-label" style="color:var(--text-dim)">정보 없음</span></div>') +
+      '</div>').join('');
+  }).catch(() => { body.innerHTML = '<div style="color:var(--text-dim);padding:20px;">조회 실패(네트워크). 잠시 후 다시.</div>'; });
+}
+function closeIncheonParking(){ document.getElementById('incheonOverlay').classList.remove('open'); }
 
 async function runMapcodeSearch(){
   const q = document.getElementById('mcq'), out = document.getElementById('mcout');

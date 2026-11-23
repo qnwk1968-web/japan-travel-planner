@@ -116,10 +116,10 @@
     padding: 0 16px;
     height: var(--header-h);
     background: var(--header-bg);
-    border-bottom: 1px solid rgba(0,0,0,0.06);
+    border-bottom: 1px solid var(--card-border);
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: space-between;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    box-shadow: var(--shadow-sm);
     position: sticky; top: 0; z-index: 90;
   }
   .header-text h1 {
@@ -906,6 +906,7 @@
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .lw-refresh:active { background: rgba(255,255,255,0.4); }
+  .lw-btns { display: flex; gap: 6px; flex-shrink: 0; }
   .lw-slots { display: flex; align-items: center; gap: 2px; }
   .lw-slot { flex: 1; text-align: center; }
   .lw-slot-lbl { font-size: 11.5px; font-weight: 700; opacity: 0.95; margin-bottom: 4px; }
@@ -1467,7 +1468,10 @@
       <div id="locWeatherCard" class="loc-weather-card" style="display:none;" onclick="onLocWeatherClick()">
         <div class="lw-top">
           <div class="lw-place" id="lwPlace">현재 위치</div>
-          <button class="lw-refresh" onclick="event.stopPropagation(); refreshLocWeather()" title="새로고침">↻</button>
+          <div class="lw-btns">
+            <button class="lw-refresh" id="lwCityBtn" style="display:none;" onclick="event.stopPropagation(); cycleHeaderCity()" title="도시 전환">⇄</button>
+            <button class="lw-refresh" onclick="event.stopPropagation(); refreshLocWeather()" title="새로고침">↻</button>
+          </div>
         </div>
         <div class="lw-slots" id="lwSlots">
           <div class="lw-slot">
@@ -4012,11 +4016,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.3.2';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 23;   // 기능 변경마다 +1
-const APP_CACHE = 'v37';
+const APP_BUILD_NO = 24;   // 기능 변경마다 +1
+const APP_CACHE = 'v38';
 const APP_CHANGELOG = [
+  { ver: '1.3.2', date: '2026-11-23', note: '날씨 카드에 도시 전환 버튼(⇄) 추가 — 여행에 도시가 여러 곳이면(예: 고마쓰↔가나자와) 눌러서 전환. 헤더 테두리·그림자 테마 대응' },
   { ver: '1.3.1', date: '2026-11-23', note: '헤더 개선 — 여행 제목·날씨 카드 시인성 강화(진한 파랑·굵은 글자). 날씨를 현재 위치 대신 「여행지(숙소 기준)」 날씨로 표시 — 여행을 불러오면 그 지역 날씨로 자동 전환(여행 없으면 현재 위치)' },
   { ver: '1.3.0', date: '2026-11-23', note: '테마 개편 — 깨짐의 진짜 원인은 장식 폰트(Do Hyeon·Sunflower·Jua). 테마를 「밝은·다크」 2종(Noto Sans KR)으로 정리하고 박스·글자 대비를 강화. 기존 민트·선셋·아이폰블루·벚꽃은 밝은으로 통합' },
   { ver: '1.2.5', date: '2026-11-23', note: '일정·날짜 카드 평면화(그림자·그라데이션·border-image 제거)' },
@@ -6350,24 +6355,48 @@ let locWeatherData = null;
 let locWeatherFetching = false;
 
 let lastHeaderWeatherKey = null;
-// 활성 여행의 대표 목적지 좌표(숙소 우선 → 첫 좌표)
-function getTripDestination() {
+let headerDests = [];     // [{lat,lon,hasHotel}] — 여행의 도시들
+let headerDestIdx = 0;
+// 활성 여행의 도시들(좌표를 ~15km로 묶어 중복 제거, 도시 안에 숙소 있으면 숙소 좌표 사용)
+function getTripDestinations() {
   const trip = (typeof getActiveTrip === 'function') ? getActiveTrip() : null;
-  if (!trip || !Array.isArray(trip.items)) return null;
+  if (!trip || !Array.isArray(trip.items)) return [];
   const geo = trip.items.filter(it => typeof it.lat === 'number' && typeof it.lng === 'number' && (it.lat || it.lng));
-  if (!geo.length) return null;
-  const hotel = geo.find(it => it.type === 'hotel');
-  const p = hotel || geo[0];
-  return { lat: p.lat, lon: p.lng };
+  const clusters = [];
+  for (const it of geo) {
+    let c = clusters.find(k => Math.abs(k.lat - it.lat) < 0.15 && Math.abs(k.lon - it.lng) < 0.15);
+    if (!c) { c = { lat: it.lat, lon: it.lng, hasHotel: false }; clusters.push(c); }
+    if (it.type === 'hotel') { c.lat = it.lat; c.lon = it.lng; c.hasHotel = true; }
+  }
+  return clusters;
 }
-// 헤더 날씨: 활성 여행지가 있으면 그곳, 없으면 현재 위치
+// 헤더 날씨: 여행 도시가 있으면 그곳(숙소 도시 우선), 없으면 현재 위치
 function loadHeaderWeather(force) {
-  const dest = getTripDestination();
-  const key = dest ? (dest.lat.toFixed(2) + ',' + dest.lon.toFixed(2)) : 'geo';
-  if (!force && key === lastHeaderWeatherKey) return;
-  lastHeaderWeatherKey = key;
-  if (dest) loadLocWeather(dest.lat, dest.lon, '여행지');
-  else initLocWeather();
+  const dests = getTripDestinations();
+  const sig = dests.length ? dests.map(d => d.lat.toFixed(2) + ',' + d.lon.toFixed(2)).join('|') : 'geo';
+  if (!force && sig === lastHeaderWeatherKey) return;
+  lastHeaderWeatherKey = sig;
+  headerDests = dests;
+  if (dests.length) {
+    let di = dests.findIndex(d => d.hasHotel); if (di < 0) di = 0;
+    headerDestIdx = di;
+    const d = dests[di];
+    loadLocWeather(d.lat, d.lon, '여행지');
+  } else {
+    initLocWeather();
+  }
+  updateCityBtn();
+}
+// 도시 전환(여러 도시일 때만)
+function cycleHeaderCity() {
+  if (headerDests.length < 2) return;
+  headerDestIdx = (headerDestIdx + 1) % headerDests.length;
+  const d = headerDests[headerDestIdx];
+  loadLocWeather(d.lat, d.lon, '여행지');
+}
+function updateCityBtn() {
+  const btn = document.getElementById('lwCityBtn');
+  if (btn) btn.style.display = (headerDests.length >= 2) ? '' : 'none';
 }
 function initLocWeather() {
   if (!navigator.geolocation) return;

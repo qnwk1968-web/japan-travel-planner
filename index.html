@@ -1787,6 +1787,12 @@
     </div>
     <div class="sheet-body">
 
+      <!-- 공통: 어느 날(일차) 선택 -->
+      <div class="form-group" id="addDayGroup" style="display:none;">
+        <label class="form-label">어느 날에 넣을까요? (일차)</label>
+        <div id="addDayChips" class="qa-daychips"></div>
+      </div>
+
       <!-- FLIGHT ARRIVAL fields -->
       <div id="fields-flight_arrival" class="type-fields" style="display:none;">
         <div class="form-group">
@@ -4056,11 +4062,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.4.4';
+const APP_VERSION = '1.4.5';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 31;   // 기능 변경마다 +1
-const APP_CACHE = 'v45';
+const APP_BUILD_NO = 32;   // 기능 변경마다 +1
+const APP_CACHE = 'v46';
 const APP_CHANGELOG = [
+  { ver: '1.4.5', date: '2026-11-23', note: '지도·상세 추가 폼에도 「일차」 칩 — 지도에서 찍어 추가할 때도 1일차·2일차… 를 눌러 날짜를 넣습니다(검색 추가와 동일). 관광지·맛집·쇼핑·도시이동·기타 등에 표시, 여행 날짜 자동 생성' },
   { ver: '1.4.4', date: '2026-11-23', note: '지도에서 찍어 추가해도 맵코드 자동 — 「지도에서 위치 지정」으로 지도를 탭해 넣은 장소(와 편집으로 위치 바뀐 경우)도 맵코드가 자동으로 채워집니다' },
   { ver: '1.4.3', date: '2026-11-23', note: '장소 추가 시 「일차」 선택 — 검색→추가할 때 1일차·2일차… 칩을 눌러 넣습니다. 칩은 현재 여행 날짜에서 자동 생성(기간 늘고 줄면 자동 반영), 날짜 직접 지정(기간 밖)도 가능' },
   { ver: '1.4.2', date: '2026-11-23', note: '검색→일정 추가 시 맵코드 자동 — 검색 탭에서 장소를 찾아 「+ 일정추가」하면 좌표·주소와 함께 맵코드가 자동으로 붙습니다. 장소가 바뀔 때마다 JSON 다시 받을 필요 없이 앱에서 바로 추가·편집' },
@@ -4750,6 +4757,7 @@ function openTypedModal(type, prefill) {
   clearModalFields(type);
   if (prefill) fillModalFields(type, prefill);
 
+  renderAddDayChips();
   document.getElementById('addModal').classList.add('open');
 }
 
@@ -5376,6 +5384,31 @@ function renderQaDayChips(){
 function pickQaDay(date){
   document.getElementById('qaDate').value = date;
   renderQaDayChips();
+}
+
+// 상세 추가 폼(지도 선택·유형 버튼)의 '일차' 칩 — 활성 유형의 날짜 필드에 연결
+const ADD_DATE_FIELD = { city:'c-date', sight:'si-date', food:'fo-date', shop:'sh-date', gasstation:'gs-date', pharmacy:'ph-date', other:'o-date' };
+const ADD_DAY_TYPES = Object.keys(ADD_DATE_FIELD);
+function addDateFieldId(){ return ADD_DATE_FIELD[currentModalType] || 'o-date'; }
+function renderAddDayChips(){
+  const grp = document.getElementById('addDayGroup'), wrap = document.getElementById('addDayChips');
+  if (!grp || !wrap) return;
+  if (ADD_DAY_TYPES.indexOf(currentModalType) < 0) { grp.style.display = 'none'; return; }
+  const days = tripDays();
+  if (!days.length) { grp.style.display = 'none'; return; }
+  grp.style.display = '';
+  const el = document.getElementById(addDateFieldId());
+  const cur = el ? el.value : '';
+  const W = ['일','월','화','수','목','금','토'];
+  wrap.innerHTML = days.map(d => {
+    const dt = new Date(d.date + 'T00:00:00');
+    return '<button type="button" class="qa-chip' + (cur === d.date ? ' on' : '') + '" onclick="pickAddDay(\'' + d.date + '\')">' + d.n + '일차<span class="qa-chip-date">' + (dt.getMonth()+1) + '/' + dt.getDate() + '(' + W[dt.getDay()] + ')</span></button>';
+  }).join('');
+}
+function pickAddDay(date){
+  const el = document.getElementById(addDateFieldId());
+  if (el) el.value = date;
+  renderAddDayChips();
 }
 
 function confirmQuickAdd() {

@@ -146,12 +146,12 @@
   /* Ambient blobs */
   .blob-container { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
   .blob {
-    position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.22;
+    position: absolute; border-radius: 50%; filter: blur(40px); opacity: 0.35;
     animation: blobMove 18s ease-in-out infinite alternate;
   }
-  .blob1 { width: 380px; height: 380px; background: var(--blob1-color); top: -120px; left: -80px; animation-duration: 20s; }
-  .blob2 { width: 320px; height: 320px; background: var(--blob2-color); bottom: -60px; right: -60px; animation-duration: 15s; animation-delay: -5s; }
-  .blob3 { width: 220px; height: 220px; background: var(--blob3-color); top: 38%; left: 28%; animation-duration: 25s; animation-delay: -10s; }
+  .blob1 { width: 380px; height: 380px; background: radial-gradient(circle, var(--blob1-color), transparent 70%); top: -120px; left: -80px; animation-duration: 20s; }
+  .blob2 { width: 320px; height: 320px; background: radial-gradient(circle, var(--blob2-color), transparent 70%); bottom: -60px; right: -60px; animation-duration: 15s; animation-delay: -5s; }
+  .blob3 { width: 220px; height: 220px; background: radial-gradient(circle, var(--blob3-color), transparent 70%); top: 38%; left: 28%; animation-duration: 25s; animation-delay: -10s; }
   @keyframes blobMove {
     0% { transform: translate(0,0) scale(1); }
     33% { transform: translate(30px,-40px) scale(1.1); }
@@ -174,8 +174,7 @@
   }
   .header-text h1 {
     font-size: 18px; font-weight: 900;
-    background: linear-gradient(135deg, var(--pink) 0%, #7C3AED 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    color: var(--pink);
     letter-spacing: -0.5px;
   }
   .header-text p { font-size: 11px; color: var(--text-dim); margin-top: 1px; font-weight: 500; }
@@ -729,7 +728,7 @@
   .add-city-form-btns { display: flex; gap: 8px; }
   .weather-current { text-align: center; padding: 24px 10px 16px; }
   .weather-icon { font-size: 72px; margin-bottom: 8px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1)); }
-  .weather-temp { font-size: 52px; font-weight: 800; background: linear-gradient(135deg, var(--pink), #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+  .weather-temp { font-size: 52px; font-weight: 800; color: var(--pink); letter-spacing: -1px; }
   .weather-desc { font-size: 15px; color: var(--text-dim); margin: 6px 0 16px; font-weight: 500; }
   .weather-details { display: flex; justify-content: center; gap: 24px; font-size: 12px; color: var(--text-dim); }
   .weather-detail { display: flex; flex-direction: column; align-items: center; gap: 4px; background: #F8FAFC; border-radius: 12px; padding: 10px 14px; }
@@ -1120,7 +1119,7 @@
     border-bottom: 1px solid var(--card-border); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     padding: 14px 16px; display: flex; align-items: center; gap: 12px; z-index: 10; flex-shrink: 0;
   }
-  .plan-title { font-size: 17px; font-weight: 800; flex: 1; background: linear-gradient(135deg, var(--pink), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .plan-title { font-size: 17px; font-weight: 800; flex: 1; color: var(--pink); }
   #planClose {
     background: none; border: 1px solid var(--card-border); color: var(--text);
     font-size: 18px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
@@ -4104,11 +4103,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.2.2';
-const APP_BUILD = '2026-11-17';
-const APP_BUILD_NO = 18;   // 기능 변경마다 +1
-const APP_CACHE = 'v27';
+const APP_VERSION = '1.2.3';
+const APP_BUILD = '2026-11-23';
+const APP_BUILD_NO = 19;   // 기능 변경마다 +1
+const APP_CACHE = 'v33';
 const APP_CHANGELOG = [
+  { ver: '1.2.3', date: '2026-11-23', note: '테마 화면 깨짐 수정 — 안드로이드 WebView 업데이트 후 제목 글자가 사라지고 배경에 파란 덩어리·줄무늬가 뜨던 문제(그라데이션 글자→솔리드, 배경 blur 의존 제거)' },
   { ver: '1.2.2', date: '2026-11-17', note: '지도 열기 수정 — place_id 항목이 모바일 구글맵에서 안 열리던 문제' },
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },
   { ver: '1.2.0', date: '2026-06-05', note: 'OCR 수동저장 복구 · 경비 항목별 내역 조회 추가' },

@@ -146,8 +146,7 @@
   /* Ambient blobs */
   .blob-container { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
   .blob {
-    position: absolute; border-radius: 50%; filter: blur(40px); opacity: 0.35;
-    animation: blobMove 18s ease-in-out infinite alternate;
+    position: absolute; border-radius: 50%; opacity: 0.4;
   }
   .blob1 { width: 380px; height: 380px; background: radial-gradient(circle, var(--blob1-color), transparent 70%); top: -120px; left: -80px; animation-duration: 20s; }
   .blob2 { width: 320px; height: 320px; background: radial-gradient(circle, var(--blob2-color), transparent 70%); bottom: -60px; right: -60px; animation-duration: 15s; animation-delay: -5s; }
@@ -165,7 +164,6 @@
     padding: 0 16px;
     height: var(--header-h);
     background: var(--header-bg);
-    backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(0,0,0,0.06);
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: space-between;
@@ -794,7 +792,6 @@
     position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 200;
     display: flex; align-items: flex-end; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity 0.28s ease;
-    backdrop-filter: blur(6px);
   }
   .overlay.open { opacity: 1; pointer-events: all; }
   .sheet {
@@ -924,7 +921,6 @@
     position: fixed; inset: 0; background: rgba(15,23,42,0.5);
     z-index: 400; display: flex; align-items: flex-end; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity 0.25s;
-    backdrop-filter: blur(6px);
   }
   #confirmOverlay.open { opacity: 1; pointer-events: all; }
   .confirm-sheet {
@@ -1042,7 +1038,7 @@
   }
   #tripManagerOverlay.open { display: flex; animation: fadeUp 0.3s cubic-bezier(.32,1,.36,1); }
   .trip-mgr-header {
-    position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+    position: sticky; top: 0; background: rgba(255,255,255,0.95);
     border-bottom: 1px solid var(--card-border); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     padding: 14px 16px; display: flex; align-items: center; gap: 12px;
     z-index: 10; flex-shrink: 0;
@@ -1115,7 +1111,7 @@
   }
   #planOverlay.open { display: flex; }
   .plan-header {
-    position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+    position: sticky; top: 0; background: rgba(255,255,255,0.95);
     border-bottom: 1px solid var(--card-border); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     padding: 14px 16px; display: flex; align-items: center; gap: 12px; z-index: 10; flex-shrink: 0;
   }
@@ -1270,7 +1266,7 @@
   }
   #routeMapOverlay.open { display: flex; }
   .route-map-header {
-    padding: 12px 14px; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px);
+    padding: 12px 14px; background: rgba(255,255,255,0.97);
     border-bottom: 1px solid var(--card-border); display: flex; align-items: center; gap: 10px;
     flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
   }
@@ -1282,7 +1278,7 @@
   }
   .route-day-chips {
     display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px; flex-shrink: 0;
-    background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.85);
     border-bottom: 1px solid var(--card-border);
   }
   .route-day-chips::-webkit-scrollbar { display: none; }
@@ -4103,12 +4099,13 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.2.3';
+const APP_VERSION = '1.2.4';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 19;   // 기능 변경마다 +1
-const APP_CACHE = 'v33';
+const APP_BUILD_NO = 20;   // 기능 변경마다 +1
+const APP_CACHE = 'v34';
 const APP_CHANGELOG = [
-  { ver: '1.2.3', date: '2026-11-23', note: '테마 화면 깨짐 수정 — 안드로이드 WebView 업데이트 후 제목 글자가 사라지고 배경에 파란 덩어리·줄무늬가 뜨던 문제(그라데이션 글자→솔리드, 배경 blur 의존 제거)' },
+  { ver: '1.2.4', date: '2026-11-23', note: '화면 깨짐 완전 수정 — backdrop-filter·배경 blur·blob 애니메이션 등 GPU 합성 효과를 전부 제거(새 WebView에서 줄무늬·덩어리 유발). 모양은 유지, 렌더링만 안정화' },
+  { ver: '1.2.3', date: '2026-11-23', note: '테마 화면 깨짐 수정(1차) — 제목 그라데이션 글자→솔리드, blob을 radial-gradient로' },
   { ver: '1.2.2', date: '2026-11-17', note: '지도 열기 수정 — place_id 항목이 모바일 구글맵에서 안 열리던 문제' },
   { ver: '1.2.1', date: '2026-06-05', note: 'OCR 세액포함가 우선 인식 · 내역조회에 공급가/세액 표시' },
   { ver: '1.2.0', date: '2026-06-05', note: 'OCR 수동저장 복구 · 경비 항목별 내역 조회 추가' },

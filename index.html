@@ -4056,11 +4056,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.4.3';
+const APP_VERSION = '1.4.4';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 30;   // 기능 변경마다 +1
-const APP_CACHE = 'v44';
+const APP_BUILD_NO = 31;   // 기능 변경마다 +1
+const APP_CACHE = 'v45';
 const APP_CHANGELOG = [
+  { ver: '1.4.4', date: '2026-11-23', note: '지도에서 찍어 추가해도 맵코드 자동 — 「지도에서 위치 지정」으로 지도를 탭해 넣은 장소(와 편집으로 위치 바뀐 경우)도 맵코드가 자동으로 채워집니다' },
   { ver: '1.4.3', date: '2026-11-23', note: '장소 추가 시 「일차」 선택 — 검색→추가할 때 1일차·2일차… 칩을 눌러 넣습니다. 칩은 현재 여행 날짜에서 자동 생성(기간 늘고 줄면 자동 반영), 날짜 직접 지정(기간 밖)도 가능' },
   { ver: '1.4.2', date: '2026-11-23', note: '검색→일정 추가 시 맵코드 자동 — 검색 탭에서 장소를 찾아 「+ 일정추가」하면 좌표·주소와 함께 맵코드가 자동으로 붙습니다. 장소가 바뀔 때마다 JSON 다시 받을 필요 없이 앱에서 바로 추가·편집' },
   { ver: '1.4.1', date: '2026-11-23', note: '카페/식당 선택을 버튼으로 — 메모 글자 대신 탭하면 구글맵이 열리는 버튼, 버튼마다 맵코드 표시(HTML 일정표와 동일). 새 일정 다시 가져오기 필요' },
@@ -4101,14 +4102,14 @@ async function mcLookup(lat, lng){
   try { const r = await fetch(MC_PROXY + '?lat=' + lat + '&lng=' + lng); const j = await r.json(); return j.ok ? j.mapcode : null; } catch(e){ return null; }
 }
 // 일정에 넣은 항목에 맵코드를 자동으로 채운다(좌표 있으면). 저장 후 비동기로 붙이고 다시 그린다.
-function fillItemMapcode(itemId, lat, lng){
+function fillItemMapcode(itemId, lat, lng, force){
   if (!lat || !lng) return;
   mcLookup(lat, lng).then(mc => {
     if (!mc) return;
     try {
       const all = getItinerary();
       const t = all.find(x => String(x.id) === String(itemId));
-      if (t && !t.mapcode) { t.mapcode = mc; saveItinerary(all); if (typeof renderItinerary === 'function') renderItinerary(); }
+      if (t && (force || !t.mapcode)) { t.mapcode = mc; saveItinerary(all); if (typeof renderItinerary === 'function') renderItinerary(); }
     } catch(e){}
   });
 }
@@ -5238,9 +5239,10 @@ function saveItineraryItem() {
     items.push(item);
   }
   saveItinerary(items);
+  fillItemMapcode(item.id, item.lat, item.lng, true);   // 좌표 있으면 맵코드 자동(지도선택·편집 포함)
   closeAddModal();
   const action = editingId ? '수정됨' : '추가됨';
-  showToast(`✅ ${escapeHtml(item.name)} ${action}`);
+  showToast(`✅ ${escapeHtml(item.name)} ${action}` + (item.lat && item.lng ? ' · 맵코드 조회 중…' : ''));
   if (window.trackEvent) trackEvent('add_item', { item_type: type, edit: editingId ? 1 : 0 });
   editingId = null;
 

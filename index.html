@@ -632,6 +632,11 @@
   .alt-btn:active { opacity: .7; }
   .alt-mc { font-size: 10px; font-weight: 700; color: #0f766e; font-variant-numeric: tabular-nums; padding-left: 3px; cursor: pointer; }
   [data-theme="dark"] .alt-mc { color: #5eead4; }
+  .qa-daychips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .qa-chip { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 14px; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .qa-chip-date { font-size: 10px; font-weight: 600; color: var(--text-dim); }
+  .qa-chip.on { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .qa-chip.on .qa-chip-date { color: rgba(255,255,255,.85); }
   .item-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .item-actions { display: flex; gap: 6px; margin-top: 10px; }
   .item-btn-row { display: flex; gap: 5px; flex-shrink: 0; flex-direction: column; align-items: flex-end; }
@@ -2455,8 +2460,12 @@
     </div>
     <div class="sheet-body">
       <div class="form-group">
-        <label class="form-label">날짜 *</label>
-        <input class="form-input" id="qaDate" type="date">
+        <label class="form-label">어느 날에 넣을까요? *</label>
+        <div id="qaDayChips" class="qa-daychips"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">날짜 (직접 지정 · 기간 밖도 가능)</label>
+        <input class="form-input" id="qaDate" type="date" onchange="renderQaDayChips()">
       </div>
       <div class="form-group">
         <label class="form-label">시간</label>
@@ -4047,11 +4056,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.4.2';
+const APP_VERSION = '1.4.3';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 29;   // 기능 변경마다 +1
-const APP_CACHE = 'v43';
+const APP_BUILD_NO = 30;   // 기능 변경마다 +1
+const APP_CACHE = 'v44';
 const APP_CHANGELOG = [
+  { ver: '1.4.3', date: '2026-11-23', note: '장소 추가 시 「일차」 선택 — 검색→추가할 때 1일차·2일차… 칩을 눌러 넣습니다. 칩은 현재 여행 날짜에서 자동 생성(기간 늘고 줄면 자동 반영), 날짜 직접 지정(기간 밖)도 가능' },
   { ver: '1.4.2', date: '2026-11-23', note: '검색→일정 추가 시 맵코드 자동 — 검색 탭에서 장소를 찾아 「+ 일정추가」하면 좌표·주소와 함께 맵코드가 자동으로 붙습니다. 장소가 바뀔 때마다 JSON 다시 받을 필요 없이 앱에서 바로 추가·편집' },
   { ver: '1.4.1', date: '2026-11-23', note: '카페/식당 선택을 버튼으로 — 메모 글자 대신 탭하면 구글맵이 열리는 버튼, 버튼마다 맵코드 표시(HTML 일정표와 동일). 새 일정 다시 가져오기 필요' },
   { ver: '1.4.0', date: '2026-11-23', note: '맵코드(렌터카 내비) 지원 — 일정 카드마다 맵코드 표시(탭하면 복사), 상단에 「맵코드 검색」(장소 이름·좌표로 바로 변환). OCR 연결테스트 오류("Engine 2 has no GIF support") 수정(GIF→PNG, 인증만 통과하면 성공). 일정에 카페/식당 선택지(각 집 맵코드 포함)도 메모로 반영 — 새 일정 가져오기 필요' },
@@ -5334,9 +5344,38 @@ function quickAddPlace(placeData) {
   document.getElementById('quickAddTitle').textContent = '📍 ' + (placeData.name || '일정 추가');
   document.getElementById('qaDate').value = '';
   document.getElementById('qaTime').value = '';
+  renderQaDayChips();
   document.getElementById('quickAddModal').classList.add('open');
 }
 function closeQuickAdd() { document.getElementById('quickAddModal').classList.remove('open'); quickAddData = null; }
+// 활성 여행의 날짜 범위에서 '일차' 목록 생성(기간 증감 자동 반영)
+function tripDays(){
+  const items = getItinerary();
+  const ds = [];
+  items.forEach(i => { if (i.date) ds.push(i.date); if (i.checkin) ds.push(i.checkin); if (i.checkout) ds.push(i.checkout); });
+  const valid = ds.filter(Boolean).sort();
+  if (!valid.length) return [];
+  const out = []; let d = new Date(valid[0] + 'T00:00:00'); const end = new Date(valid[valid.length - 1] + 'T00:00:00');
+  let n = 1;
+  while (d <= end && n <= 60){ out.push({ n, date: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') }); d.setDate(d.getDate()+1); n++; }
+  return out;
+}
+function renderQaDayChips(){
+  const wrap = document.getElementById('qaDayChips'); if (!wrap) return;
+  const days = tripDays();
+  const cur = document.getElementById('qaDate').value;
+  const W = ['일','월','화','수','목','금','토'];
+  if (!days.length){ wrap.innerHTML = '<span style="font-size:12px;color:var(--text-dim);">여행에 날짜가 없습니다 — 아래에서 날짜를 직접 선택하세요.</span>'; return; }
+  wrap.innerHTML = days.map(d => {
+    const dt = new Date(d.date + 'T00:00:00');
+    return '<button type="button" class="qa-chip' + (cur === d.date ? ' on' : '') + '" onclick="pickQaDay(\'' + d.date + '\')">' + d.n + '일차<span class="qa-chip-date">' + (dt.getMonth()+1) + '/' + dt.getDate() + '(' + W[dt.getDay()] + ')</span></button>';
+  }).join('');
+}
+function pickQaDay(date){
+  document.getElementById('qaDate').value = date;
+  renderQaDayChips();
+}
+
 function confirmQuickAdd() {
   if (!quickAddData) return;
   const date = document.getElementById('qaDate').value;

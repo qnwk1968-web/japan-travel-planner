@@ -637,6 +637,13 @@
   .qa-chip-date { font-size: 10px; font-weight: 600; color: var(--text-dim); }
   .qa-chip.on { background: var(--pink); border-color: var(--pink); color: #fff; }
   .qa-chip.on .qa-chip-date { color: rgba(255,255,255,.85); }
+  .reco-note { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+  .reco-dish { margin-bottom: 14px; }
+  .reco-dish-hd { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .reco-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 7px 0; }
+  .reco-meta { font-size: 11px; color: var(--text-dim); }
+  .reco-mc { font-weight: 700; color: #0f766e; font-variant-numeric: tabular-nums; cursor: pointer; }
+  [data-theme="dark"] .reco-mc { color: #5eead4; }
   .item-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .item-actions { display: flex; gap: 6px; margin-top: 10px; }
   .item-btn-row { display: flex; gap: 5px; flex-shrink: 0; flex-direction: column; align-items: flex-end; }
@@ -2485,6 +2492,20 @@
   </div>
 </div>
 
+<!-- 추천장소 (메뉴별 식당) -->
+<div class="overlay" id="recoOverlay" onclick="closeRecoSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🍴 추천장소 (메뉴별)</div>
+    </div>
+    <div class="sheet-body" id="recoBody" style="max-height:62vh;overflow-y:auto;"></div>
+    <div class="sheet-footer">
+      <button class="btn btn-outline" onclick="closeRecoSheet()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- Grid Settings Sheet -->
 <div class="overlay" id="gridSettingsOverlay" style="z-index:1100;" onclick="closeGridSettings()">
   <div class="sheet" id="gridSettingsSheet" onclick="event.stopPropagation()">
@@ -3226,6 +3247,7 @@ const ALL_MENU_ITEMS = [
   { key:'rental',          icon:'🚗',  label:'렌트카',    cssClass:'t-rental',  action:"openTypedModal('rental')" },
   { key:'sight',           icon:'🏯',  label:'관광지',    cssClass:'t-sight',   action:"openTypedModal('sight')" },
   { key:'food',            icon:'🍜',  label:'카페/맛집', cssClass:'t-food',    action:"openTypedModal('food')" },
+  { key:'reco',            icon:'🍴',  label:'추천장소',  cssClass:'t-food',    action:"openRecoSheet()" },
   { key:'shop',            icon:'🛍️', label:'쇼핑',      cssClass:'t-shop',    action:"openTypedModal('shop')" },
   { key:'phrase',          icon:'💬',  label:'회화',      cssClass:'t-other',   action:"switchTab('phrase',document.querySelectorAll('.nav-btn')[6])" },
   { key:'city',            icon:'🏙️', label:'도시이동',  cssClass:'t-city',    action:"openTypedModal('city')" },
@@ -4062,11 +4084,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.4.5';
+const APP_VERSION = '1.5.0';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 32;   // 기능 변경마다 +1
-const APP_CACHE = 'v46';
+const APP_BUILD_NO = 33;   // 기능 변경마다 +1
+const APP_CACHE = 'v47';
 const APP_CHANGELOG = [
+  { ver: '1.5.0', date: '2026-11-23', note: '「추천장소」 메뉴 추가 — 그리드 메뉴 설정에서 켜면, 메뉴별 추천 식당(타코라이스·스프카레·야끼소바·야키토리 각 3곳)을 구글맵 버튼+맵코드로 보여줍니다(HTML 일정표와 동일)' },
   { ver: '1.4.5', date: '2026-11-23', note: '지도·상세 추가 폼에도 「일차」 칩 — 지도에서 찍어 추가할 때도 1일차·2일차… 를 눌러 날짜를 넣습니다(검색 추가와 동일). 관광지·맛집·쇼핑·도시이동·기타 등에 표시, 여행 날짜 자동 생성' },
   { ver: '1.4.4', date: '2026-11-23', note: '지도에서 찍어 추가해도 맵코드 자동 — 「지도에서 위치 지정」으로 지도를 탭해 넣은 장소(와 편집으로 위치 바뀐 경우)도 맵코드가 자동으로 채워집니다' },
   { ver: '1.4.3', date: '2026-11-23', note: '장소 추가 시 「일차」 선택 — 검색→추가할 때 1일차·2일차… 칩을 눌러 넣습니다. 칩은 현재 여행 날짜에서 자동 생성(기간 늘고 줄면 자동 반영), 날짜 직접 지정(기간 밖)도 가능' },
@@ -4090,6 +4113,8 @@ const APP_CHANGELOG = [
 
 // ===== 맵코드 (렌터카 내비) =====
 const MC_PROXY = 'https://park2.elx.co.kr/dash/ct/trip/mapcode';
+// 추천 식당(메뉴별) — HTML 일정표의 추천 리스트와 동일
+const RECO_FOOD = [{"dish":"🌮 타코라이스","items":[{"name":"LOMA 로마","rating":"4.4","area":"숙소 0.3km·竪町","lat":36.5589622,"lng":136.6548058,"placeId":"ChIJ74gvre41-F8RgLmWqf0Mdxw","mapcode":"41 498 658*52"},{"name":"HARE 하레","rating":"4.7","area":"1.8km·石引","lat":36.5559002,"lng":136.671294,"placeId":"ChIJQby5cxMz-F8RK1P1aGnZa74","mapcode":"41 500 327*60"},{"name":"BEAT TACOS","rating":"4.7","area":"고마쓰(1일차)","lat":36.4002009,"lng":136.4493018,"placeId":"ChIJh9xsuJRR-F8RM54XJ7J_eo0","mapcode":"120 534 578*83"}]},{"dish":"🍛 스프카레","items":[{"name":"아츠노야 篤乃屋","rating":"4.9","area":"1.5km·武蔵","lat":36.5719392,"lng":136.6545139,"placeId":"ChIJEZgp7bcz-F8RYlHkeYLrChk","mapcode":"41 558 237*22"},{"name":"탄도리키친","rating":"4.8","area":"0.5km·広坂","lat":36.561846,"lng":136.6557316,"placeId":"ChIJoS5AMAAz-F8R7KDsub7zHI8","mapcode":"41 529 031*03"},{"name":"스아게 Suage","rating":"4.7","area":"2.2km·포러스","lat":36.5791483,"lng":136.6497543,"placeId":"ChIJ69-eZgAz-F8RMq8Mp9bdP8k","mapcode":"41 588 099*44"}]},{"dish":"🍜 야끼소바","items":[{"name":"철판 haru","rating":"4.9","area":"0.4km·広坂","lat":36.5610825,"lng":136.6557307,"placeId":"ChIJg82JiIAz-F8Rsd7YuozBGlM","mapcode":"41 499 841*38"},{"name":"오니노팬츠","rating":"4.8","area":"0.3km·片町","lat":36.5613166,"lng":136.6514233,"placeId":"ChIJe264Iao1-F8RJn7_kQ39SR4","mapcode":"41 498 885*47"},{"name":"카도노미세 角の店","rating":"4.6","area":"1.0km·長町","lat":36.5667257,"lng":136.6466609,"placeId":"ChIJaTxVh3sz-F8RUm_4pMi3QJk","mapcode":"41 527 598*70"}]},{"dish":"🍢 야키토리","items":[{"name":"만지로 卍郎","rating":"4.6","area":"0.3km·木倉","lat":36.5617919,"lng":136.6511692,"placeId":"ChIJp3nTDYA0-F8RMspDcVOQQPU","mapcode":"41 528 045*85"},{"name":"마에카와","rating":"4.5","area":"0.2km·野町","lat":36.557568,"lng":136.6502619,"placeId":"ChIJHfjU0gE1-F8RUS1I75MbdV0","mapcode":"41 498 491*78"},{"name":"하치마키","rating":"4.3","area":"숙소앞·片町","lat":36.5590069,"lng":136.6524436,"placeId":"ChIJdY0JTl01-F8RjV154KZH-6g","mapcode":"41 498 649*07"}]}];
 // 장소 보기(핀) — 한국서 눌러도 '경로없음' 안 뜨고 바로 열림. 현지서 그 화면의 '경로' 버튼으로 길안내.
 function placeViewUrl(a){
   let u = 'https://www.google.com/maps/search/?api=1&query=' + a.lat + ',' + a.lng;
@@ -4120,6 +4145,18 @@ function fillItemMapcode(itemId, lat, lng, force){
     } catch(e){}
   });
 }
+// 추천장소 시트 — RECO_FOOD(메뉴별 식당)를 버튼+맵코드로
+function openRecoSheet(){
+  const body = document.getElementById('recoBody');
+  if (!body || typeof RECO_FOOD === 'undefined') return;
+  body.innerHTML = '<div class="reco-note">일정엔 미포함 · 대부분 가나자와 숙소 도보권 · 버튼=구글맵, 맵코드=탭하면 복사</div>' +
+    RECO_FOOD.map(g => '<div class="reco-dish"><div class="reco-dish-hd">' + g.dish + '</div>' +
+      g.items.map(a => '<div class="reco-row"><a class="alt-btn food" href="' + placeViewUrl(a) + '" target="_blank" rel="noopener">' + escapeHtml(a.name) + (a.rating ? ' ★' + escapeHtml(a.rating) : '') + '</a><span class="reco-meta">' + escapeHtml(a.area || '') + (a.mapcode ? ' · <span class="reco-mc" onclick="copyMapcode(this,\'' + escapeHtml(a.mapcode) + '\')">' + escapeHtml(a.mapcode) + '</span>' : '') + '</span></div>').join('') +
+    '</div>').join('');
+  document.getElementById('recoOverlay').classList.add('open');
+}
+function closeRecoSheet(){ document.getElementById('recoOverlay').classList.remove('open'); }
+
 async function runMapcodeSearch(){
   const q = document.getElementById('mcq'), out = document.getElementById('mcout');
   if (!q || !out) return;

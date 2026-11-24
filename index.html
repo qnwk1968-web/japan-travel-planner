@@ -4124,8 +4124,8 @@ function setExlistFilter(cat) {
 // ========== 앱 버전 정보 ==========
 const APP_VERSION = '1.6.3';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 37;   // 기능 변경마다 +1
-const APP_CACHE = 'v51';
+const APP_BUILD_NO = 38;   // 기능 변경마다 +1
+const APP_CACHE = 'v52';
 const APP_CHANGELOG = [
   { ver: '1.6.3', date: '2026-11-24', note: '지도에서 선택 정확도 개선 — 시설(핀·아이콘)을 탭하면 그 시설의 등록명·정확 좌표로 맵코드 조회(기존엔 지역·주소명이 뜨던 문제). 빈 곳을 탭하면 주소로 표시' },
   { ver: '1.6.2', date: '2026-11-24', note: '맵코드 검색 2가지 개선 — ① 이름 검색을 구글 플레이스로(일본어·한국어도 정확히 좌표 매칭, 지도 탭은 반대로 그 지점의 명칭을 자동 획득) ② 결과에 「📌 일정에 추가」 버튼 추가(며칠차만 고르면 명칭·좌표·맵코드가 그대로 일정에 저장)' },
@@ -4234,6 +4234,7 @@ function openMapcodePick(){
     let c = { lat: 36.5613, lng: 136.6562 };   // 기본: 가나자와
     try { const ds = (typeof getTripDestinations === 'function') ? getTripDestinations() : []; if (ds && ds[0]) c = { lat: ds[0].lat, lng: ds[0].lon }; } catch(e){}
     map.setCenter(c); map.setZoom(14);
+    map.setOptions({ clickableIcons: true });   // 시설 아이콘 탭이 placeId를 싣도록 보장
     if (locPickListener) { google.maps.event.removeListener(locPickListener); locPickListener = null; }
     function dropPickMarker(la, ln){
       if (locPickMarker) locPickMarker.setMap(null);

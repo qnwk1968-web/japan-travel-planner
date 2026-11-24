@@ -614,6 +614,13 @@
   .mcbox button { padding: 10px 18px; border: none; border-radius: 10px; background: #0f766e; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
   .mc-mapbtn { width: 100%; margin-top: 8px; padding: 11px 12px; border: 1px dashed var(--card-border); border-radius: 10px; background: var(--input-bg); color: var(--text); font-weight: 700; font-size: 13.5px; cursor: pointer; }
   .mc-mapbtn:active { background: var(--card-border); }
+  .mcr-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .mc-addbtn { padding: 8px 14px; border: none; border-radius: 9px; background: #0f766e; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .mc-addbtn:active { opacity: .85; }
+  .mc-addbox { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--card-border); }
+  .mc-addlbl { font-size: 12.5px; font-weight: 800; color: var(--text-dim); margin-bottom: 7px; }
+  .mc-daychips { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+  .mc-dateinput { padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 9px; background: var(--input-bg); color: var(--text); font-size: 13px; }
   .mcout { margin-top: 11px; font-size: 13px; color: var(--text-dim); }
   .mcout a { color: var(--blue); }
   .mcrname { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
@@ -4115,11 +4122,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.6.2';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 35;   // 기능 변경마다 +1
-const APP_CACHE = 'v49';
+const APP_BUILD_NO = 36;   // 기능 변경마다 +1
+const APP_CACHE = 'v50';
 const APP_CHANGELOG = [
+  { ver: '1.6.2', date: '2026-11-24', note: '맵코드 검색 2가지 개선 — ① 이름 검색을 구글 플레이스로(일본어·한국어도 정확히 좌표 매칭, 지도 탭은 반대로 그 지점의 명칭을 자동 획득) ② 결과에 「📌 일정에 추가」 버튼 추가(며칠차만 고르면 명칭·좌표·맵코드가 그대로 일정에 저장)' },
   { ver: '1.6.1', date: '2026-11-24', note: '맵코드 검색에 「지도에서 선택」 추가 — 일본어 이름을 몰라도 지도를 눌러 그 지점의 맵코드를 바로 조회(여행지로 지도 자동 이동). 탭한 지점 이름은 검색창에도 채워짐' },
   { ver: '1.6.0', date: '2026-11-23', note: '「인천공항주차」 메뉴 추가 — 조회 시점의 인천공항 실시간 주차 현황(T1·T2 단기·장기, 층/구역별 주차 가능 대수·만차 여부·업데이트 시각). 그리드 메뉴 설정에서 켜면 사용' },
   { ver: '1.5.0', date: '2026-11-23', note: '「추천장소」 메뉴 추가 — 그리드 메뉴 설정에서 켜면, 메뉴별 추천 식당(타코라이스·스프카레·야끼소바·야키토리 각 3곳)을 구글맵 버튼+맵코드로 보여줍니다(HTML 일정표와 동일)' },
@@ -4235,31 +4243,97 @@ function openMapcodePick(){
         let name = (gs === 'OK' && gr && gr[0]) ? gr[0].formatted_address.replace(/^일본\s*/, '') : (lat.toFixed(5)+','+lng.toFixed(5));
         try {
           placesService.nearbySearch({ location: new google.maps.LatLng(lat,lng), radius: 60 }, (pl, ps) => {
-            if (ps === google.maps.places.PlacesServiceStatus.OK && pl && pl[0] && pl[0].name) name = pl[0].name;
-            finishMapcodePick(lat, lng, name);
+            let pid = '';
+            if (ps === google.maps.places.PlacesServiceStatus.OK && pl && pl[0]) { if (pl[0].name) name = pl[0].name; pid = pl[0].place_id || ''; }
+            finishMapcodePick(lat, lng, name, pid);
           });
-        } catch(e){ finishMapcodePick(lat, lng, name); }
+        } catch(e){ finishMapcodePick(lat, lng, name, ''); }
       });
     });
   }, 120);
 }
-function finishMapcodePick(lat, lng, name){
+function finishMapcodePick(lat, lng, name, placeId){
   const overlay = document.getElementById('mapOverlay');
   overlay.classList.remove('open');
   const hint = document.getElementById('mapPickHint'); if (hint) hint.style.display = 'none';
   if (locPickListener) { google.maps.event.removeListener(locPickListener); locPickListener = null; }
   if (locPickMarker) { locPickMarker.setMap(null); locPickMarker = null; }
   const q = document.getElementById('mcq'); if (q) q.value = name;
-  runMapcodeSearchCoords(lat, lng, name);
+  runMapcodeSearchCoords(lat, lng, name, placeId || '');
 }
-function runMapcodeSearchCoords(lat, lng, name){
+
+// 이름 → 좌표: 구글 플레이스 텍스트검색(이미 로드된 placesService 활용 — 일본어·한국어 정확)
+function placesFindQuery(query){
+  return new Promise(resolve => {
+    try {
+      if (typeof placesService === 'undefined' || !placesService || !google.maps.places) return resolve(null);
+      placesService.findPlaceFromQuery({ query, fields: ['name','geometry','place_id'] }, (res, st) => {
+        if (st === google.maps.places.PlacesServiceStatus.OK && res && res[0] && res[0].geometry) {
+          const p = res[0];
+          resolve({ lat: p.geometry.location.lat(), lng: p.geometry.location.lng(), name: p.name || query, placeId: p.place_id || '' });
+        } else resolve(null);
+      });
+    } catch(e){ resolve(null); }
+  });
+}
+
+let __mcPick = null;   // 마지막 조회 결과(일정 추가용) {name,lat,lng,mapcode,placeId}
+function renderMcResult(name, lat, lng, mapcode, placeId){
+  const out = document.getElementById('mcout'); if (!out) return;
+  __mcPick = { name, lat, lng, mapcode, placeId: placeId || '' };
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const gm = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
+  out.hidden = false;
+  out.innerHTML =
+    '<div class="mcrname">' + esc(name) + '</div>' +
+    '<div class="mcrcode"><span class="mcbadge">맵코드</span> <b>' + esc(mapcode) + '</b> <button type="button" class="mccopy" onclick="copyMapcode(this,\'' + esc(mapcode) + '\')">복사</button></div>' +
+    '<div class="mcr-actions"><a class="mcgm" href="' + gm + '" target="_blank" rel="noopener">구글지도에서 보기</a>' +
+    '<button type="button" class="mc-addbtn" onclick="mcAddStart()">📌 일정에 추가</button></div>' +
+    '<div id="mcAddBox" class="mc-addbox" hidden></div>';
+}
+
+// 결과 → 일정 반영: 며칠차 고르면 명칭·좌표·맵코드 그대로 항목 저장
+function mcAddStart(){
+  const box = document.getElementById('mcAddBox'); if (!box || !__mcPick) return;
+  box.hidden = false;
+  const days = tripDays();
+  const W = ['일','월','화','수','목','금','토'];
+  let html = '<div class="mc-addlbl">며칠차에 넣을까요?</div>';
+  if (days.length){
+    html += '<div class="mc-daychips">' + days.map(d => {
+      const dt = new Date(d.date + 'T00:00:00');
+      return '<button type="button" class="qa-chip" onclick="mcAddCommit(\'' + d.date + '\')">' + d.n + '일차<span class="qa-chip-date">' + (dt.getMonth()+1) + '/' + dt.getDate() + '(' + W[dt.getDay()] + ')</span></button>';
+    }).join('') + '</div>';
+  } else {
+    html += '<div class="mc-daychips"><input type="date" id="mcAddDate" class="mc-dateinput"><button type="button" class="mc-addbtn" onclick="mcAddCommit(document.getElementById(\'mcAddDate\').value)">추가</button></div>';
+  }
+  box.innerHTML = html;
+}
+function mcAddCommit(date){
+  if (!__mcPick) return;
+  if (!date){ showToast('⚠️ 날짜를 선택하세요'); return; }
+  const item = {
+    id: Date.now().toString(), type: 'sight',
+    name: __mcPick.name || '방문지', date, time: '', addr: '',
+    lat: __mcPick.lat || null, lng: __mcPick.lng || null,
+    placeId: __mcPick.placeId || '', mapcode: __mcPick.mapcode || '',
+  };
+  const items = getItinerary();
+  items.push(item);
+  saveItinerary(items);
+  try { maybeAddWeatherCityFromItem(item); } catch(e){}
+  showToast('✅ ' + item.name + ' 일정 추가됨');
+  const navBtns = document.querySelectorAll('.nav-btn');
+  switchTab('itinerary', navBtns[0]);
+  renderItinerary();
+}
+
+function runMapcodeSearchCoords(lat, lng, name, placeId){
   const out = document.getElementById('mcout'); if (!out) return;
   out.hidden = false; out.textContent = '맵코드 조회 중…';
-  const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   mcLookup(lat, lng).then(mc => {
     if (!mc) { out.innerHTML = '맵코드를 못 가져왔습니다. 잠시 후 다시 시도해 주세요.'; return; }
-    const gm = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
-    out.innerHTML = '<div class="mcrname">' + esc(name) + '</div><div class="mcrcode"><span class="mcbadge">맵코드</span> <b>' + esc(mc) + '</b> <button type="button" class="mccopy" onclick="copyMapcode(this,\'' + esc(mc) + '\')">복사</button></div><a class="mcgm" href="' + gm + '" target="_blank" rel="noopener">구글지도에서 보기</a>';
+    renderMcResult(name, lat, lng, mc, placeId || '');
   }).catch(() => { out.innerHTML = '조회 중 오류가 났습니다.'; });
 }
 
@@ -4270,13 +4344,16 @@ async function runMapcodeSearch(){
   out.hidden = false; out.textContent = '검색 중…';
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   try {
-    let lat, lng, nm = v, c = v.indexOf(',');
+    let lat, lng, nm = v, pid = '', c = v.indexOf(',');
     if (c > 0) { const p1 = parseFloat(v.slice(0,c)), p2 = parseFloat(v.slice(c+1)); if (isFinite(p1) && isFinite(p2) && Math.abs(p1)<=90 && Math.abs(p2)<=180) { lat=p1; lng=p2; nm=p1.toFixed(5)+','+p2.toFixed(5); } }
-    if (lat === undefined) { const g = await mcGeocode(v); if (!g) { out.innerHTML = '<b>'+esc(v)+'</b> 을(를) 못 찾았습니다. <a href="https://japanmapcode.com/ko" target="_blank" rel="noopener">japanmapcode.com</a> 에서 직접 검색해 보세요.'; return; } lat=g.lat; lng=g.lng; nm=g.name; }
+    if (lat === undefined) {
+      const gp = await placesFindQuery(v);                       // ① 구글 플레이스(이름→좌표·정확)
+      if (gp) { lat=gp.lat; lng=gp.lng; nm=gp.name; pid=gp.placeId; }
+      else { const g = await mcGeocode(v); if (!g) { out.innerHTML = '<b>'+esc(v)+'</b> 을(를) 못 찾았습니다. <a href="https://japanmapcode.com/ko" target="_blank" rel="noopener">japanmapcode.com</a> 에서 직접 검색해 보세요.'; return; } lat=g.lat; lng=g.lng; nm=g.name; }   // ② Nominatim 폴백
+    }
     const mc = await mcLookup(lat, lng);
     if (!mc) { out.innerHTML = '맵코드를 못 가져왔습니다. 잠시 후 다시 시도해 주세요.'; return; }
-    const gm = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
-    out.innerHTML = '<div class="mcrname">'+esc(nm)+'</div><div class="mcrcode"><span class="mcbadge">맵코드</span> <b>'+esc(mc)+'</b> <button type="button" class="mccopy" onclick="copyMapcode(this,\''+esc(mc)+'\')">복사</button></div><a class="mcgm" href="'+gm+'" target="_blank" rel="noopener">구글지도에서 보기</a>';
+    renderMcResult(nm, lat, lng, mc, pid);
   } catch(e) { out.textContent = '검색 중 오류가 났습니다. 다시 시도해 주세요.'; }
 }
 

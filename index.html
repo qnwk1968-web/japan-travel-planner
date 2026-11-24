@@ -612,6 +612,8 @@
   .mcbox { display: flex; gap: 8px; }
   .mcbox input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 10px; background: var(--input-bg); color: var(--text); font-size: 14px; }
   .mcbox button { padding: 10px 18px; border: none; border-radius: 10px; background: #0f766e; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+  .mc-mapbtn { width: 100%; margin-top: 8px; padding: 11px 12px; border: 1px dashed var(--card-border); border-radius: 10px; background: var(--input-bg); color: var(--text); font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  .mc-mapbtn:active { background: var(--card-border); }
   .mcout { margin-top: 11px; font-size: 13px; color: var(--text-dim); }
   .mcout a { color: var(--blue); }
   .mcrname { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
@@ -1552,6 +1554,7 @@
           <input id="mcq" type="text" placeholder="장소 이름 또는  위도,경도" autocomplete="off" enterkeyhint="search" onkeydown="if(event.key==='Enter'){event.preventDefault();runMapcodeSearch();}">
           <button id="mcbtn" type="button" onclick="runMapcodeSearch()">검색</button>
         </div>
+        <button type="button" class="mc-mapbtn" onclick="openMapcodePick()">🗺️ 지도에서 선택 (이름 몰라도 콕 찍기)</button>
         <div id="mcout" class="mcout" hidden></div>
       </div>
       <div id="itineraryList"></div>
@@ -4112,11 +4115,12 @@ function setExlistFilter(cat) {
 }
 
 // ========== 앱 버전 정보 ==========
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const APP_BUILD = '2026-11-23';
-const APP_BUILD_NO = 34;   // 기능 변경마다 +1
-const APP_CACHE = 'v48';
+const APP_BUILD_NO = 35;   // 기능 변경마다 +1
+const APP_CACHE = 'v49';
 const APP_CHANGELOG = [
+  { ver: '1.6.1', date: '2026-11-24', note: '맵코드 검색에 「지도에서 선택」 추가 — 일본어 이름을 몰라도 지도를 눌러 그 지점의 맵코드를 바로 조회(여행지로 지도 자동 이동). 탭한 지점 이름은 검색창에도 채워짐' },
   { ver: '1.6.0', date: '2026-11-23', note: '「인천공항주차」 메뉴 추가 — 조회 시점의 인천공항 실시간 주차 현황(T1·T2 단기·장기, 층/구역별 주차 가능 대수·만차 여부·업데이트 시각). 그리드 메뉴 설정에서 켜면 사용' },
   { ver: '1.5.0', date: '2026-11-23', note: '「추천장소」 메뉴 추가 — 그리드 메뉴 설정에서 켜면, 메뉴별 추천 식당(타코라이스·스프카레·야끼소바·야키토리 각 3곳)을 구글맵 버튼+맵코드로 보여줍니다(HTML 일정표와 동일)' },
   { ver: '1.4.5', date: '2026-11-23', note: '지도·상세 추가 폼에도 「일차」 칩 — 지도에서 찍어 추가할 때도 1일차·2일차… 를 눌러 날짜를 넣습니다(검색 추가와 동일). 관광지·맛집·쇼핑·도시이동·기타 등에 표시, 여행 날짜 자동 생성' },
@@ -4208,6 +4212,56 @@ function openIncheonParking(){
   }).catch(() => { body.innerHTML = '<div style="color:var(--text-dim);padding:20px;">조회 실패(네트워크). 잠시 후 다시.</div>'; });
 }
 function closeIncheonParking(){ document.getElementById('incheonOverlay').classList.remove('open'); }
+
+// 지도에서 콕 찍어 맵코드 — 일본어 이름을 몰라도 지도 탭으로 선택
+function openMapcodePick(){
+  if (typeof map === 'undefined' || !map || !placesService) { if (typeof showToast === 'function') showToast('지도 로딩 중… 잠시 후 다시 눌러주세요'); return; }
+  const overlay = document.getElementById('mapOverlay');
+  if (typeof locPickMode !== 'undefined') locPickMode = null;   // 추가폼 모드 아님 → 닫을 때 폼 안 열림
+  overlay.classList.add('open');
+  const hint = document.getElementById('mapPickHint'); if (hint){ hint.style.display = 'block'; hint.textContent = '📍 가고 싶은 곳을 지도에서 탭하세요 (맵코드)'; }
+  setTimeout(() => {
+    google.maps.event.trigger(map, 'resize');
+    let c = { lat: 36.5613, lng: 136.6562 };   // 기본: 가나자와
+    try { const ds = (typeof getTripDestinations === 'function') ? getTripDestinations() : []; if (ds && ds[0]) c = { lat: ds[0].lat, lng: ds[0].lon }; } catch(e){}
+    map.setCenter(c); map.setZoom(12);
+    if (locPickListener) { google.maps.event.removeListener(locPickListener); locPickListener = null; }
+    locPickListener = map.addListener('click', function(e){
+      const lat = e.latLng.lat(), lng = e.latLng.lng();
+      if (locPickMarker) locPickMarker.setMap(null);
+      locPickMarker = new google.maps.Marker({ position:{lat,lng}, map, icon:{ path: google.maps.SymbolPath.CIRCLE, scale:9, fillColor:'#0f766e', fillOpacity:1, strokeColor:'#fff', strokeWeight:2 } });
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location:{lat,lng}, language:'ko' }, (gr, gs) => {
+        let name = (gs === 'OK' && gr && gr[0]) ? gr[0].formatted_address.replace(/^일본\s*/, '') : (lat.toFixed(5)+','+lng.toFixed(5));
+        try {
+          placesService.nearbySearch({ location: new google.maps.LatLng(lat,lng), radius: 60 }, (pl, ps) => {
+            if (ps === google.maps.places.PlacesServiceStatus.OK && pl && pl[0] && pl[0].name) name = pl[0].name;
+            finishMapcodePick(lat, lng, name);
+          });
+        } catch(e){ finishMapcodePick(lat, lng, name); }
+      });
+    });
+  }, 120);
+}
+function finishMapcodePick(lat, lng, name){
+  const overlay = document.getElementById('mapOverlay');
+  overlay.classList.remove('open');
+  const hint = document.getElementById('mapPickHint'); if (hint) hint.style.display = 'none';
+  if (locPickListener) { google.maps.event.removeListener(locPickListener); locPickListener = null; }
+  if (locPickMarker) { locPickMarker.setMap(null); locPickMarker = null; }
+  const q = document.getElementById('mcq'); if (q) q.value = name;
+  runMapcodeSearchCoords(lat, lng, name);
+}
+function runMapcodeSearchCoords(lat, lng, name){
+  const out = document.getElementById('mcout'); if (!out) return;
+  out.hidden = false; out.textContent = '맵코드 조회 중…';
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  mcLookup(lat, lng).then(mc => {
+    if (!mc) { out.innerHTML = '맵코드를 못 가져왔습니다. 잠시 후 다시 시도해 주세요.'; return; }
+    const gm = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
+    out.innerHTML = '<div class="mcrname">' + esc(name) + '</div><div class="mcrcode"><span class="mcbadge">맵코드</span> <b>' + esc(mc) + '</b> <button type="button" class="mccopy" onclick="copyMapcode(this,\'' + esc(mc) + '\')">복사</button></div><a class="mcgm" href="' + gm + '" target="_blank" rel="noopener">구글지도에서 보기</a>';
+  }).catch(() => { out.innerHTML = '조회 중 오류가 났습니다.'; });
+}
 
 async function runMapcodeSearch(){
   const q = document.getElementById('mcq'), out = document.getElementById('mcout');
